@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend — Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+
+      - name: Build & run tests
+        working-directory: src/meditrack-back
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify
+
+  frontend:
+    name: Frontend — Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/meditrack-front/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/meditrack-front
+        run: npm ci
+
+      - name: Lint
+        working-directory: src/meditrack-front
+        run: npm run lint
+
+      - name: Build
+        working-directory: src/meditrack-front
+        run: npm run build
