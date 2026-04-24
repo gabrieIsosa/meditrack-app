@@ -1,0 +1,3 @@
+# Documentación – MediTrack
+
+## Completar posteriormente
