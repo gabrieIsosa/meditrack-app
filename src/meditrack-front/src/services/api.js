@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080/api';
+const BASE_URL = 'http://localhost:8080';
 
 function getAuthHeaders() {
   try {
@@ -40,11 +40,11 @@ export async function logout() {
   await fetch(`${BASE_URL}/auth/logout`, {
     method: 'POST',
     headers: { ...getAuthHeaders() },
-  }).catch(() => {});
+  }).catch(() => { });
 }
 
 export async function getEnvios() {
-  const res = await fetch(`${BASE_URL}/envios`, {
+  const res = await fetch(`${BASE_URL}/api/envios`, {
     headers: { ...getAuthHeaders() },
   });
   await handleResponse(res);
@@ -53,7 +53,7 @@ export async function getEnvios() {
 }
 
 export async function getEnvioById(id) {
-  const res = await fetch(`${BASE_URL}/envios/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/envios/${id}`, {
     headers: { ...getAuthHeaders() },
   });
   await handleResponse(res);
@@ -62,7 +62,7 @@ export async function getEnvioById(id) {
 }
 
 export async function createEnvio(data) {
-  const res = await fetch(`${BASE_URL}/envios`, {
+  const res = await fetch(`${BASE_URL}/api/envios`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
@@ -73,18 +73,31 @@ export async function createEnvio(data) {
 }
 
 export async function updateEnvio(id, data) {
-  const res = await fetch(`${BASE_URL}/envios/${id}`, {
+  const dataLimpia = {
+    remitente: data.remitente,
+    destinatario: data.destinatario,
+    descripcionCarga: data.descripcionCarga,
+    direccionEntrega: data.direccionEntrega,
+    origen: data.origen,
+    destino: data.destino,
+    fechaEstimada: data.fechaEstimada,
+    prioridad: data.prioridad,
+    observaciones: data.observaciones
+  };
+
+  const res = await fetch(`${BASE_URL}/api/envios/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify(data),
+    body: JSON.stringify(dataLimpia),
   });
+
   await handleResponse(res);
   if (!res.ok) throw new Error('Error al actualizar envío');
   return res.json();
 }
 
 export async function updateEstadoEnvio(id, estado, fecha, hora, usuario) {
-  const res = await fetch(`${BASE_URL}/envios/${id}/estado`, {
+  const res = await fetch(`${BASE_URL}/api/envios/${id}/estado`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ estado, fecha, hora, usuario }),
