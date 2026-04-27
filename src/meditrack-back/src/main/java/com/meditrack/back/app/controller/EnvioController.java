@@ -1,5 +1,8 @@
 package com.meditrack.back.app.controller;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -123,4 +126,34 @@ public class EnvioController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelar(@PathVariable String id, @RequestBody Map<String,String> body,
+        @RequestHeader(value = "Authorization", required = false) String authHeader){
+            try {
+                Sesion sesion = autenticar(authHeader);
+                if (sesion.getRole() != Role.SUPERVISOR){
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error","Sin permisos para cancelar envíos"));
+                }
+
+                String fecha = body.getOrDefault("fecha", LocalDate.now().toString());
+                String hora = body.getOrDefault("hora", LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+                String motivo = body.getOrDefault("motivo","");
+                String firma = body.getOrDefault("firma","");
+                String usuario = sesion.getNombre();
+
+                return ResponseEntity.ok(envioService.cancelar(id,motivo,firma,fecha,hora,usuario));
+            
+            } catch (IllegalArgumentException e){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error",e.getMessage()));
+            } catch (RuntimeException e){
+                if (e.getMessage().contains("no encontrado")){
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error",e.getMessage()));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error",e.getMessage()));
+            }
+
+        }
+
 }

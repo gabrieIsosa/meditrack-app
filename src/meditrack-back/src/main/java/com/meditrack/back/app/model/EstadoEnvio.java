@@ -11,13 +11,29 @@ public enum EstadoEnvio {
     CANCELADO;
 
     public EstadoEnvio siguiente() {
+        
+        if (this == CANCELADO){
+            throw new IllegalStateException("El envío está cancelado");
+        }
+        if(this == ENTREGADO){
+            throw new IllegalStateException("El envío ya fue entregado");
+        }
+        if(this == INCIDENTE_REPORTADO){
+            throw new IllegalStateException("El envío tiene un incidente reportado");
+        }
+
         EstadoEnvio[] valores = values();
         int siguiente = this.ordinal() + 1;
-        if (siguiente >= valores.length) {
-            throw new IllegalStateException("El envío ya está en su estado final: " + this);
+        
+        if (valores[siguiente] == INCIDENTE_REPORTADO || valores[siguiente] == CANCELADO) {
+            throw new IllegalStateException("No hay un estado siguiente disponible");
         }
 
         return valores[siguiente];
+    }
+
+    public boolean permiteCancelacion(){
+        return this != ENTREGADO && this != CANCELADO;
     }
 
 }

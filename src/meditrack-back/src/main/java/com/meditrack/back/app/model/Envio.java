@@ -19,6 +19,9 @@ public class Envio {
     private String observaciones;
     private EstadoEnvio estado;
     private String prioridad;
+    private String motivoCancelacion;
+    private String firmaCancelacion;
+    private String fechaCancelacion;
     private List<HistorialEstado> historial = new ArrayList<>();
     private String usuarioResponsable;
     private String fechaCreacion;
@@ -77,4 +80,10 @@ public class Envio {
     public void setFechaCreacion(String fechaCreacion) { this.fechaCreacion = fechaCreacion; }
     public String getHoraCreacion() { return horaCreacion; }
     public void setHoraCreacion(String horaCreacion) { this.horaCreacion = horaCreacion; }
+    public String getMotivoCancelacion() { return motivoCancelacion; }
+    public void setMotivoCancelacion(String motivoCancelacion) { this.motivoCancelacion = motivoCancelacion; }
+    public String getFirmaCancelacion(){ return firmaCancelacion; }
+    public void setFirmaCancelacion(String firmaCancelacion){ this.firmaCancelacion = firmaCancelacion; }
+    public String getFechaCancelacion(){ return fechaCancelacion; }
+    public void setFechaCancelacion(String fechaCancelacion){ this.fechaCancelacion = fechaCancelacion; }
 }

@@ -4,6 +4,8 @@ import { getEnvioById, updateEstadoEnvio } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ModalHistorial from '../components/ModalHistorial';
 import StatusLine from '../components/StatusLine';
+import ModalCancelacion from '../components/ModalCancelacion';
+import { cancelarEnvio } from '../services/api';
 
 const ORDEN_ESTADOS = [
   'PENDIENTE', 'ASIGNADO', 'EN_PREPARACION', 'EN_TRANSITO', 
@@ -28,6 +30,7 @@ function DetalleEnvio() {
   const [historialAbierto, setHistorialAbierto] = useState(false);
   const [modalForm, setModalForm] = useState({ nuevoEstado: '', fecha: '', hora: '', usuario: '' });
   const [modalError, setModalError] = useState('');
+  const [cancelacionAbierta, setCancelacionAbierta] = useState(false);
 
   useEffect(() => {
     getEnvioById(id)
@@ -55,6 +58,16 @@ function DetalleEnvio() {
       setModalError(e.message);
     }
   };
+
+  const handleConfirmarCancelacion = async (motivo,firma) => {
+    try{
+      const actualizado = await cancelarEnvio(id, motivo, firma);
+      setEnvio(actualizado);
+      setCancelacionAbierta(false);
+    } catch (e) {
+      alert(e.message);
+    }
+  }
 
   if (!envio) return <div className="container"><p>{error || 'Cargando...'}</p></div>;
 
@@ -113,7 +126,7 @@ function DetalleEnvio() {
           <div className="detail-field"><label>OBSERVACIONES</label><span>{envio.observaciones || '-'}</span></div>
         </div>
 
-        <div style={{ position: 'absolute', bottom: '20px', left: '25px' }}>
+        <div style={{ position: 'absolute', bottom: '20px', left: '25px', display: 'flex', gap: '10px' }}>
           {user?.role === 'SUPERVISOR' && (
             <button 
               className="btn btn-primary" 
@@ -122,6 +135,15 @@ function DetalleEnvio() {
             >
               Editar
             </button>
+          )}
+          {user?.role === 'SUPERVISOR' && envio.estado !== 'ENTREGADO' && envio.estado !== 'CANCELADO' &&(
+            <button
+              className="btn btn-primary"
+              onClick={() => setCancelacionAbierta(true)}
+              style={{ backgroundColor: '#DC2626', color: 'white', padding: '10px 24px', borderRadius: '8px', border: 'none', fontWeight: '600'}}
+              >
+                Cancelar envío
+              </button>
           )}
         </div>
 
@@ -136,6 +158,12 @@ function DetalleEnvio() {
       </div>
 
       {historialAbierto && <ModalHistorial historial={envio.historial || []} alCerrar={() => setHistorialAbierto(false)} />}
+
+      {cancelacionAbierta && (<ModalCancelacion
+              onConfirmar={handleConfirmarCancelacion}
+              onCerrar={() => setCancelacionAbierta(false)}
+              />
+          )}
 
       {modalAbierto && (
         <div className="modal-overlay">
@@ -159,6 +187,8 @@ function DetalleEnvio() {
           </div>
         </div>
       )}
+
+      
     </div>
   );
 }

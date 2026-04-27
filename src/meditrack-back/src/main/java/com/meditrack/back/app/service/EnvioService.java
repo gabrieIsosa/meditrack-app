@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.meditrack.back.app.model.Envio;
 import com.meditrack.back.app.model.EstadoEnvio;
+import com.meditrack.back.app.model.HistorialEstado;
 
 @Service
 public class EnvioService {
@@ -64,4 +65,34 @@ public class EnvioService {
         envio.setUsuarioResponsable(usuario);
         return envio;
     }
+
+    public Envio cancelar(String id, String motivo, String firma, String fecha, String hora, String usuario) {
+        Envio envio = envios.stream()
+                .filter(e -> e.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Envío no encontrado"));
+
+        if (!envio.getEstado().permiteCancelacion()) {
+            throw new IllegalArgumentException(
+                "No se puede cancelar un envío en estado: " + envio.getEstado()
+            );
+        }
+
+        if (motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("El motivo de cancelación es obligatorio");
+        }
+
+        if (firma == null || firma.isBlank()) {
+            throw new IllegalArgumentException("La firma es obligatoria");
+        }
+
+        envio.setEstado(EstadoEnvio.CANCELADO);
+        envio.setMotivoCancelacion(motivo);
+        envio.setFirmaCancelacion(firma);
+        envio.setFechaCancelacion(fecha + " " + hora);
+        envio.agregarHistorial(new HistorialEstado(EstadoEnvio.CANCELADO, fecha, hora, usuario));
+
+        return envio;
+    }
+    
 }
