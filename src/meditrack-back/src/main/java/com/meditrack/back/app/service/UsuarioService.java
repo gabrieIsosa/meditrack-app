@@ -41,7 +41,7 @@ public class UsuarioService {
         return false;
     }
 
-    public Usuario crear(Map<String, String> datos, Role rolCreador) {
+    public Usuario crear(Map<String, String> datos, Role rolCreador, String usuarioDelCambio) {
         Role rolNuevoUsuario = Role.valueOf(datos.get("role"));
 
         if (!tienePermisoSobreRol(rolCreador, rolNuevoUsuario)) {
@@ -58,6 +58,7 @@ public class UsuarioService {
             datos.get("password"),
             rolNuevoUsuario
         );
+        nuevo.addHistorial(new HistorialUsuario("Creación", "-", "-", LocalDateTime.now().toString(), usuarioDelCambio));
         
         usuarios.add(nuevo);
         return nuevo;

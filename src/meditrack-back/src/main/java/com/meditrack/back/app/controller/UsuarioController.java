@@ -59,7 +59,8 @@ public class UsuarioController {
     public ResponseEntity<?> crear(@RequestBody Map<String, String> body, @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             Sesion sesion = autenticar(authHeader);
-            Usuario nuevo = usuarioService.crear(body, sesion.getRole());
+            String usuario = sesion.getNombre();
+            Usuario nuevo = usuarioService.crear(body, sesion.getRole(), usuario);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
