@@ -8,7 +8,7 @@ function Usuarios() {
     const [usuarios, setUsuarios] = useState([]);
     const [busqueda, setBusqueda] = useState('');
     const [historialAbierto, setHistorialAbierto] = useState(false);
-    const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+    const [usuarioParaHistorial, setUsuarioParaHistorial] = useState(null);
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -22,7 +22,7 @@ function Usuarios() {
             const data = await getUsuarios();
             setUsuarios(data);
         } catch (error) {
-            console.error("Error al cambiar estado:", error);
+            console.error(error);
         }
     };
 
@@ -33,22 +33,26 @@ function Usuarios() {
 
     return (
         <div className="container">
-            <div className="header-with-action">
-                <h1 style={{ fontSize: '24px', fontWeight: '800' }}>Gestión de Personal</h1>
-                {user?.role !== 'REPARTIDOR' && (
-                    <button className="btn btn-primary" onClick={() => navigate('/usuarios/nuevo')}>
-                        + NUEVO USUARIO
-                    </button>
-                )}
+            <div className="page-header-row">
+                <button className="btn btn-secondary" onClick={() => navigate('/')}>VOLVER</button>
+                <h1>Gestión del personal</h1>
             </div>
 
             <div className="card">
-                <input
-                    style={{ marginBottom: '20px', width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}
-                    placeholder="🔍 Buscar por Nombre o Email..."
-                    value={busqueda}
-                    onChange={e => setBusqueda(e.target.value)}
-                />
+                <div className="table-header-actions">
+                    <input
+                        className="search-input-user"
+                        placeholder="🔍 Buscar por Nombre o Email..."
+                        value={busqueda}
+                        onChange={e => setBusqueda(e.target.value)}
+                    />
+                    
+                    {user?.role === 'ADMINISTRADOR' && (
+                        <button className="btn-new-user" onClick={() => navigate('/usuarios/nuevo')}>
+                            + NUEVO USUARIO
+                        </button>
+                    )}
+                </div>
 
                 <table>
                     <thead>
@@ -57,8 +61,7 @@ function Usuarios() {
                             <th>Email</th>
                             <th>Rol</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
-                            <th>Historial de Cambios</th>
+                            <th style={{ textAlign: 'center' }}>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,55 +71,63 @@ function Usuarios() {
                                 <td>{u.email}</td>
                                 <td><span className={`badge badge-${u.role}`}>{u.role}</span></td>
                                 <td>
-                                    <span style={{ color: u.estadoActivo ? '#10b981' : '#ef4444', fontWeight: 'bold' }}>
-                                        {u.estadoActivo ? 'Activo' : 'Inactivo'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button className="btn btn-sm btn-primary" onClick={() => navigate(`/usuarios/editar/${u.id}`)}>
-                                            EDITAR
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-secondary"
-                                            style={{ backgroundColor: u.estadoActivo ? '#fee2e2' : '#d1fae5', color: u.estadoActivo ? '#ef4444' : '#10b981', border: 'none' }}
-                                            onClick={() => handleToggleEstado(u.id)}
-                                        >
-                                            {u.estadoActivo ? 'DESACTIVAR' : 'ACTIVAR'}
-                                        </button>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={u.estadoActivo} 
+                                                onChange={() => handleToggleEstado(u.id)}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                        <span className={`user-status-label ${u.estadoActivo ? 'status-active' : 'status-inactive'}`}>
+                                            {u.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
+                                        </span>
                                     </div>
                                 </td>
                                 <td>
-                                    <button
-                                        className="btn btn-sm btn-secondary"
+                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                        <button 
+                                            className="action-icon-btn" 
+                                            title="Editar Usuario"
+                                            onClick={() => navigate(`/usuarios/editar/${u.id}`)}
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <button 
+                                            className="action-icon-btn" 
+                                            title="Ver Historial"
                                             onClick={() => {
-                                            setUsuarioSeleccionado(u);
-                                            setHistorialAbierto(true);
-                                        }}
-                                    >VER HISTORIAL</button>
+                                                setUsuarioParaHistorial(u);
+                                                setHistorialAbierto(true);
+                                            }}
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
-
-                        {historialAbierto && usuarioSeleccionado && (
-                            <ModalHistorialUsuario
-                                usuario={usuarioSeleccionado}
-                                alCerrar={() => {
-                                    setHistorialAbierto(false);
-                                    setUsuarioSeleccionado(null);
-                                }}
-                            />
-                        )}
-                        {usuariosFiltrados.length === 0 && (
-                            <tr>
-                                <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
-                                    No se encontraron usuarios.
-                                </td>
-                            </tr>
-                        )}
                     </tbody>
                 </table>
             </div>
+
+            {historialAbierto && usuarioParaHistorial && (
+                <ModalHistorialUsuario
+                    usuario={usuarioParaHistorial}
+                    alCerrar={() => {
+                        setHistorialAbierto(false);
+                        setUsuarioParaHistorial(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

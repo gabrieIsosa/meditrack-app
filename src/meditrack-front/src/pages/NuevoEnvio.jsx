@@ -38,7 +38,7 @@ function NuevoEnvio() {
       };
       
       await createEnvio(payload); 
-      navigate('/', { state: { success: true } });
+      navigate('/envios', { state: { success: true } });
     } catch (err) {
       setError(err.message || 'Error de conexión con el servidor.');
     }

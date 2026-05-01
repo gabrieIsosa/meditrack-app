@@ -10,7 +10,7 @@ import EditarEnvio from './pages/EditarEnvio';
 import Usuarios from './pages/Usuarios';
 import NuevoUsuario from './pages/NuevoUsuario';
 import EditarUsuario from './pages/EditarUsuario';
-
+import MainMenu from './pages/MainMenu';
 import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
@@ -21,11 +21,11 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route element={<ProtectedLayout />}>
-            <Route path="/"            element={<Home />} />
-            <Route path="/envios"            element={<Home />} />
+            <Route path="/" element={<MainMenu />} />
+            <Route path="/envios" element={<Home />} />
             <Route path="/detalle/:id" element={<DetalleEnvio />} />
-            <Route path="/envios/nuevo"       element={<ProtectedRoute roles={['SUPERVISOR','ADMINISTRADOR']}><NuevoEnvio /></ProtectedRoute>} />
-            <Route path="/envios/editar/:id"  element={<ProtectedRoute roles={['SUPERVISOR','ADMINISTRADOR']}><EditarEnvio /></ProtectedRoute>} />
+            <Route path="/envios/nuevo" element={<ProtectedRoute roles={['SUPERVISOR','ADMINISTRADOR']}><NuevoEnvio /></ProtectedRoute>} />
+            <Route path="/envios/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR','ADMINISTRADOR']}><EditarEnvio /></ProtectedRoute>} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/usuarios/nuevo" element={<NuevoUsuario />} />
             <Route path="/usuarios/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR','ADMINISTRADOR']}><EditarUsuario /></ProtectedRoute>} />

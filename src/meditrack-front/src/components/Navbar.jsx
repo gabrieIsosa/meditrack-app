@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout as apiLogout } from '../services/api';
+import logo from '../assets/logo.png';
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -24,9 +25,25 @@ function Navbar() {
       <div 
         className="navbar-brand" 
         onClick={() => navigate('/')} 
-        style={{ cursor: 'pointer' }}
+        style={{ 
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}
       >
-        MediTrack
+        <img 
+          src={logo} 
+          alt="MediTrack Logo" 
+          style={{ 
+            height: '35px', 
+            width: 'auto',
+            objectFit: 'contain'
+          }} 
+        />
+        <span style={{ fontWeight: 'bold', fontSize: '20px' }}>
+          MediTrack
+        </span>
       </div>
       
       <div className="navbar-user-section">
