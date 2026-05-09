@@ -1,25 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMedicamentos, deleteMedicamento } from '../services/api';
+import { inactivarMedicamento, getMedicamentos } from '../../services/api';
 
 function Medicamentos() {
     const [medicamentos, setMedicamentos] = useState([]);
     const [busqueda, setBusqueda] = useState('');
-    const [confirmId, setConfirmId] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         getMedicamentos().then(setMedicamentos).catch(console.error);
     }, []);
 
-    const handleEliminar = async (id) => {
+    const handleInactivar = async (id) => {
         try {
-            await deleteMedicamento(id);
-            setMedicamentos(prev => prev.filter(m => m.id !== id));
+            await inactivarMedicamento(id);
+            const data = await getMedicamentos();
+            setMedicamentos(data);
         } catch (error) {
             console.error(error);
-        } finally {
-            setConfirmId(null);
         }
     };
 
@@ -47,6 +45,9 @@ function Medicamentos() {
                         value={busqueda}
                         onChange={e => setBusqueda(e.target.value)}
                     />
+                    <button className="btn-new-shipment" onClick={() => navigate('/medicamentos/nuevoMedicamento')}>
+                        + NUEVO MEDICAMENTO
+                    </button>
                 </div>
 
                 <table>
@@ -57,6 +58,7 @@ function Medicamentos() {
                             <th>Laboratorio</th>
                             <th>Presentación</th>
                             <th>Stock</th>
+                            <th>Estado</th>
                             <th style={{ textAlign: 'center' }}>Acciones</th>
                         </tr>
                     </thead>
@@ -69,6 +71,21 @@ function Medicamentos() {
                                 <td>{m.presentacion}</td>
                                 <td>{m.stock} {m.unidad}</td>
                                 <td>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <label className="switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={m.estadoActivo} 
+                                                onChange={() => handleInactivar(m.id)}
+                                            />
+                                            <span className="slider"></span>
+                                        </label>
+                                        <span className={`user-status-label ${m.estadoActivo ? 'status-active' : 'status-inactive'}`}>
+                                            {m.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                                         <button
                                             className="action-icon-btn"
@@ -78,19 +95,6 @@ function Medicamentos() {
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
-                                            </svg>
-                                        </button>
-                                        <button
-                                            className="action-icon-btn"
-                                            title="Eliminar medicamento"
-                                            onClick={() => setConfirmId(m.id)}
-                                        >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                                <path d="M10 11v6"></path>
-                                                <path d="M14 11v6"></path>
-                                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
                                             </svg>
                                         </button>
                                     </div>
@@ -107,21 +111,6 @@ function Medicamentos() {
                     </tbody>
                 </table>
             </div>
-
-            {confirmId && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2>Eliminar medicamento</h2>
-                        <p style={{ color: '#6B7280', fontSize: '14px' }}>
-                            ¿Estás seguro de que querés eliminar este medicamento? Esta acción no se puede deshacer.
-                        </p>
-                        <div className="modal-actions">
-                            <button className="btn btn-secondary" onClick={() => setConfirmId(null)}>CANCELAR</button>
-                            <button className="btn btn-danger" onClick={() => handleEliminar(confirmId)}>ELIMINAR</button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

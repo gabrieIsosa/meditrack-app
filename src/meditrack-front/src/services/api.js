@@ -212,37 +212,75 @@ export async function updateUsuario(id, data) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || 'Error al actualizar usuario');
   }
-  return res.json();
+  return 
 }
 
 // --- Medicamentos (stubs — conectar cuando exista el modelo) ---
-
-const MOCK_MEDICAMENTOS = [
-  { id: 1, nombre: 'Ibuprofeno 400mg', principioActivo: 'Ibuprofeno', laboratorio: 'Bayer', presentacion: 'Comprimidos', stock: 500, unidad: 'mg' },
-  { id: 2, nombre: 'Amoxicilina 500mg', principioActivo: 'Amoxicilina', laboratorio: 'Pfizer', presentacion: 'Cápsulas', stock: 200, unidad: 'mg' },
-  { id: 3, nombre: 'Paracetamol 1g', principioActivo: 'Paracetamol', laboratorio: 'Genoma', presentacion: 'Comprimidos', stock: 800, unidad: 'mg' },
-];
-
 export async function getMedicamentos() {
-  return structuredClone(MOCK_MEDICAMENTOS);
+  const res = await fetch(`${BASE_URL}/api/medicamentos`, {
+    headers: { ...getAuthHeaders() },
+  });
+  await handleResponse(res);
+  if (!res.ok) throw new Error('Error al obtener medicamentos');
+  return res.json();
 }
 
 export async function getMedicamentoById(id) {
-  const m = MOCK_MEDICAMENTOS.find(m => String(m.id) === String(id));
-  if (!m) throw new Error('Medicamento no encontrado');
-  return structuredClone(m);
+  const res = await fetch(`${BASE_URL}/api/medicamentos/${id}`, {
+    headers: { ...getAuthHeaders() },
+  });
+
+  await handleResponse(res);
+  if (!res.ok) throw new Error('Error al obtener medicamentos');
+  return res.json();
+}
+
+export async function createMedicamento(data) {
+  const res = await fetch(`${BASE_URL}/api/medicamentos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+
+  await handleResponse(res);
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al crear medicamento');
+  }
+
+  return res.json();
 }
 
 export async function updateMedicamento(id, data) {
-  const idx = MOCK_MEDICAMENTOS.findIndex(m => String(m.id) === String(id));
-  if (idx === -1) throw new Error('Medicamento no encontrado');
-  MOCK_MEDICAMENTOS[idx] = { ...MOCK_MEDICAMENTOS[idx], ...data };
-  return structuredClone(MOCK_MEDICAMENTOS[idx]);
+  fetch(`${BASE_URL}/api/medicamentos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(data),
+  });
 }
 
-export async function deleteMedicamento(id) {
-  const idx = MOCK_MEDICAMENTOS.findIndex(m => String(m.id) === String(id));
-  if (idx !== -1) MOCK_MEDICAMENTOS.splice(idx, 1);
+export async function inactivarMedicamento(id) {
+  const res = await fetch(`${BASE_URL}/api/medicamentos/${id}/cambiarEstado`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify({}) 
+  });
+
+  await handleResponse(res);
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al cambiar estado');
+  }
+
+  return res.json();
 }
 
 export async function toggleEstadoUsuario(id) {
