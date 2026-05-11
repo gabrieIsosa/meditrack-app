@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getEnvioById, updateEstadoEnvio, cancelarEnvio } from '../services/api';
+import { getEnvioById, updateEstadoEnvio, cancelarEnvio, descargarEtiqueta } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ModalHistorial from '../components/ModalHistorial';
 import StatusLine from '../components/StatusLine';
@@ -192,7 +192,7 @@ function DetalleEnvio() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={getBadgeStyle(envio.estado)}>{envio.estado?.replace(/_/g, ' ')}</span>
               {envio.estado !== 'ENTREGADO' && envio.estado !== 'CANCELADO' && (
-                <button className="btn btn-primary btn-sm" onClick={abrirModalEstado}>▾</button>
+                <button className="btn btn-primary btn-sm" onClick={abrirModalEstado} style={{ fontSize: "10px", lineHeight: 1 }}>▼</button>
               )}
             </div>
           </div>
@@ -259,7 +259,10 @@ function DetalleEnvio() {
             </>
           )}
         </div>
-        <div style={{ position: 'absolute', bottom: '20px', right: '25px' }}>
+        <div style={{ position: 'absolute', bottom: '20px', right: '25px', display: 'flex', gap: '6px' }}>
+          <button className="btn btn-secondary" onClick={() => descargarEtiqueta(envio.id).catch(console.error)}>
+            GENERAR ETIQUETA
+          </button>
           <button className="btn btn-secondary" onClick={() => setHistorialAbierto(true)}>
             VER HISTORIAL
           </button>

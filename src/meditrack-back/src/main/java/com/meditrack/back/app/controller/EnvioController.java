@@ -5,7 +5,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +25,7 @@ import com.meditrack.back.app.model.Role;
 import com.meditrack.back.app.model.Sesion;
 import com.meditrack.back.app.service.AuthService;
 import com.meditrack.back.app.service.EnvioService;
+import com.meditrack.back.app.service.EtiquetaService;
 
 @RestController
 @RequestMapping("/api/envios")
@@ -31,10 +34,12 @@ public class EnvioController {
 
     private final EnvioService envioService;
     private final AuthService authService;
+    private final EtiquetaService etiquetaService;
 
-    public EnvioController(EnvioService envioService, AuthService authService) {
+    public EnvioController(EnvioService envioService, AuthService authService, EtiquetaService etiquetaService) {
         this.envioService = envioService;
         this.authService = authService;
+        this.etiquetaService = etiquetaService;
     }
 
     private Sesion autenticar(String authHeader) {
@@ -113,6 +118,25 @@ public class EnvioController {
         } catch (RuntimeException e) {
             if (e.getMessage().contains("no encontrado")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/etiqueta")
+    public ResponseEntity<?> descargarEtiqueta(@PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            autenticar(authHeader);
+            Envio envio = envioService.buscarPorId(id);
+            byte[] pdf = etiquetaService.generarEtiqueta(envio);
+            String filename = "etiqueta-" + envio.getId() + ".pdf";
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(pdf);
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Envío no encontrado"));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }

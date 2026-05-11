@@ -97,7 +97,7 @@ public class Medicamento {
         return this.stock;
     }
 
-    public void setLaboratorio(String laboratorio){
+    public void setLaboratorio(String laboratorio) {
         this.laboratorio = laboratorio;
     }
     
@@ -105,11 +105,12 @@ public class Medicamento {
         return this.laboratorio;
     }
 
-    public void setPrincipioActivo(String principio){
+    public void setPrincipioActivo(String principio) {
         this.principioActivo = principio;
     }
 
-    public String getPrincipioActivo(){
+    public String getPrincipioActivo() {
         return this.principioActivo;
     }
+    
 }

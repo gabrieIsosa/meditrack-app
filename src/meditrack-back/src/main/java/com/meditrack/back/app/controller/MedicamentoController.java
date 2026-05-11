@@ -111,4 +111,5 @@ public class MedicamentoController{
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
     }
+
 }

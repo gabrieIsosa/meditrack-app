@@ -76,6 +76,21 @@ export async function resetPassword(email, codigo, nuevaPassword) {
   return data;
 }
 
+export async function descargarEtiqueta(id) {
+  const res = await fetch(`${BASE_URL}/api/envios/${id}/etiqueta`, {
+    headers: { ...getAuthHeaders() },
+  });
+  await handleResponse(res);
+  if (!res.ok) throw new Error('Error al generar la etiqueta');
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `etiqueta-${id}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function getEnvios() {
   const res = await fetch(`${BASE_URL}/api/envios`, {
     headers: { ...getAuthHeaders() },

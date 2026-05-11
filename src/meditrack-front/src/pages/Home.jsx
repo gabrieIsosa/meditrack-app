@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { getEnvios } from '../services/api';
+import { getEnvios, descargarEtiqueta } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ModalHistorial from '../components/ModalHistorial';
 
@@ -265,7 +265,7 @@ function Home() {
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
                     <button 
                       className="action-icon-btn"
-                      title="Ver Detalle"
+                      title="Ver detalle"
                       onClick={() => navigate(`/detalle/${e.id}`)}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -273,14 +273,24 @@ function Home() {
                         <circle cx="12" cy="12" r="3"></circle>
                       </svg>
                     </button>
-                    <button 
+                    <button
                       className="action-icon-btn"
-                      title="Ver Historial"
+                      title="Ver historial"
                       onClick={() => setEnvioSeleccionado(e)}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
                         <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                    </button>
+                    <button
+                      className="action-icon-btn"
+                      title="Descargar etiqueta"
+                      onClick={() => descargarEtiqueta(e.id).catch(console.error)}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                        <line x1="7" y1="7" x2="7.01" y2="7"/>
                       </svg>
                     </button>
                   </div>
