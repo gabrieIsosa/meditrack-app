@@ -24,6 +24,7 @@ public class Envio {
     private String fechaCancelacion;
     private List<HistorialEstado> historial = new ArrayList<>();
     private String usuarioResponsable;
+    private String repartidorId;
     private String fechaCreacion;
     private String horaCreacion;
 
@@ -155,6 +156,14 @@ public class Envio {
 
     public void setUsuarioResponsable(String usuarioResponsable) { 
         this.usuarioResponsable = usuarioResponsable; 
+    }
+
+    public String getRepartidorId() { 
+        return repartidorId; 
+    }
+
+    public void setRepartidorId(String repartidorId) { 
+        this.repartidorId = repartidorId; 
     }
 
     public String getFechaCreacion() { 

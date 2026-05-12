@@ -48,7 +48,7 @@ class EnvioServiceTest {
         Map<String, String> body = Map.of("destinatario", "Test", "remitente", "Test");
         Envio envio = service.crear(body, USUARIO_TEST);
         
-        Envio actualizado = service.actualizarEstado(envio.getId(), EstadoEnvio.ASIGNADO, USUARIO_TEST);
+        Envio actualizado = service.actualizarEstado(envio.getId(), EstadoEnvio.ASIGNADO, USUARIO_TEST, "REP-123");
         
         assertEquals(EstadoEnvio.ASIGNADO, actualizado.getEstado());
         assertEquals(USUARIO_TEST, actualizado.getUsuarioResponsable());
@@ -57,7 +57,7 @@ class EnvioServiceTest {
     @Test
     void actualizarEstado_idInexistente_lanzaExcepcion() {
         assertThrows(RuntimeException.class, () -> 
-            service.actualizarEstado("NON-EXISTENT-ID", EstadoEnvio.EN_TRANSITO, USUARIO_TEST)
+            service.actualizarEstado("NON-EXISTENT-ID", EstadoEnvio.EN_TRANSITO, USUARIO_TEST, null)
         );
     }
 
@@ -76,16 +76,16 @@ class EnvioServiceTest {
         Map<String, String> body = Map.of("destinatario", "Test", "remitente", "Test");
         Envio envio = service.crear(body, USUARIO_TEST);
         
-        service.actualizarEstado(envio.getId(), EstadoEnvio.EN_PREPARACION, USUARIO_TEST);
+        service.actualizarEstado(envio.getId(), EstadoEnvio.EN_PREPARACION, USUARIO_TEST, null);
         assertEquals(EstadoEnvio.EN_PREPARACION, envio.getEstado());
         
-        service.actualizarEstado(envio.getId(), EstadoEnvio.EN_PUNTO_DE_ENTREGA, USUARIO_TEST);
+        service.actualizarEstado(envio.getId(), EstadoEnvio.EN_PUNTO_DE_ENTREGA, USUARIO_TEST, null);
         assertEquals(EstadoEnvio.EN_PUNTO_DE_ENTREGA, envio.getEstado());
         
-        service.actualizarEstado(envio.getId(), EstadoEnvio.INCIDENTE_REPORTADO, USUARIO_TEST);
+        service.actualizarEstado(envio.getId(), EstadoEnvio.INCIDENTE_REPORTADO, USUARIO_TEST, null);
         assertEquals(EstadoEnvio.INCIDENTE_REPORTADO, envio.getEstado());
         
-        service.actualizarEstado(envio.getId(), EstadoEnvio.CANCELADO, USUARIO_TEST);
+        service.actualizarEstado(envio.getId(), EstadoEnvio.CANCELADO, USUARIO_TEST, null);
         assertEquals(EstadoEnvio.CANCELADO, envio.getEstado());
     }
 }

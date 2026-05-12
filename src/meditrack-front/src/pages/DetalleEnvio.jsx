@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getEnvioById, updateEstadoEnvio, cancelarEnvio, descargarEtiqueta } from '../services/api';
+import { getEnvioById, updateEstadoEnvio, cancelarEnvio, getUsuarios, reasignarRepartidorEnvio, descargarEtiqueta } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ModalHistorial from '../components/ModalHistorial';
 import StatusLine from '../components/StatusLine';
@@ -42,12 +42,17 @@ function DetalleEnvio() {
   
   const [envio, setEnvio] = useState(null);
   const [error, setError] = useState('');
+  const [repartidores, setRepartidores] = useState([]);
+  
   const [modalAbierto, setModalAbierto] = useState(false);
   const [historialAbierto, setHistorialAbierto] = useState(false);
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [modalForm, setModalForm] = useState({ nuevoEstado: '', fecha: '', hora: '', usuario: '' });
-  const [modalError, setModalError] = useState('');
   const [cancelacionAbierta, setCancelacionAbierta] = useState(false);
+  const [modalReasignarAbierto, setModalReasignarAbierto] = useState(false);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  
+  const [modalForm, setModalForm] = useState({ nuevoEstado: '', fecha: '', hora: '', usuario: '', repartidorId: '' });
+  const [repartidorReasignar, setRepartidorReasignar] = useState('');
+  const [modalError, setModalError] = useState('');
 
   useEffect(() => {
     getEnvioById(id)
@@ -58,10 +63,17 @@ function DetalleEnvio() {
           nuevoEstado: data.estado, 
           fecha, 
           hora, 
-          usuario: user?.nombre || '' 
+          usuario: user?.nombre || '',
+          repartidorId: ''
         });
       })
       .catch(() => setError('Envío no encontrado.'));
+
+    getUsuarios()
+      .then(data => {
+        setRepartidores(data.filter(u => u.role === 'REPARTIDOR' && u.estadoActivo));
+      })
+      .catch(console.error);
 
     if (location.state?.editSuccess) {
       const showTimer = setTimeout(() => setShowSnackbar(true), 100);
@@ -80,7 +92,8 @@ function DetalleEnvio() {
       nuevoEstado: opcionesValidas.length > 0 ? opcionesValidas[0] : envio.estado, 
       fecha, 
       hora, 
-      usuario: user?.nombre || '' 
+      usuario: user?.nombre || '',
+      repartidorId: ''
     }));
     setModalError('');
     setModalAbierto(true);
@@ -104,13 +117,30 @@ function DetalleEnvio() {
   };
 
   const handleConfirmarEstado = async () => {
-    const { nuevoEstado } = modalForm;
+    const { nuevoEstado, fecha, hora, usuario, repartidorId } = modalForm;
+    
+    if (nuevoEstado === 'ASIGNADO' && !repartidorId) {
+      setModalError('Debe seleccionar un repartidor para asignar el envío.');
+      return;
+    }
+
     try {
-      const actualizado = await updateEstadoEnvio(id, nuevoEstado, modalForm.fecha, modalForm.hora, modalForm.usuario);
+      const actualizado = await updateEstadoEnvio(id, nuevoEstado, fecha, hora, usuario, repartidorId);
       setEnvio(actualizado);
       setModalAbierto(false);
     } catch (e) {
       setModalError(e.message);
+    }
+  };
+
+  const handleReasignar = async () => {
+    if (!repartidorReasignar) return;
+    try {
+      const actualizado = await reasignarRepartidorEnvio(id, repartidorReasignar);
+      setEnvio(actualizado);
+      setModalReasignarAbierto(false);
+    } catch (e) {
+      alert(e.message);
     }
   };
 
@@ -122,6 +152,12 @@ function DetalleEnvio() {
     } catch (e) {
       alert(e.message);
     }
+  };
+
+  const getNombreRepartidor = (repartidorId) => {
+    if (!repartidorId) return 'Sin asignar';
+    const rep = repartidores.find(r => r.id === repartidorId);
+    return rep ? `${rep.nombre}` : 'Repartidor no encontrado';
   };
 
   const getBadgeStyle = (estado) => {
@@ -232,7 +268,34 @@ function DetalleEnvio() {
           </div>
         </div>
 
-        <div style={{ marginTop: '10px', borderTop: '1px solid #E5E7EB', paddingTop: '20px' }}>
+        <div className="info-row-grid" style={{ marginTop: '10px', borderTop: '1px solid #E5E7EB', paddingTop: '20px', marginBottom: '0' }}>
+          <div className="detail-field" style={{ gridColumn: 'span 3' }}>
+            <label>REPARTIDOR ASIGNADO</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '5px' }}>
+              <span style={{ fontWeight: '600', fontSize: '15px' }}>
+                {getNombreRepartidor(envio.repartidorId)}
+              </span>
+              
+              {envio.repartidorId && (user?.role === 'SUPERVISOR' || user?.role === 'ADMINISTRADOR' || user?.role === 'OPERADOR') && (
+                <button 
+                  onClick={() => {
+                    setRepartidorReasignar(envio.repartidorId);
+                    setModalReasignarAbierto(true);
+                  }}
+                  style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#3b82f6', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', transition: 'all 0.2s' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                  </svg>
+                  CAMBIAR
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '20px', borderTop: '1px solid #E5E7EB', paddingTop: '20px' }}>
           <div className="detail-field">
             <label>OBSERVACIONES</label>
             <span>{envio.observaciones || '-'}</span>
@@ -301,10 +364,29 @@ function DetalleEnvio() {
                 )}
               </select>
             </div>
+
+            {modalForm.nuevoEstado === 'ASIGNADO' && (
+              <div className="form-group">
+                <label>Seleccionar repartidor *</label>
+                <select 
+                  value={modalForm.repartidorId} 
+                  onChange={e => setModalForm({...modalForm, repartidorId: e.target.value})}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                >
+                  <option value="">-- Seleccione un repartidor --</option>
+                  {repartidores.map(r => (
+                    <option key={r.id} value={r.id}>{r.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="form-group"><label>Fecha</label><input type="date" value={modalForm.fecha} onChange={e => setModalForm({...modalForm, fecha: e.target.value})} /></div>
             <div className="form-group"><label>Hora</label><input type="time" value={modalForm.hora} onChange={e => setModalForm({...modalForm, hora: e.target.value})} /></div>
             <div className="form-group"><label>Usuario</label><input value={modalForm.usuario} disabled className="input-locked" /></div>
-            {modalError && <p className="error-msg">{modalError}</p>}
+            
+            {modalError && <p className="error-msg" style={{ color: '#ef4444', fontWeight: 'bold' }}>{modalError}</p>}
+            
             <div className="modal-actions" style={{ marginTop: '20px' }}>
               <button 
                 className="btn btn-primary" 
@@ -314,6 +396,42 @@ function DetalleEnvio() {
                 CONFIRMAR
               </button>
               <button className="btn btn-secondary" onClick={() => setModalAbierto(false)}>CANCELAR</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalReasignarAbierto && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px' }}>
+            <h2 style={{ marginBottom: '10px' }}>Reasignar Repartidor</h2>
+            <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+              El envío mantendrá su estado actual, pero se actualizará el responsable de la entrega.
+            </p>
+            
+            <div className="form-group">
+              <label>Nuevo Repartidor</label>
+              <select 
+                value={repartidorReasignar} 
+                onChange={e => setRepartidorReasignar(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+              >
+                <option value="">-- Seleccione un repartidor --</option>
+                {repartidores.map(r => (
+                  <option key={r.id} value={r.id}>{r.nombre}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="modal-actions" style={{ marginTop: '25px' }}>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleReasignar} 
+                disabled={!repartidorReasignar || repartidorReasignar === envio.repartidorId}
+              >
+                REASIGNAR
+              </button>
+              <button className="btn btn-secondary" onClick={() => setModalReasignarAbierto(false)}>CANCELAR</button>
             </div>
           </div>
         </div>

@@ -112,7 +112,8 @@ public class EnvioController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Sin permisos para actualizar estados"));
             }
             EstadoEnvio nuevoEstado = EstadoEnvio.valueOf(body.get("estado"));
-            return ResponseEntity.ok(envioService.actualizarEstado(id, nuevoEstado, sesion.getNombre()));
+            String repartidorId = body.get("repartidorId");
+            return ResponseEntity.ok(envioService.actualizarEstado(id, nuevoEstado, sesion.getNombre(), repartidorId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Estado no válido"));
         } catch (RuntimeException e) {
@@ -123,21 +124,48 @@ public class EnvioController {
         }
     }
 
+    @PutMapping("/{id}/reasignar")
+    public ResponseEntity<?> reasignarRepartidor(@PathVariable String id,@RequestBody Map<String, String> body,@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            Sesion sesion = autenticar(authHeader);
+
+            if (sesion.getRole() == Role.REPARTIDOR) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Los repartidores no pueden reasignar envíos"));
+            }
+
+            String nuevoRepartidorId = body.get("repartidorId");
+
+            return ResponseEntity.ok(envioService.reasignarRepartidor(id, nuevoRepartidorId, sesion.getNombre()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/{id}/etiqueta")
-    public ResponseEntity<?> descargarEtiqueta(@PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<?> descargarEtiqueta(@PathVariable String id,@RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             autenticar(authHeader);
+
             Envio envio = envioService.buscarPorId(id);
+
             byte[] pdf = etiquetaService.generarEtiqueta(envio);
+
             String filename = "etiqueta-" + envio.getId() + ".pdf";
+
             return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .body(pdf);
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + filename + "\"")
+                    .body(pdf);
+
         } catch (RuntimeException e) {
+
             if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Envío no encontrado"));
             }
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
     }

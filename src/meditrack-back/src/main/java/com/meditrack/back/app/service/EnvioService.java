@@ -121,15 +121,41 @@ public class EnvioService {
         return envio;
     }
 
-    public Envio actualizarEstado(String id, EstadoEnvio nuevoEstado, String usuario) {
+    public Envio actualizarEstado(String id, EstadoEnvio nuevoEstado, String usuario, String repartidorId) {
         Envio envio = buscarPorId(id);
         EstadoEnvio estadoViejo = envio.getEstado();
+        
+        if (nuevoEstado == EstadoEnvio.ASIGNADO) {
+            if (repartidorId == null || repartidorId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Debe seleccionar un repartidor para pasar a estado ASIGNADO");
+            }
+            envio.setRepartidorId(repartidorId);
+        }
         
         if (estadoViejo != nuevoEstado) {
             envio.setEstado(nuevoEstado);
             String detalle = estadoViejo.name().replace("_", " ") + " → " + nuevoEstado.name().replace("_", " ");
+            if (nuevoEstado == EstadoEnvio.ASIGNADO) {
+                detalle += " (Repartidor ID: " + repartidorId + ")";
+            }
             registrarHistorial(envio, "CAMBIO_ESTADO", nuevoEstado, detalle, LocalDate.now().toString(), LocalTime.now().toString().substring(0, 5), usuario);
         }
+        return envio;
+    }
+
+    public Envio reasignarRepartidor(String id, String nuevoRepartidorId, String usuario) {
+        Envio envio = buscarPorId(id);
+
+        if (nuevoRepartidorId == null || nuevoRepartidorId.trim().isEmpty()) {
+            throw new IllegalArgumentException("El ID del nuevo repartidor es obligatorio");
+        }
+
+        String repartidorAnterior = envio.getRepartidorId() != null ? envio.getRepartidorId() : "Sin asignar";
+        envio.setRepartidorId(nuevoRepartidorId);
+
+        String detalle = "Cambio de repartidor: " + repartidorAnterior + " → " + nuevoRepartidorId;
+        registrarHistorial(envio, "REASIGNACION", envio.getEstado(), detalle, LocalDate.now().toString(), LocalTime.now().toString().substring(0, 5), usuario);
+
         return envio;
     }
 
