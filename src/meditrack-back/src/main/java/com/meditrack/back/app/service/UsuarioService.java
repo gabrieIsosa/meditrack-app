@@ -18,10 +18,10 @@ public class UsuarioService {
     private List<Usuario> usuarios = new ArrayList<>();
 
     public UsuarioService() {
-        usuarios.add(new Usuario("admin@meditrack.com", "Admin Principal", "admin123", Role.ADMINISTRADOR));
-        usuarios.add(new Usuario("supervisor@meditrack.com", "Admin MediTrack", "1234", Role.SUPERVISOR));
-        usuarios.add(new Usuario("operador@meditrack.com", "Carlos Ruiz", "1234", Role.OPERADOR));
-        usuarios.add(new Usuario("repartidor@meditrack.com", "Diego Torres", "1234", Role.REPARTIDOR));
+        usuarios.add(new Usuario("admin@meditrack.com", "Admin Principal", "12156236", "admin123", Role.ADMINISTRADOR));
+        usuarios.add(new Usuario("supervisor@meditrack.com", "Admin MediTrack", "30156256", "1234", Role.SUPERVISOR));
+        usuarios.add(new Usuario("operador@meditrack.com", "Carlos Ruiz", "42156236", "1234", Role.OPERADOR));
+        usuarios.add(new Usuario("repartidor@meditrack.com", "Diego Torres", "41156236", "1234", Role.REPARTIDOR));
     }
 
     public List<Usuario> listarTodos() {
@@ -55,6 +55,7 @@ public class UsuarioService {
         Usuario nuevo = new Usuario(
             datos.get("email"),
             datos.get("nombre"),
+            datos.get("dni"),
             datos.get("password"),
             rolNuevoUsuario
         );
@@ -86,14 +87,19 @@ public class UsuarioService {
         if (datos.containsKey("email") && !usuario.getEmail().equals(datos.get("email"))){
             usuario.addHistorial(new HistorialUsuario("Email", usuario.getEmail(), datos.get("email"), fechaModificacion, usuarioDelCambio));
             usuario.setEmail(datos.get("email"));
-        } 
+        }
+
+        if (datos.containsKey("dni") && !usuario.getDni().equals(datos.get("dni"))){
+            usuario.addHistorial(new HistorialUsuario("DNI", usuario.getDni(), datos.get("dni"), fechaModificacion, usuarioDelCambio));
+            usuario.setDni(datos.get("dni"));
+        }
 
         if (datos.containsKey("role") && usuario.getRole() != rolObjetivo){
             usuario.addHistorial(new HistorialUsuario("Role", usuario.getRole().toString(), rolObjetivo.toString(), fechaModificacion, usuarioDelCambio));
             usuario.setRole(rolObjetivo);
         } 
 
-        if (datos.containsKey("password") && !datos.get("password").trim().isEmpty() && usuario.getPassword().equals(datos.get("password"))) {
+        if (datos.containsKey("password") && !datos.get("password").trim().isEmpty() && !usuario.getPassword().equals(datos.get("password"))) {
             usuario.addHistorial(new HistorialUsuario("Password", usuario.getPassword(), datos.get("password"), fechaModificacion, usuarioDelCambio));
             usuario.setPassword(datos.get("password")); 
         }
@@ -123,6 +129,11 @@ public class UsuarioService {
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarios.stream()
                 .filter(u -> u.getEmail().equals(email))
+                .findFirst();
+    }
+    public Optional<Usuario> buscarPorDni(String dni) {
+        return usuarios.stream()
+                .filter(u -> u.getDni().equals(dni))
                 .findFirst();
     }
 

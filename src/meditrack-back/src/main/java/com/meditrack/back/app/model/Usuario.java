@@ -9,6 +9,7 @@ public class Usuario {
     private String id;
     private String email;
     private String nombre;
+    private String dni;
     private String password;
     private Role role;
     private boolean estadoActivo;
@@ -18,10 +19,11 @@ public class Usuario {
         this.estadoActivo = true;
     }
 
-    public Usuario(String email, String nombre, String password, Role role) {
+    public Usuario(String email, String nombre, String dni, String password, Role role) {
         this.id = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.email = email;
         this.nombre = nombre;
+        this.dni = dni;
         this.password = password;
         this.role = role;
         this.estadoActivo = true;
@@ -41,6 +43,14 @@ public class Usuario {
 
     public void setEmail(String email) { 
         this.email = email; 
+    }
+
+    public String getDni() { 
+        return dni; 
+    }
+
+    public void setDni(String dni) { 
+        this.dni = dni; 
     }
 
     public String getNombre() { 

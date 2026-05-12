@@ -86,6 +86,11 @@ function EditarUsuario() {
                     </div>
 
                     <div className="form-group">
+                        <label>DNI *</label>
+                        <input name="dni" value={form.dni || ''} onChange={handleChange} placeholder="Sin puntos ni espacios"/>
+                    </div>
+                    
+                    <div className="form-group">
                         <label>Rol *</label>
                         <select
                             name="role"

@@ -83,6 +83,11 @@ function NuevoUsuario() {
             </div>
 
             <div className="form-group">
+                <label>DNI *</label>
+                <input name="dni" value={form.dni || ''} onChange={handleChange} placeholder="Sin puntos ni espacios"/>
+            </div>
+            
+            <div className="form-group">
                 <label>Rol *</label>
                 <select name="role" value={form.role} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}>
                 <option value="">-- Seleccionar Rol --</option>

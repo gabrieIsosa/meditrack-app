@@ -1,14 +1,12 @@
 package com.meditrack.back.app.service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 import org.springframework.stereotype.Service;
+
 import com.meditrack.back.app.config.JwtUtil;
-import com.meditrack.back.app.model.Role;
 import com.meditrack.back.app.model.Sesion;
 import com.meditrack.back.app.model.Usuario;
 
@@ -17,12 +15,6 @@ public class AuthService {
 
     private final JwtUtil jwtUtil;
     private final UsuarioService usuarioService;
-
-    private final List<Usuario> usuarios = new ArrayList<>(List.of(
-        new Usuario("supervisor@meditrack.com", "Admin MediTrack", "1234", Role.SUPERVISOR),
-        new Usuario("operador@meditrack.com",   "Carlos Ruiz",     "1234", Role.OPERADOR),
-        new Usuario("repartidor@meditrack.com", "Diego Torres",    "1234", Role.REPARTIDOR)
-    ));
     private final Map<String, Map<String, Object>> resetCodes = new HashMap<>();
 
     public AuthService(JwtUtil jwtUtil, UsuarioService usuarioService) {
@@ -33,13 +25,17 @@ public class AuthService {
     public Map<String, String> login(String email, String password) {
         Usuario usuario = usuarioService.buscarPorEmail(email)
             .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+            
         if (!usuario.getPassword().equals(password)) {
             throw new RuntimeException("Credenciales inválidas");
         }
+        
         if (!usuario.isEstadoActivo()) {
             throw new RuntimeException("Usuario inactivo. Contacte a un administrador.");
         }
+        
         String token = jwtUtil.generarToken(usuario.getEmail(), usuario.getNombre(), usuario.getRole());
+        
         return Map.of(
             "token",  token,
             "email",  usuario.getEmail(),
@@ -53,7 +49,8 @@ public class AuthService {
     }
 
     public Map<String, String> solicitarReset(String email) {
-        boolean existe = usuarios.stream().anyMatch(u -> u.getEmail().equals(email));
+        boolean existe = usuarioService.buscarPorEmail(email).isPresent();
+        
         if (!existe) {
             throw new RuntimeException("El correo no se encuentra registrado en la base de datos");
         }
@@ -64,6 +61,7 @@ public class AuthService {
         resetCodes.put(email, Map.of("code", codigo, "expiresAt", expira));
 
         System.out.println("[MOCK EMAIL] Codigo para " + email + ": " + codigo);
+        
         return Map.of(
             "mensaje", "Codigo enviado (mock)",
             "codigo", codigo
@@ -78,6 +76,7 @@ public class AuthService {
         }
 
         long expira = (long) datos.get("expiresAt");
+        
         if (System.currentTimeMillis() > expira) {
             resetCodes.remove(email);
             throw new RuntimeException("El codigo ha expirado");
@@ -91,14 +90,12 @@ public class AuthService {
     public void resetearPassword(String email, String codigo, String nuevaPassword) {
         verificarCodigo(email, codigo);
 
-        Usuario usuario = usuarios.stream()
-            .filter(u -> u.getEmail().equals(email))
-            .findFirst()
+        Usuario usuario = usuarioService.buscarPorEmail(email)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         usuario.setPassword(nuevaPassword);
         resetCodes.remove(email);
+        
         System.out.println("[TRAZABILIDAD] Contrasena reseteada para: " + email);
     }
-    
 }
