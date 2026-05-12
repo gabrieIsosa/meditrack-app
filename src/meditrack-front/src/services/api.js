@@ -144,16 +144,34 @@ export async function updateEnvio(id, data) {
   return res.json();
 }
 
-export async function updateEstadoEnvio(id, estado, fecha, hora, usuario) {
+export async function updateEstadoEnvio(id, estado, fecha, hora, usuario, repartidorId = null) {
+  const bodyData = { estado, fecha, hora, usuario };
+  if (repartidorId) {
+    bodyData.repartidorId = repartidorId;
+  }
   const res = await fetch(`${BASE_URL}/api/envios/${id}/estado`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify({ estado, fecha, hora, usuario }),
+    body: JSON.stringify(bodyData),
   });
   await handleResponse(res);
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error || 'Error al actualizar estado');
+  }
+  return res.json();
+}
+
+export async function reasignarRepartidorEnvio(id, repartidorId) {
+  const res = await fetch(`${BASE_URL}/api/envios/${id}/reasignar`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify({ repartidorId }),
+  });
+  await handleResponse(res);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al reasignar repartidor');
   }
   return res.json();
 }
