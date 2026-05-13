@@ -270,32 +270,42 @@ export async function getMedicamentoById(id) {
   return res.json();
 }
 
-export async function createMedicamento(data) {
-  const res = await fetch(`${BASE_URL}/api/medicamentos`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(data),
-  });
+export async function createMedicamento(formData) {
+  const response = await fetch(`${BASE_URL}/api/medicamentos`,
+    {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders()
+      },
+      body: formData,
+    }
+  );
 
-  await handleResponse(res);
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Error al crear medicamento');
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Error actualizando medicamento');
   }
 
-  return res.json();
+  return response.json();
 }
 
-export async function updateMedicamento(id, data) {
-  fetch(`${BASE_URL}/api/medicamentos/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify(data),
-  });
+export async function updateMedicamento(id, formData) {
+  const response = await fetch(`${BASE_URL}/api/medicamentos/${id}`,
+    {
+      method: 'PUT',
+      headers: {
+        ...getAuthHeaders()
+      },
+      body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Error actualizando medicamento');
+  }
+
+  return response.json();
 }
 
 export async function inactivarMedicamento(id) {

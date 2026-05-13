@@ -13,9 +13,10 @@ public class Medicamento {
     private String principioActivo;
     private boolean estadoActivo;
     private boolean cadenaFrio;
+    private String imagenUrl;
 
     public Medicamento(String nombre, String descripcion, String presentacion, int stock, String unidadMedida,
-            String laboratorio, String principioActivo, boolean cadenaFrio) {
+            String laboratorio, String principioActivo, boolean cadenaFrio, String imagenUrl) {
         this.id = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.descripcion = descripcion;
         this.nombre = nombre;
@@ -26,6 +27,7 @@ public class Medicamento {
         this.laboratorio = laboratorio;
         this.principioActivo = principioActivo;
         this.cadenaFrio = cadenaFrio;
+        this.imagenUrl = imagenUrl;
     }
 
     public Medicamento() {
@@ -112,5 +114,13 @@ public class Medicamento {
     public String getPrincipioActivo() {
         return this.principioActivo;
     }
-    
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
+    }
+
 }

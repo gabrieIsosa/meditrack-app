@@ -17,9 +17,18 @@ function NuevoMedicamento() {
     });
 
     const [error, setError] = useState('');
+    const [preview, setPreview] = useState('');
+    const [imagen, setImagen] = useState(null);
 
-    const handleChange = e =>
-        setForm({ ...form, [e.target.name]: e.target.value });
+    const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setImagen(file);
+        setPreview( URL.createObjectURL(file) );
+    };
 
     const handleGuardar = async () => {
         if (!form.nombre?.trim() || !form.principioActivo?.trim()) {
@@ -28,7 +37,17 @@ function NuevoMedicamento() {
         }
 
         try {
-            await createMedicamento(form);
+            const formData = new FormData();
+
+            Object.keys(form).forEach(key => {
+                if (form[key] != null) 
+                    formData.append(key, form[key]);
+            });
+
+            if (imagen) 
+                formData.append("imagen", imagen);
+            
+            await createMedicamento(formData);
             navigate('/medicamentos');
         } catch (err) {
             setError(err.message || 'Error al crear medicamento.');
@@ -57,6 +76,71 @@ function NuevoMedicamento() {
                 )}
 
                 <div className="form-grid">
+
+
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '20px',
+                        marginBottom: '30px',
+                        paddingBottom: '20px',
+                        borderBottom: '1px solid #E5E7EB'
+                    }}>
+
+                        <div style={{
+                            width: '110px',
+                            height: '110px',
+                            borderRadius: '18px',
+                            overflow: 'hidden',
+                            border: '1px solid #E5E7EB',
+                            background: '#F9FAFB',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+
+                            <img
+                                src={ preview || 'https://placehold.co/200x200?text=%F0%9F%92%8A' }
+                                alt="Medicamento"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                        </div>
+
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111827' }}>
+                                {form.nombre || 'Nuevo medicamento'}
+                            </h2>
+
+                            <p style={{ marginTop: '6px', color: '#6B7280' }}>
+                                {form.principioActivo || 'Principio activo'}
+                            </p>
+
+                            <label
+                                style={{
+                                    display: 'inline-block',
+                                    marginTop: '12px',
+                                    padding: '10px 14px',
+                                    background: '#10B981',
+                                    color: 'white',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                Subir imagen
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    hidden
+                                    onChange={handleImageChange}
+                                />
+                            </label>
+                        </div>
+                    </div>
+
+
+
 
                     <div className="form-group">
                         <label>Nombre *</label>

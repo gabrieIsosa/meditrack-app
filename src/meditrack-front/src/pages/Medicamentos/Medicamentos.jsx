@@ -53,8 +53,7 @@ function Medicamentos() {
                 <table>
                     <thead>
                         <tr>
-                            <th>Nombre</th>
-                            <th>Principio Activo</th>
+                            <th>Medicamento</th>
                             <th>Laboratorio</th>
                             <th>Presentación</th>
                             <th>Stock</th>
@@ -64,18 +63,59 @@ function Medicamentos() {
                     </thead>
                     <tbody>
                         {filtrados.map(m => (
-                            <tr key={m.id}>
-                                <td style={{ fontWeight: 'bold' }}>{m.nombre}</td>
-                                <td>{m.principioActivo}</td>
+                            <tr key={m.id}
+                                style={{ transition: 'background 0.2s' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#deffe4'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
+                            >
+                                <td>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px'
+                                    }}>
+                                        <img
+                                            src={
+                                                m.imagenUrl
+                                                    ? `http://localhost:8080${m.imagenUrl}`
+                                                    : '/placeholder-medicamento.png'
+                                            }
+                                            alt={m.nombre}
+                                            style={{
+                                                width: '42px',
+                                                height: '42px',
+                                                borderRadius: '10px',
+                                                objectFit: 'cover',
+                                                border: '1px solid #E5E7EB',
+                                                background: '#F9FAFB'
+                                            }}
+                                        />
+                                        <div>
+                                            <div style={{
+                                                fontWeight: '700',
+                                                color: '#111827'
+                                            }}>
+                                                {m.nombre}
+                                            </div>
+
+                                            <div style={{
+                                                fontSize: '13px',
+                                                color: '#6B7280'
+                                            }}>
+                                                {m.principioActivo}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td>{m.laboratorio}</td>
                                 <td>{m.presentacion}</td>
                                 <td>{m.stock} {m.unidad}</td>
                                 <td>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <label className="switch">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={m.estadoActivo} 
+                                            <input
+                                                type="checkbox"
+                                                checked={m.estadoActivo}
                                                 onChange={() => handleInactivar(m.id)}
                                             />
                                             <span className="slider"></span>

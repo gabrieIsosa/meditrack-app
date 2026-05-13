@@ -14,8 +14,8 @@ public class MedicamentoService {
     private List<Medicamento> medicamentos = new ArrayList<>();
 
     public MedicamentoService() {
-        medicamentos.add(new Medicamento("Ibuprofeno 400mg", "test", "Comprimidos", 500, "mg", "Bayer", "Ibuprofeno", true));
-        medicamentos.add(new Medicamento("Amoxicilina 500mg", "test", "Cápsulas", 200, "mg", "Pfizer", "Amoxicilina", true));
+        medicamentos.add(new Medicamento("Ibuprofeno 400mg", "test", "Comprimidos", 500, "mg", "Bayer", "Ibuprofeno", true, "/uploads/6a84ff89-02b6-49a4-b722-5a55a3a7b175_actron_400_1.jpg"));
+        medicamentos.add(new Medicamento("Amoxicilina 500mg", "test", "Cápsulas", 200, "mg", "Pfizer", "Amoxicilina", true, "/uploads/c3521887-b0a1-4af3-918a-4b1a22a28108_F_000001106329.jpg"));
     }
 
     public List<Medicamento> listarTodos() {
@@ -61,5 +61,8 @@ public class MedicamentoService {
         medicamento.setStock(Integer.parseInt(body.get("stock")));
         medicamento.setLaboratorio(body.get("laboratorio"));
         medicamento.setCadenaFrio(Boolean.getBoolean(body.get("cadenaFrio")));
+
+        if (body.get("imagenUrl") != null && !body.get("imagenUrl").isBlank()) 
+            medicamento.setImagenUrl(body.get("imagenUrl"));
     }
 }
