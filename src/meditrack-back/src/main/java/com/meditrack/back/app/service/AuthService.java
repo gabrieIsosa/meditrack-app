@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.meditrack.back.app.config.JwtUtil;
 import com.meditrack.back.app.model.Sesion;
 import com.meditrack.back.app.model.Usuario;
+import com.meditrack.back.app.model.Role;
 import com.meditrack.back.app.repository.UsuarioRepository;
 
 @Service
@@ -17,7 +18,9 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
+    
     private final Map<String, Map<String, Object>> resetCodes = new HashMap<>();
+    private final Map<String, String> codigos2faActivos = new HashMap<>();
 
     public AuthService(JwtUtil jwtUtil, UsuarioService usuarioService, UsuarioRepository usuarioRepository) {
         this.jwtUtil = jwtUtil;
@@ -25,7 +28,7 @@ public class AuthService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public Map<String, String> login(String email, String password) {
+    public Map<String, Object> login(String email, String password) {
         Usuario usuario = usuarioService.buscarPorEmail(email)
             .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
             
@@ -36,10 +39,46 @@ public class AuthService {
         if (!usuario.isEstadoActivo()) {
             throw new RuntimeException("Usuario inactivo. Contacte a un administrador.");
         }
+
+        if (usuario.getRole() == Role.ADMINISTRADOR) {
+            String codigo2fa = String.format("%06d", new Random().nextInt(999999));
+            codigos2faActivos.put(usuario.getEmail(), codigo2fa);
+            
+            return Map.of(
+                "require2fa", true,
+                "email", usuario.getEmail(),
+                "mockCode", codigo2fa 
+            );
+        }
         
         String token = jwtUtil.generarToken(usuario.getId(), usuario.getEmail(), usuario.getNombre(), usuario.getRole());
         
         return Map.of(
+            "require2fa", false,
+            "token",  token,
+            "id",     usuario.getId(),
+            "email",  usuario.getEmail(),
+            "nombre", usuario.getNombre(),
+            "role",   usuario.getRole().name()
+        );
+    }
+
+    public Map<String, Object> verificar2fa(String email, String codigo) {
+        String codigoGuardado = codigos2faActivos.get(email);
+        
+        if (codigoGuardado == null || !codigoGuardado.equals(codigo)) {
+            throw new RuntimeException("Código de seguridad incorrecto o expirado");
+        }
+
+        codigos2faActivos.remove(email);
+
+        Usuario usuario = usuarioService.buscarPorEmail(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        String token = jwtUtil.generarToken(usuario.getId(), usuario.getEmail(), usuario.getNombre(), usuario.getRole());
+
+        return Map.of(
+            "require2fa", false,
             "token",  token,
             "id",     usuario.getId(),
             "email",  usuario.getEmail(),

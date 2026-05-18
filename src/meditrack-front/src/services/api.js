@@ -43,6 +43,21 @@ export async function logout() {
   }).catch(() => { });
 }
 
+export const verify2fa = async (email, codigo) => {
+    const response = await fetch(`${BASE_URL}/auth/verify-2fa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, codigo }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al verificar el código 2FA');
+    }
+
+    return response.json();
+};
+
 export async function forgotPassword(email) {
   const res = await fetch(`${BASE_URL}/auth/forgot-password`, {
     method: 'POST',

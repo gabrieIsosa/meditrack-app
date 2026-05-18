@@ -22,7 +22,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         try {
-            Map<String, String> respuesta = authService.login(body.get("email"), body.get("password"));
+            Map<String, Object> respuesta = authService.login(body.get("email"), body.get("password"));
+            return ResponseEntity.ok(respuesta);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<?> verify2fa(@RequestBody Map<String, String> body) {
+        try {
+            Map<String, Object> respuesta = authService.verificar2fa(body.get("email"), body.get("codigo"));
             return ResponseEntity.ok(respuesta);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
@@ -63,5 +73,4 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-
 }

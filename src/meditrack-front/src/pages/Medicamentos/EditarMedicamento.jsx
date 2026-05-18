@@ -93,7 +93,9 @@ function EditarMedicamento() {
                             src={
                                 preview ||
                                 (form.imagenUrl
-                                    ? `http://localhost:8080${form.imagenUrl}`
+                                    ? (form.imagenUrl.startsWith('http')
+                                        ? form.imagenUrl
+                                        : `http://localhost:8080${form.imagenUrl}`)
                                     : 'https://placehold.co/200x200?text=%F0%9F%92%8A')
                             }
                             alt="Medicamento"

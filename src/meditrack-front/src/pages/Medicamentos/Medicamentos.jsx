@@ -77,7 +77,9 @@ function Medicamentos() {
                                         <img
                                             src={
                                                 m.imagenUrl
-                                                    ? `http://localhost:8080${m.imagenUrl}`
+                                                    ? (m.imagenUrl.startsWith('http') 
+                                                        ? m.imagenUrl 
+                                                        : `http://localhost:8080${m.imagenUrl}`)
                                                     : '/placeholder-medicamento.png'
                                             }
                                             alt={m.nombre}
