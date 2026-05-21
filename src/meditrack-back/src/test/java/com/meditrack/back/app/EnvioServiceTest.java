@@ -57,7 +57,6 @@ class EnvioServiceTest {
         Envio inputEnvio = new Envio();
         inputEnvio.setDestinatario("Juan Pérez");
         inputEnvio.setRemitente("Laboratorio Central");
-        inputEnvio.setDireccionEntrega("Calle Falsa 123");
         inputEnvio.setPrioridad("ALTA");
         inputEnvio.setDetalles(List.of(detalleSimulado));
         

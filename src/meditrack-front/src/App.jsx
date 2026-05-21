@@ -2,23 +2,26 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedLayout from './components/ProtectedLayout';
 import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Home from './pages/Home';
-import NuevoEnvio from './pages/NuevoEnvio';
-import DetalleEnvio from './pages/DetalleEnvio';
-import EditarEnvio from './pages/EditarEnvio';
-import Usuarios from './pages/Usuarios';
-import NuevoUsuario from './pages/NuevoUsuario';
-import EditarUsuario from './pages/EditarUsuario';
-import MainMenu from './pages/MainMenu';
-import ForgotPassword from './pages/ForgotPassword';
+import Login from './pages/Home/Login';
+import Home from './pages/Home/Home';
+import NuevoEnvio from './pages/Envio/NuevoEnvio';
+import DetalleEnvio from './pages/Envio/DetalleEnvio';
+import EditarEnvio from './pages/Envio/EditarEnvio';
+import Usuarios from './pages/Usuarios/Usuarios';
+import NuevoUsuario from './pages/Usuarios/NuevoUsuario';
+import EditarUsuario from './pages/Usuarios/EditarUsuario';
+import MainMenu from './pages/Home/MainMenu';
+import ForgotPassword from './pages/Home/ForgotPassword';
 import Medicamentos from './pages/Medicamentos/Medicamentos';
 import EditarMedicamento from './pages/Medicamentos/EditarMedicamento';
 import NuevoMedicamento from './pages/Medicamentos/NuevoMedicamento';
-import TrackingPublico from './pages/TrackingPublico';
+import TrackingPublico from './pages/Envio/TrackingPublico';
 import Rutas from './pages/Rutas/Rutas';
 import NuevaRuta from './pages/Rutas/NuevaRuta';
 import DetalleRuta from './pages/Rutas/DetalleRuta';
+import Clientes from './pages/Clientes/Clientes';
+import NuevoCliente from './pages/Clientes/NuevoCliente';
+import EditarCliente from './pages/Clientes/EditarCliente';
 
 function App() {
   return (
@@ -43,6 +46,9 @@ function App() {
             <Route path="/medicamentos" element={<Medicamentos />} />
             <Route path="/medicamentos/editar/:id" element={<EditarMedicamento />} />
             <Route path="/medicamentos/nuevoMedicamento" element={<NuevoMedicamento />} />
+            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/clientes/nuevo" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevoCliente /></ProtectedRoute>} />
+            <Route path="/clientes/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}> <EditarCliente /></ProtectedRoute>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

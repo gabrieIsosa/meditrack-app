@@ -56,7 +56,6 @@ class RutaServiceTest {
         Envio envio = new Envio();
         envio.setId(id);
         envio.setEstado(EstadoEnvio.PENDIENTE);
-        envio.setDireccionEntrega("Av. Corrientes 1234");
         return envio;
     }
 

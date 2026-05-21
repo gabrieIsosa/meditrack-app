@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { getEnvios, descargarEtiqueta } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import ModalHistorial from '../components/ModalHistorial';
+import { getEnvios, descargarEtiqueta } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import ModalHistorial from '../../components/ModalHistorial';
 
 const ESTADO_COLORS = {
   PENDIENTE: '#6b7280',

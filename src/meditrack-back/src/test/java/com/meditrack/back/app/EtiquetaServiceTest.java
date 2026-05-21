@@ -81,7 +81,6 @@ class EtiquetaServiceTest {
         Envio envio = new Envio();
         envio.setId("TEST1234");
         envio.setDestinatario("Juan Pérez");
-        envio.setDireccionEntrega("Calle Falsa 123, Buenos Aires");
         envio.setOrigen("Córdoba");
         envio.setDestino("Buenos Aires");
         envio.setFechaEstimada("2026-05-20");

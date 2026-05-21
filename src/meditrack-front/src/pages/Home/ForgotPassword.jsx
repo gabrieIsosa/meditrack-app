@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { forgotPassword, verifyCode, resetPassword } from '../services/api';
+import { forgotPassword, verifyCode, resetPassword } from '../../services/api';
 
 function ForgotPassword() {
   const navigate = useNavigate();

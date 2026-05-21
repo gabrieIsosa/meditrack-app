@@ -60,6 +60,10 @@ public class EnvioService {
         nuevo.setUsuarioResponsable(usuario);
         nuevo.setFechaCreacion(LocalDate.now().toString());
         nuevo.setHoraCreacion(LocalTime.now().toString().substring(0, 5));
+        nuevo.setLatitudOrigen(nuevo.getLatitudOrigen());
+        nuevo.setLongitudOrigen(nuevo.getLongitudOrigen());
+        nuevo.setLatitudDestino(nuevo.getLatitudDestino());
+        nuevo.setLongitudDestino(nuevo.getLongitudDestino());
 
         if (nuevo.getDetalles() != null) {
             for (DetalleEnvio detalle : nuevo.getDetalles()) {
@@ -94,13 +98,16 @@ public class EnvioService {
 
         envio.setRemitente(datosNuevos.getRemitente());
         envio.setDestinatario(datosNuevos.getDestinatario());
-        envio.setDireccionEntrega(datosNuevos.getDireccionEntrega());
         envio.setOrigen(datosNuevos.getOrigen());
         envio.setDestino(datosNuevos.getDestino());
         envio.setFechaEstimada(datosNuevos.getFechaEstimada());
         envio.setDescripcionCarga(datosNuevos.getDescripcionCarga());
         envio.setPrioridad(datosNuevos.getPrioridad());
         envio.setObservaciones(datosNuevos.getObservaciones());
+        envio.setLatitudOrigen(datosNuevos.getLatitudOrigen());
+        envio.setLongitudOrigen(datosNuevos.getLongitudOrigen());
+        envio.setLatitudDestino(datosNuevos.getLatitudDestino());
+        envio.setLongitudDestino(datosNuevos.getLongitudDestino());
 
         if (datosNuevos.getDetalles() != null) {
             List<DetalleEnvio> detallesActuales = envio.getDetalles();

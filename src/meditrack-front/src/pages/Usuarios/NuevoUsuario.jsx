@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createUsuario } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { createUsuario } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const FORM_INICIAL = {
     nombre: '',

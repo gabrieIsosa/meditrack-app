@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { getTrackingPublico } from "../services/api";
-import Navbar from '../components/Navbar';
+import { getTrackingPublico } from "../../services/api";
+import Navbar from '../../components/Navbar';
 
 const PASOS =[
     {key: 'PENDIENTE', label: 'PENDIENTE'},

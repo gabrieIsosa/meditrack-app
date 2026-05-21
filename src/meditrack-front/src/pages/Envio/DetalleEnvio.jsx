@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getEnvioById, updateEstadoEnvio, cancelarEnvio, getUsuarios, reasignarRepartidorEnvio, descargarEtiqueta, getMedicamentos } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import ModalHistorial from '../components/ModalHistorial';
-import StatusLine from '../components/StatusLine';
-import ModalCancelacion from '../components/ModalCancelacion';
+import { getEnvioById, updateEstadoEnvio, cancelarEnvio, getUsuarios, reasignarRepartidorEnvio, descargarEtiqueta, getMedicamentos } from '../../services/api';
+import ModalHistorial from '../../components/ModalHistorial';
+import StatusLine from '../../components/StatusLine';
+import ModalCancelacion from '../../components/ModalCancelacion';
+import { useAuth } from '../../context/AuthContext';
 
 const ESTADO_COLORS = {
   PENDIENTE: '#6b7280',

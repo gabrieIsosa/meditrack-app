@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getUsuarioById, updateUsuario } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { getUsuarioById, updateUsuario } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 function EditarUsuario() {
     const { id } = useParams();

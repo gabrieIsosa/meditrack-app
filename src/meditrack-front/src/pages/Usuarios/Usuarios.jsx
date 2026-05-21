@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { getUsuarios, toggleEstadoUsuario } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import ModalHistorialUsuario from '../components/ModalHistorialUsuario';
+import { getUsuarios, toggleEstadoUsuario } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import ModalHistorialUsuario from '../../components/ModalHistorialUsuario';
 
 const ROLE_COLORS = {
 ADMINISTRADOR: '#8b5cf6',

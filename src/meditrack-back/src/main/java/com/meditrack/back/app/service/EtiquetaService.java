@@ -97,7 +97,6 @@ public class EtiquetaService {
             .setMarginTop(4);
 
         agregarFila(tabla, "Destinatario", envio.getDestinatario());
-        agregarFila(tabla, "Dirección", envio.getDireccionEntrega());
         agregarFila(tabla, "Origen", envio.getOrigen());
         agregarFila(tabla, "Destino", envio.getDestino());
         agregarFila(tabla, "Fecha estimada", envio.getFechaEstimada());

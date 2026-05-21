@@ -25,9 +25,6 @@ public class Envio {
     @Column(nullable = false)
     private String destinatario;
 
-    @Column(name = "direccion_entrega", nullable = false)
-    private String direccionEntrega;
-
     @Column(nullable = false)
     private String origen;
 
@@ -69,6 +66,18 @@ public class Envio {
     @Column(name = "hora_creacion")
     private String horaCreacion;
 
+    @Column(name = "latitud_origen")
+    private Double latitudOrigen;
+
+    @Column(name = "longitud_origen")
+    private Double longitudOrigen;
+
+    @Column(name = "latitud_destino")
+    private Double latitudDestino;
+
+    @Column(name = "longitud_destino")
+    private Double longitudDestino;
+
     @OneToMany(mappedBy = "envio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HistorialEstado> historial = new ArrayList<>();
 
@@ -78,12 +87,11 @@ public class Envio {
     public Envio() {
     }
 
-    public Envio(String id, String remitente, String destinatario, String direccionEntrega, String origen, String destino,
+    public Envio(String id, String remitente, String destinatario, String origen, String destino,
                  String fechaEstimada, String descripcionCarga, String observaciones, EstadoEnvio estado, String usuario) {
         this.id = id;
         this.remitente = remitente;
         this.destinatario = destinatario;
-        this.direccionEntrega = direccionEntrega;
         this.origen = origen;
         this.destino = destino;
         this.fechaEstimada = fechaEstimada;
@@ -115,14 +123,6 @@ public class Envio {
 
     public void setDestinatario(String v) { 
         this.destinatario = v; 
-    }
-
-    public String getDireccionEntrega() { 
-        return direccionEntrega; 
-    }
-
-    public void setDireccionEntrega(String v) { 
-        this.direccionEntrega = v; 
     }
 
     public String getOrigen() { 
@@ -273,4 +273,37 @@ public class Envio {
     public void setFechaCancelacion(String fechaCancelacion) { 
         this.fechaCancelacion = fechaCancelacion; 
     }
+
+    public Double getLatitudOrigen() {
+        return latitudOrigen;
+    }
+
+    public void setLatitudOrigen(Double latitudOrigen) {
+        this.latitudOrigen = latitudOrigen;
+    }
+
+    public Double getLongitudOrigen() {
+        return longitudOrigen;
+    }
+
+    public void setLongitudOrigen(Double longitudOrigen) {
+        this.longitudOrigen = longitudOrigen;
+    }
+
+    public Double getLatitudDestino() {
+        return latitudDestino;
+    }
+
+    public void setLatitudDestino(Double latitudDestino) {
+        this.latitudDestino = latitudDestino;
+    }
+
+    public Double getLongitudDestino() {
+        return longitudDestino;
+    }
+
+    public void setLongitudDestino(Double longitudDestino) {
+        this.longitudDestino = longitudDestino;
+    }
+
 }
