@@ -10,7 +10,8 @@ import {
   Pill,
   Hospital,
   NotepadText,
-  History
+  History,
+  CircleAlert
 } from 'lucide-react';
 
 const MainMenu = () => {
@@ -44,10 +45,9 @@ const MainMenu = () => {
     },
     {
       title: "Reportes",
-      rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'OPERADOR'],
+      rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'],
       items: [
-        { label: "Incidencias", icon: <ShieldAlert size={32} />, path: "/incidencias", color: "#4338CA" },
-        { label: "Volumen", icon: <TriangleRight size={32} />, path: "/volumen", color: "#4338CA" },
+        { label: "Reportes", icon: <ShieldAlert size={32} />, path: "/reportes", color: "#4338CA" },
       ]
     },
     {

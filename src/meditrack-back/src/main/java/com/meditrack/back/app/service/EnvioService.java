@@ -196,13 +196,22 @@ public class EnvioService {
     }
 
     @Transactional
-    public Envio actualizarEstado(String id, EstadoEnvio nuevoEstado, String usuario, String repartidorId) {
+    public Envio actualizarEstado(String id, EstadoEnvio nuevoEstado, String usuario, String repartidorId, String tipoIncidencia, String descripcionIncidencia) {
         Envio envio = buscarPorId(id);
         if (nuevoEstado == EstadoEnvio.ASIGNADO) {
             envio.setRepartidorId(repartidorId);
         }
         envio.setEstado(nuevoEstado);
-        registrarHistorial(envio, "CAMBIO_ESTADO", nuevoEstado, "Cambio a " + nuevoEstado, LocalDate.now().toString(), LocalTime.now().toString().substring(0, 5), usuario);
+        
+        String tipoHistorial = "CAMBIO_ESTADO";
+        String detalleHistorial = "Cambio a " + nuevoEstado;
+        
+        if (nuevoEstado == EstadoEnvio.INCIDENTE_REPORTADO) {
+            tipoHistorial = tipoIncidencia;
+            detalleHistorial = descripcionIncidencia;
+        }
+        
+        registrarHistorial(envio, tipoHistorial, nuevoEstado, detalleHistorial, LocalDate.now().toString(), LocalTime.now().toString().substring(0, 5), usuario);
         return envioRepository.save(envio);
     }
 

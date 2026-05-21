@@ -56,6 +56,9 @@ function DetalleEnvio() {
   const [repartidorReasignar, setRepartidorReasignar] = useState('');
   const [modalError, setModalError] = useState('');
 
+  const [tipoIncidencia, setTipoIncidencia] = useState('');
+  const [descripcionIncidencia, setDescripcionIncidencia] = useState('');
+
   useEffect(() => {
     getMedicamentos()
       .then(setCatalogo)
@@ -207,8 +210,6 @@ function DetalleEnvio() {
     }
   }, [id, user?.nombre, location.state]);
 
-  // Reemplazamos el useEffect problemático por un useMemo puro.
-  // Esto vincula dinámicamente las imágenes del catálogo sin alterar el estado local.
   const itemsCargaVinculados = useMemo(() => {
     if (catalogo.length === 0 || itemsCarga.length === 0) return itemsCarga;
     
@@ -238,6 +239,8 @@ function DetalleEnvio() {
       usuario: user?.nombre || '',
       repartidorId: ''
     }));
+    setTipoIncidencia('');
+    setDescripcionIncidencia('');
     setModalError('');
     setModalAbierto(true);
   };
@@ -256,6 +259,11 @@ function DetalleEnvio() {
       opciones.push('INCIDENTE_REPORTADO');
     }
 
+    if (estadoActual === 'INCIDENTE_REPORTADO') {
+      opciones.push('EN_TRANSITO');
+      opciones.push('EN_PUNTO_DE_ENTREGA');
+    }
+
     return opciones;
   };
 
@@ -267,8 +275,22 @@ function DetalleEnvio() {
       return;
     }
 
+    if (nuevoEstado === 'INCIDENTE_REPORTADO' && !tipoIncidencia) {
+      setModalError('Debe seleccionar el tipo de incidencia para guardar el registro.');
+      return;
+    }
+
     try {
-      const actualizado = await updateEstadoEnvio(id, nuevoEstado, fecha, hora, usuario, repartidorId);
+      const actualizado = await updateEstadoEnvio(
+        id, 
+        nuevoEstado, 
+        fecha, 
+        hora, 
+        usuario, 
+        repartidorId, 
+        tipoIncidencia, 
+        descripcionIncidencia
+      );
       setEnvio(actualizado);
       setModalAbierto(false);
     } catch (e) {
@@ -551,6 +573,36 @@ function DetalleEnvio() {
                   ))}
                 </select>
               </div>
+            )}
+
+            {modalForm.nuevoEstado === 'INCIDENTE_REPORTADO' && (
+              <>
+                <div className="form-group">
+                  <label>Tipo de Incidencia *</label>
+                  <select
+                    value={tipoIncidencia}
+                    onChange={e => setTipoIncidencia(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                  >
+                    <option value="">-- Seleccione Tipo --</option>
+                    <option value="FALLA_MECANICA">Falla Mecánica</option>
+                    <option value="ACCIDENTE_VIAL">Accidente Vial</option>
+                    <option value="ROBO_O_PERDIDA">Robo o Pérdida</option>
+                    <option value="ZONA_INACCESIBLE">Zona Inaccesible o Bloqueo</option>
+                    <option value="CLIENTE_AUSENTE">Cliente Ausente</option>
+                    <option value="OTRO">Otro Imprevisto</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Descripción del Incidente</label>
+                  <textarea
+                    value={descripcionIncidencia}
+                    onChange={e => setDescripcionIncidencia(e.target.value)}
+                    placeholder="Detalles sobre lo sucedido..."
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB', minHeight: '80px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </>
             )}
 
             <div className="form-group"><label>Fecha</label><input type="date" value={modalForm.fecha} onChange={e => setModalForm({...modalForm, fecha: e.target.value})} /></div>

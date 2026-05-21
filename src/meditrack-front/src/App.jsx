@@ -22,6 +22,7 @@ import DetalleRuta from './pages/Rutas/DetalleRuta';
 import Clientes from './pages/Clientes/Clientes';
 import NuevoCliente from './pages/Clientes/NuevoCliente';
 import EditarCliente from './pages/Clientes/EditarCliente';
+import Reportes from './pages/Reportes/Reportes';
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/clientes/nuevo" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevoCliente /></ProtectedRoute>} />
             <Route path="/clientes/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}> <EditarCliente /></ProtectedRoute>} />
+            <Route path="/reportes" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Reportes/></ProtectedRoute>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

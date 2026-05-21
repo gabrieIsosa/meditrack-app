@@ -101,7 +101,7 @@ public class EnvioController {
         }
     }
 
-    @PutMapping("/{id}/estado")
+@PutMapping("/{id}/estado")
     public ResponseEntity<?> cambiarEstado(@PathVariable String id, @RequestBody Map<String, String> body, @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             Sesion sesion = autenticar(authHeader);
@@ -110,7 +110,9 @@ public class EnvioController {
             }
             EstadoEnvio nuevoEstado = EstadoEnvio.valueOf(body.get("estado"));
             String repartidorId = body.get("repartidorId");
-            return ResponseEntity.ok(envioService.actualizarEstado(id, nuevoEstado, sesion.getNombre(), repartidorId));
+            String tipoIncidencia = body.get("tipoIncidencia");
+            String descripcionIncidencia = body.get("descripcionIncidencia");
+            return ResponseEntity.ok(envioService.actualizarEstado(id, nuevoEstado, sesion.getNombre(), repartidorId, tipoIncidencia, descripcionIncidencia));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Estado no válido"));
         } catch (RuntimeException e) {
@@ -120,7 +122,6 @@ public class EnvioController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
     }
-
     @PutMapping("/{id}/reasignar")
     public ResponseEntity<?> reasignarRepartidor(@PathVariable String id, @RequestBody Map<String, String> body, @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {

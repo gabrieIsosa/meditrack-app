@@ -91,10 +91,33 @@ class EnvioServiceTest {
         when(envioRepository.findById("ENV-111")).thenReturn(Optional.of(envioExistente));
         when(envioRepository.save(any(Envio.class))).thenAnswer(i -> i.getArguments()[0]);
         
-        Envio actualizado = service.actualizarEstado("ENV-111", EstadoEnvio.ASIGNADO, USUARIO_TEST, "REP-123");
+        Envio actualizado = service.actualizarEstado("ENV-111", EstadoEnvio.ASIGNADO, USUARIO_TEST, "REP-123", null, null);
         
         assertEquals(EstadoEnvio.ASIGNADO, actualizado.getEstado());
         assertEquals(USUARIO_TEST, actualizado.getUsuarioResponsable());
+    }
+
+    @Test
+    void actualizarEstado_conIncidente_asignaCamposCorrectamente() {
+        Envio envioExistente = new Envio();
+        envioExistente.setId("ENV-456");
+        envioExistente.setEstado(EstadoEnvio.EN_TRANSITO);
+        envioExistente.setUsuarioResponsable(USUARIO_TEST);
+
+        when(envioRepository.findById("ENV-456")).thenReturn(Optional.of(envioExistente));
+        when(envioRepository.save(any(Envio.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Envio actualizado = service.actualizarEstado(
+                "ENV-456", 
+                EstadoEnvio.INCIDENTE_REPORTADO, 
+                USUARIO_TEST, 
+                null, 
+                "FALLA_MECANICA", 
+                "Cubierta pinchada"
+        );
+
+        assertNotNull(actualizado);
+        assertEquals(EstadoEnvio.INCIDENTE_REPORTADO, actualizado.getEstado());
     }
 
     @Test
@@ -102,7 +125,7 @@ class EnvioServiceTest {
         when(envioRepository.findById("NON-EXISTENT-ID")).thenReturn(Optional.empty());
 
         assertThrows(ResponseStatusException.class, () -> 
-            service.actualizarEstado("NON-EXISTENT-ID", EstadoEnvio.EN_TRANSITO, USUARIO_TEST, null)
+            service.actualizarEstado("NON-EXISTENT-ID", EstadoEnvio.EN_TRANSITO, USUARIO_TEST, null, null, null)
         );
     }
 
@@ -146,13 +169,13 @@ class EnvioServiceTest {
         when(envioRepository.findById("ENV-999")).thenReturn(Optional.of(envioExistente));
         when(envioRepository.save(any(Envio.class))).thenAnswer(i -> i.getArguments()[0]);
         
-        service.actualizarEstado("ENV-999", EstadoEnvio.EN_PREPARACION, USUARIO_TEST, null);
+        service.actualizarEstado("ENV-999", EstadoEnvio.EN_PREPARACION, USUARIO_TEST, null, null, null);
         assertEquals(EstadoEnvio.EN_PREPARACION, envioExistente.getEstado());
         
-        service.actualizarEstado("ENV-999", EstadoEnvio.EN_PUNTO_DE_ENTREGA, USUARIO_TEST, null);
+        service.actualizarEstado("ENV-999", EstadoEnvio.EN_PUNTO_DE_ENTREGA, USUARIO_TEST, null, null, null);
         assertEquals(EstadoEnvio.EN_PUNTO_DE_ENTREGA, envioExistente.getEstado());
         
-        service.actualizarEstado("ENV-999", EstadoEnvio.INCIDENTE_REPORTADO, USUARIO_TEST, null);
+        service.actualizarEstado("ENV-999", EstadoEnvio.INCIDENTE_REPORTADO, USUARIO_TEST, null, "ACCIDENTE", "Colisión menor");
         assertEquals(EstadoEnvio.INCIDENTE_REPORTADO, envioExistente.getEstado());
     }
 }

@@ -99,7 +99,7 @@ public class RutaService {
             Envio envio = envioRepository.findById(envioId).get();
             ruta.agregarEnvio(new RutaEnvio(envio, orden));
 
-            envioService.actualizarEstado(envioId, EstadoEnvio.ASIGNADO, usuario, repartidorId);
+            envioService.actualizarEstado(envioId, EstadoEnvio.ASIGNADO, usuario, repartidorId, null, null);
         }
 
         repartidor.setHaciendoEntrega(true);
