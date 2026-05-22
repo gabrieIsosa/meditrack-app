@@ -28,6 +28,9 @@ function EditarEnvio() {
   const [openRemitente, setOpenRemitente] = useState(false);
   const [openDestinatario, setOpenDestinatario] = useState(false);
 
+  const containerRefRemitente = useRef(null);
+  const containerRefDestinatario = useRef(null);
+
   useEffect(() => {
     getClientes()
       .then(setClientes)
@@ -75,6 +78,12 @@ function EditarEnvio() {
     const handleClickAfuera = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
+      }
+      if (containerRefRemitente.current && !containerRefRemitente.current.contains(event.target)) {
+        setOpenRemitente(false);
+      }
+      if (containerRefDestinatario.current && !containerRefDestinatario.current.contains(event.target)) {
+        setOpenDestinatario(false);
       }
     };
     document.addEventListener('mousedown', handleClickAfuera);
@@ -181,13 +190,65 @@ function EditarEnvio() {
 
   const clientesFiltradosDestinatario = clientes.filter(c => c.nombre?.toLowerCase().includes(busquedaDestinatario.toLowerCase()));
 
-  if (!form) return <div className="container">Cargando...</div>;
-
   const opcionesFiltradas = catalogo.filter(m =>
     m.estadoActivo &&
     (m.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       m.presentacion.toLowerCase().includes(busqueda.toLowerCase()))
   );
+
+  if (!form) {
+    const skeletonItemStyle = {
+      height: '40px',
+      backgroundColor: '#E5E7EB',
+      borderRadius: '6px',
+      width: '100%'
+    };
+
+    return (
+      <div className="container" style={{ animation: 'pulse 1.5s infinite ease-in-out' }}>
+        <style>
+          {`
+            @keyframes pulse {
+              0%, 100% { opacity: 0.6; }
+              50% { opacity: 1; }
+            }
+          `}
+        </style>
+        <div className="page-header">
+          <div style={{ height: '32px', backgroundColor: '#E5E7EB', borderRadius: '6px', width: '200px', marginBottom: '10px' }}></div>
+        </div>
+        <div className="card">
+          <div className="form-grid">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div className="form-group" key={i}>
+                <div style={{ height: '16px', backgroundColor: '#E5E7EB', borderRadius: '4px', width: '100px', marginBottom: '8px' }}></div>
+                <div style={skeletonItemStyle}></div>
+              </div>
+            ))}
+            <div className="form-group form-full">
+              <div style={{ height: '16px', backgroundColor: '#E5E7EB', borderRadius: '4px', width: '150px', marginBottom: '8px' }}></div>
+              <div style={{ ...skeletonItemStyle, height: '80px' }}></div>
+            </div>
+          </div>
+          <div style={{ background: '#F9FAFB', padding: '20px', borderRadius: '12px', border: '1px solid #E5E7EB', marginTop: '20px' }}>
+            <div style={{ height: '20px', backgroundColor: '#E5E7EB', borderRadius: '4px', width: '250px', marginBottom: '8px' }}></div>
+            <div style={{ height: '14px', backgroundColor: '#E5E7EB', borderRadius: '4px', width: '400px', marginBottom: '20px' }}></div>
+            <div style={{ ...skeletonItemStyle, height: '42px', marginBottom: '12px' }}></div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={skeletonItemStyle}></div>
+              <div style={skeletonItemStyle}></div>
+              <div style={{ ...skeletonItemStyle, width: '100px' }}></div>
+              <div style={{ ...skeletonItemStyle, width: '100px', backgroundColor: '#D1D5DB' }}></div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+            <div style={{ height: '38px', backgroundColor: '#E5E7EB', borderRadius: '8px', width: '110px' }}></div>
+            <div style={{ height: '38px', backgroundColor: '#D1D5DB', borderRadius: '8px', width: '160px' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
@@ -197,7 +258,7 @@ function EditarEnvio() {
       <div className="card">
         {error && <div style={{ color: '#dc3545', backgroundColor: '#f8d7da', padding: '10px', borderRadius: '4px', marginBottom: '15px', fontWeight: 'bold' }}>{error}</div>}
         <div className="form-grid">
-          <div className="form-group">
+          <div className="form-group" ref={containerRefRemitente}>
             <label>
               Remitente *
             </label>
@@ -265,7 +326,7 @@ function EditarEnvio() {
               )}
             </div>
           </div>
-          <div className="form-group">
+          <div className="form-group" ref={containerRefDestinatario}>
             <label>Destinatario *</label>
             <div style={{ position: 'relative' }}>
               <input

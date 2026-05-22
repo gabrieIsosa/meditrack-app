@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { getTrackingPublico } from "../../services/api";
 import Navbar from '../../components/Navbar';
+import bg from '../../assets/bg.png';
+import { Search } from 'lucide-react';
 
 const PASOS =[
     {key: 'PENDIENTE', label: 'PENDIENTE'},
@@ -29,6 +31,10 @@ export default function TrackingPublico() {
     ? PASOS.findIndex(p => p.key === resultado.estado)
     : -1;
 
+    const pasosFiltrados = resultado?.estado === 'CANCELADO'
+        ? PASOS.filter(p => p.key !== 'ENTREGADO')
+        : PASOS.filter(p => p.key !== 'CANCELADO');
+
     async function consultar(e) {
         e.preventDefault();
         setError('');
@@ -51,41 +57,75 @@ export default function TrackingPublico() {
         }
     }
         return(
-            <>
+            <div style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                minHeight: '100vh',
+                width: '100vw',
+                overflowX: 'hidden',
+                overflowY: 'auto',
+                boxSizing: 'border-box',
+                paddingBottom: 24
+            }}>
             <Navbar/>
 
-            <div style={{maxWidth: 820, margin: '40px auto', padding: 16, color: '#111827'}}>
-                <h1>Seguimiento público</h1>
-                <p>Ingresá tu Tracking ID para consultar el estado de tu envío.</p>
+            <div style={{
+                maxWidth: 820, 
+                margin: '20px auto', 
+                width: 'calc(100% - 32px)',
+                padding: '32px 24px', 
+                color: '#111827',
+                background: '#ffffff',
+                borderRadius: 16,
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                boxSizing: 'border-box'
+            }}>
+                <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', margin: '0 0 8px 0' }}>Seguimiento público</h1>
+                <p style={{ margin: '0 0 16px 0', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>Ingresá tu Tracking ID para consultar el estado de tu envío.</p>
 
-                <form onSubmit={consultar} style={{display: 'flex', gap: 8, marginTop: 12}}>
+                <form onSubmit={consultar} style={{
+                    display: 'flex', 
+                    alignItems: 'center',
+                    position: 'relative',
+                    marginTop: 12,
+                    width: '100%'
+                }}>
                     <input
                         value={trackingId}
                         onChange={(e) => setTrackingId(e.target.value)}
                         placeholder="Ej: A1B2C3D4"
-                        style={{flex: 1, padding: 10}}
+                        style={{
+                            width: '100%', 
+                            padding: '12px 50px 12px 14px', 
+                            boxSizing: 'border-box',
+                            borderRadius: 8,
+                            border: '1px solid #D1D5DB',
+                            fontSize: 16,
+                            outline: 'none'
+                        }}
                     />
                     <button type="submit"
                             disabled={cargando}
-                            style={{padding: '10px 16px',
-                                    background: cargando ? '#059669' : '#00A86B',
-                                    color: '#fff',
-                                    border: 'none',
-                                    cursor: cargando ? 'not-allowed' : 'pointer',
-                                    borderRadius: 8,
-                                    transition: "transform 0.05s ease, filter 0.15s ease, background 0.15s ease",
-                                    filter: cargando ? 'brightness(0.95)' : 'none',
-                                    fontWeight: 'bold'
-                                }}
-                                onMouseDown={(e) => {
-                                    if(!cargando) e.currentTarget.style.transform = 'scale(0.98)';
-                                }}
-                                onMouseUp={(e) => {
-                                    e.currentTarget.style.transform = 'scale(1)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'scale(1)';
-                                }}
+                            style={{
+                                position: 'absolute',
+                                right: 6,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: cargando ? '#059669' : '#00A86B',
+                                color: '#fff',
+                                border: 'none',
+                                cursor: cargando ? 'not-allowed' : 'pointer',
+                                borderRadius: 6,
+                                width: 36,
+                                height: 36,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: "filter 0.15s ease, background 0.15s ease",
+                                filter: cargando ? 'brightness(0.95)' : 'none',
+                            }}
                                 onMouseEnter={(e) => {
                                     if(!cargando) e.currentTarget.style.filter = 'brightness(0.92)';
                                 }}
@@ -93,7 +133,28 @@ export default function TrackingPublico() {
                                     e.currentTarget.style.filter = cargando ? 'brightness(0.95)' : 'none';
                                 }}
                                 >
-                        {cargando ? 'Consultando...' : 'Consultar'}
+                        {cargando ? (
+                            <svg 
+                                width="18" 
+                                height="18" 
+                                viewBox="0 0 24 24" 
+                                xmlns="http://www.w3.org/2000/svg"
+                                style={{
+                                    animation: 'spin 1s linear infinite',
+                                }}
+                            >
+                                <style>{`
+                                    @keyframes spin {
+                                        0% { transform: rotate(0deg); }
+                                        100% { transform: rotate(360deg); }
+                                    }
+                                `}</style>
+                                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)" strokeWidth="3" fill="none" />
+                                <path d="M4 12a8 8 0 018-8V4a10 10 0 00-10 10h2z" fill="#fff" />
+                            </svg>
+                        ) : (
+                            <Search size={18} />
+                        )}
                     </button>
                 </form>
             {error && (
@@ -103,51 +164,73 @@ export default function TrackingPublico() {
             )}
 
             {resultado && (
-                <div style={{ marginTop: 24 }}>
-                    <h2 style={{ marginBottom: 6 }}>
+                <div style={{ marginTop: 32 }}>
+                    <h2 style={{ marginBottom: 24, fontSize: 'clamp(1.25rem, 4vw, 1.5rem)' }}>
                         Estado actual: {resultado.estado?.replaceAll('_', ' ')}
                     </h2>
 
-                    <div style={{ color: "#111827" }}>
-                        Última actualización: {''}
-                        {formaUltimaActualizacion(resultado.fechaUltimoEstado, 
-                            resultado.horaUltimoEstado)}
-                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', marginTop: 22 }}>
+                            {pasosFiltrados.map((p, i) => {
+                                const idxEnOriginal = PASOS.findIndex(orig => orig.key === p.key);
+                                const completado = idxActual !== -1 && idxEnOriginal <= idxActual;
+                                const actual = idxActual !== -1 && idxEnOriginal === idxActual;
 
-                    <div style={{ display: 'flex', alignItems: 'center', marginTop: 22, gap: 8,
-                        flexWrap: 'wrap' }}>
-                            {PASOS.map((p,i) =>{
-                                const completado = idxActual !== -1 && i <= idxActual;
-                                const actual = idxActual !== -1 && i === idxActual;
-
-                                const circleBg = actual || completado ? '#00A86B' : '#6B7280' ;
-                                const lineBg = completado ? '#00A86B' : '#F3F4F6';
+                                const borderCircleColor = actual || completado ? '#00A86B' : '#9CA3AF';
+                                const bgCircleColor = actual ? '#00A86B' : '#ffffff';
+                                const lineBg = completado && idxActual > idxEnOriginal ? '#00A86B' : '#F3F4F6';
                             
                             return(
-                                <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div key={p.key} style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'space-between', 
+                                        gap: 16,
+                                        flexWrap: 'wrap'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                            <div style={{
+                                                width: 24,
+                                                height: 24,
+                                                borderRadius: '50%',
+                                                border: `3px solid ${borderCircleColor}`,
+                                                background: bgCircleColor,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                boxSizing: 'border-box'
+                                            }}
+                                            title={p.label}
+                                            />
 
-                                <div style={{
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: '50%',
-                                    background: circleBg,
-                                    color: '#ffffff',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: 700
-                                }}
-                                title={p.label}>
-                                    {completado ? '✓' : i + 1}
-                                </div>
+                                            <div style={{ fontSize: 14, fontWeight: actual ? 700 : 500, color: actual ? '#00A86B' : '#111827' }}>
+                                                {p.label}
+                                            </div>
+                                        </div>
 
-                                <div style={{ fontSize: 12, fontWeight: actual ? 700 : 500 }}>
-                                    {p.label}
-                                </div>
+                                        {actual && (
+                                            <div style={{ 
+                                                fontSize: 14, 
+                                                color: '#00A86B', 
+                                                fontWeight: 700,
+                                                marginLeft: 'auto',
+                                                paddingLeft: 40
+                                            }}>
+                                                {formaUltimaActualizacion(resultado.fechaUltimoEstado, resultado.horaUltimoEstado)}
+                                            </div>
+                                        )}
+                                    </div>
 
-                                {i < PASOS.length - 1 && (
-                                    <div style={{
-                                        width: 32, height: 2, background: lineBg}} />
+                                    {i < pasosFiltrados.length - 1 && (
+                                        <div style={{
+                                            width: 2, 
+                                            height: 32, 
+                                            background: lineBg,
+                                            marginLeft: 11,
+                                            marginTop: 4,
+                                            marginBottom: 4
+                                        }} />
                                     )}
                                 </div>
                             );
@@ -156,8 +239,7 @@ export default function TrackingPublico() {
                 </div>
             )}
             </div>
-            </>
+            </div>
         );
 
     }
-    

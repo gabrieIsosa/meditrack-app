@@ -93,7 +93,7 @@ const usuariosFiltrados = [...usuarios].filter(u => {
 return (
 <div className="container">
     <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-    <button className="btn btn-secondary" onClick={() => navigate('/')}>VOLVER</button>
+    <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
     <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Gestión del personal</h1>
     </div>
 

@@ -41,6 +41,7 @@ function DetalleEnvio() {
   const { user } = useAuth();
   
   const [envio, setEnvio] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [repartidores, setRepartidores] = useState([]);
   const [catalogo, setCatalogo] = useState([]);
@@ -60,155 +61,157 @@ function DetalleEnvio() {
   const [descripcionIncidencia, setDescripcionIncidencia] = useState('');
 
   useEffect(() => {
-    getMedicamentos()
-      .then(setCatalogo)
-      .catch(() => {});
+  getMedicamentos()
+    .then(setCatalogo)
+    .catch(() => {});
 
-    getEnvioById(id)
-      .then(data => {
-        setEnvio(data);
-        const { fecha, hora } = ahora();
-        setModalForm({ 
-          nuevoEstado: data.estado, 
-          fecha, 
-          hora, 
-          usuario: user?.nombre || '',
-          repartidorId: ''
-        });
+  getEnvioById(id)
+    .then(data => {
+      setEnvio(data);
+      const { fecha, hora } = ahora();
+      setModalForm({ 
+        nuevoEstado: data.estado, 
+        fecha, 
+        hora, 
+        usuario: user?.nombre || '',
+        repartidorId: ''
+      });
 
-        if (data.detalles && Array.isArray(data.detalles)) {
-          const itemsMapeados = data.detalles.map((item, index) => ({
-            id: item.id || `det-${index}-${Date.now()}`,
-            nombre: item.medicamento?.nombre || 'Desconocido',
-            presentacion: item.medicamento?.presentacion || '',
-            lote: item.lote || 'N/A',
-            vencimiento: item.fechaVencimiento || 'N/A',
-            cantidad: Number(item.cantidad || 1),
-            imagenUrl: item.medicamento?.imagenUrl || '',
-            esManual: false
-          }));
-          setItemsCarga(itemsMapeados);
-        } else {
-          let textoOriginal = data.descripcionCarga || '';
-          let itemsParseados = [];
-          let parteManual = '';
-          let parteMeds = '';
+      if (data.detalles && Array.isArray(data.detalles)) {
+        const itemsMapeados = data.detalles.map((item, index) => ({
+          id: item.id || `det-${index}-${Date.now()}`,
+          nombre: item.medicamento?.nombre || 'Desconocido',
+          presentacion: item.medicamento?.presentacion || '',
+          lote: item.lote || 'N/A',
+          vencimiento: item.fechaVencimiento || 'N/A',
+          cantidad: Number(item.cantidad || 1),
+          imagenUrl: item.medicamento?.imagenUrl || '',
+          esManual: false
+        }));
+        setItemsCarga(itemsMapeados);
+      } else {
+        let textoOriginal = data.descripcionCarga || '';
+        let itemsParseados = [];
+        let parteManual = '';
+        let parteMeds = '';
 
-          if (typeof textoOriginal === 'string' && textoOriginal.trim() !== '') {
-            if (textoOriginal.includes('| Meds: ')) {
-              const partes = textoOriginal.split('| Meds: ');
-              parteManual = partes[0].trim();
-              parteMeds = partes[1] || '';
-            } else if (textoOriginal.startsWith('Meds: ')) {
-              parteMeds = textoOriginal.replace('Meds: ', '');
-            } else {
-              parteManual = textoOriginal;
-            }
+        if (typeof textoOriginal === 'string' && textoOriginal.trim() !== '') {
+          if (textoOriginal.includes('| Meds: ')) {
+            const partes = textoOriginal.split('| Meds: ');
+            parteManual = partes[0].trim();
+            parteMeds = partes[1] || '';
+          } else if (textoOriginal.startsWith('Meds: ')) {
+            parteMeds = textoOriginal.replace('Meds: ', '');
+          } else {
+            parteManual = textoOriginal;
+          }
 
-            if (parteManual.trim()) {
-              const mItems = parteManual.split(', ');
-              mItems.forEach((item, index) => {
-                if (!item.trim()) return;
-                const match = item.match(/^(.*?)\s\[Lote:\s(.*?)\s\/\sVenc:\s(.*?)\]\sx(\d+)$/);
-                if (match) {
-                  itemsParseados.push({
-                    id: `manual-${index}-${Date.now()}`,
-                    nombre: match[1],
-                    presentacion: '',
-                    lote: match[2],
-                    vencimiento: match[3],
-                    cantidad: Number(match[4]),
-                    esManual: true
-                  });
-                } else {
-                  const matchSimple = item.match(/^(.*?)\sx(\d+)$/);
-                  itemsParseados.push({
-                    id: `manual-${index}-${Date.now()}`,
-                    nombre: matchSimple ? matchSimple[1] : item,
-                    presentacion: '',
-                    lote: 'N/A',
-                    vencimiento: 'N/A',
-                    cantidad: matchSimple ? Number(matchSimple[2]) : 1,
-                    esManual: true
-                  });
-                }
-              });
-            }
+          if (parteManual.trim()) {
+            const mItems = parteManual.split(', ');
+            mItems.forEach((item, index) => {
+              if (!item.trim()) return;
+              const match = item.match(/^(.*?)\s\[Lote:\s(.*?)\s\/\sVenc:\s(.*?)\]\sx(\d+)$/);
+              if (match) {
+                itemsParseados.push({
+                  id: `manual-${index}-${Date.now()}`,
+                  nombre: match[1],
+                  presentacion: '',
+                  lote: match[2],
+                  vencimiento: match[3],
+                  cantidad: Number(match[4]),
+                  esManual: true
+                });
+              } else {
+                const matchSimple = item.match(/^(.*?)\sx(\d+)$/);
+                itemsParseados.push({
+                  id: `manual-${index}-${Date.now()}`,
+                  nombre: matchSimple ? matchSimple[1] : item,
+                  presentacion: '',
+                  lote: 'N/A',
+                  vencimiento: 'N/A',
+                  cantidad: matchSimple ? Number(matchSimple[2]) : 1,
+                  esManual: true
+                });
+              }
+            });
+          }
 
-            if (parteMeds.trim()) {
-              const medItems = parteMeds.split(', ');
-              medItems.forEach((item, index) => {
-                if (!item.trim()) return;
-                const match = item.match(/^(.*?)\s\((.*?)\)\s\[Lote:\s(.*?)\s\/\sVenc:\s(.*?)\]\sx(\d+)$/);
-                if (match) {
+          if (parteMeds.trim()) {
+            const medItems = parteMeds.split(', ');
+            medItems.forEach((item, index) => {
+              if (!item.trim()) return;
+              const match = item.match(/^(.*?)\s\((.*?)\)\s\[Lote:\s(.*?)\s\/\sVenc:\s(.*?)\]\sx(\d+)$/);
+              if (match) {
+                itemsParseados.push({
+                  id: `med-${index}-${Date.now()}`,
+                  nombre: match[1],
+                  presentacion: match[2],
+                  lote: match[3],
+                  vencimiento: match[4],
+                  cantidad: Number(match[5]),
+                  esManual: false
+                });
+              } else {
+                const matchSimple = item.match(/^(.*?)\s\((.*?)\)\sx(\d+)$/);
+                if (matchSimple) {
                   itemsParseados.push({
                     id: `med-${index}-${Date.now()}`,
-                    nombre: match[1],
-                    presentacion: match[2],
-                    lote: match[3],
-                    vencimiento: match[4],
-                    cantidad: Number(match[5]),
+                    nombre: matchSimple[1],
+                    presentacion: matchSimple[2],
+                    lote: 'N/A',
+                    vencimiento: 'N/A',
+                    cantidad: Number(matchSimple[3]),
                     esManual: false
                   });
                 } else {
-                  const matchSimple = item.match(/^(.*?)\s\((.*?)\)\sx(\d+)$/);
-                  if (matchSimple) {
+                  const matchVerySimple = item.match(/^(.*?)\s\[Lote:\s(.*?)\s\/\sVenc:\s(.*?)\]\sx(\d+)$/);
+                  if (matchVerySimple) {
                     itemsParseados.push({
                       id: `med-${index}-${Date.now()}`,
-                      nombre: matchSimple[1],
-                      presentacion: matchSimple[2],
-                      lote: 'N/A',
-                      vencimiento: 'N/A',
-                      cantidad: Number(matchSimple[3]),
+                      nombre: matchVerySimple[1],
+                      presentacion: '',
+                      lote: matchVerySimple[2],
+                      vencimiento: matchVerySimple[3],
+                      bytes: '',
+                      amount: '',
+                      cantidad: Number(matchVerySimple[4]),
                       esManual: false
                     });
                   } else {
-                    const matchVerySimple = item.match(/^(.*?)\s\[Lote:\s(.*?)\s\/\sVenc:\s(.*?)\]\sx(\d+)$/);
-                    if (matchVerySimple) {
-                      itemsParseados.push({
-                        id: `med-${index}-${Date.now()}`,
-                        nombre: matchVerySimple[1],
-                        presentacion: '',
-                        lote: matchVerySimple[2],
-                        vencimiento: matchVerySimple[3],
-                        bytes: '',
-                        cantidad: Number(matchVerySimple[4]),
-                        esManual: false
-                      });
-                    } else {
-                      itemsParseados.push({
-                        id: `med-${index}-${Date.now()}`,
-                        nombre: item,
-                        presentacion: '',
-                        lote: 'N/A',
-                        vencimiento: 'N/A',
-                        cantidad: 1,
-                        esManual: false
-                      });
-                    }
+                    itemsParseados.push({
+                      id: `med-${index}-${Date.now()}`,
+                      nombre: item,
+                      presentacion: '',
+                      lote: 'N/A',
+                      vencimiento: 'N/A',
+                      cantidad: 1,
+                      esManual: false
+                    });
                   }
                 }
-              });
-            }
+              }
+            });
           }
-          setItemsCarga(itemsParseados);
         }
-      })
-      .catch(() => setError('Envío no encontrado.'));
+        setItemsCarga(itemsParseados);
+      }
+    })
+    .catch(() => setError('Envío no encontrado.'))
+    .finally(() => setLoading(false));
 
-    getUsuarios()
-      .then(data => {
-        setRepartidores(data.filter(u => u.role === 'REPARTIDOR' && u.estadoActivo));
-      })
-      .catch(console.error);
+  getUsuarios()
+    .then(data => {
+      setRepartidores(data.filter(u => u.role === 'REPARTIDOR' && u.estadoActivo));
+    })
+    .catch(console.error);
 
-    if (location.state?.editSuccess) {
-      const showTimer = setTimeout(() => setShowSnackbar(true), 100);
-      window.history.replaceState({}, document.title);
-      const hideTimer = setTimeout(() => setShowSnackbar(false), 3100);
-      return () => { clearTimeout(showTimer); clearTimeout(hideTimer); };
-    }
-  }, [id, user?.nombre, location.state]);
+  if (location.state?.editSuccess) {
+    const showTimer = setTimeout(() => setShowSnackbar(true), 100);
+    window.history.replaceState({}, document.title);
+    const hideTimer = setTimeout(() => setShowSnackbar(false), 3100);
+    return () => { clearTimeout(showTimer); clearTimeout(hideTimer); };
+  }
+}, [id, user?.nombre, location.state]);
 
   const itemsCargaVinculados = useMemo(() => {
     if (catalogo.length === 0 || itemsCarga.length === 0) return itemsCarga;
@@ -340,7 +343,97 @@ function DetalleEnvio() {
     };
   };
 
-  if (!envio) return <div className="container"><p>{error || 'Cargando...'}</p></div>;
+  if (loading) {
+    return (
+      <div className="container">
+        <style>
+          {`
+            .skeleton-box {
+              background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+              background-size: 200% 100%;
+              animation: skeleton-loading 1.5s infinite linear;
+              border-radius: 4px;
+            }
+            @keyframes skeleton-loading {
+              0% { background-position: 200% 0; }
+              100% { background-position: -200% 0; }
+            }
+            .info-row-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 20px;
+              margin-bottom: 25px;
+            }
+          `}
+        </style>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+          <div className="skeleton-box" style={{ width: '90px', height: '38px', borderRadius: '6px' }}></div>
+          <div className="skeleton-box" style={{ width: '220px', height: '32px' }}></div>
+        </div>
+        <div className="skeleton-box" style={{ width: '100%', height: '70px', borderRadius: '8px', marginBottom: '24px' }}></div>
+        <div className="card" style={{ padding: '30px 25px 80px 25px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+          <div className="info-row-grid">
+            <div>
+              <div className="skeleton-box" style={{ width: '80px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '150px', height: '20px' }}></div>
+            </div>
+            <div>
+              <div className="skeleton-box" style={{ width: '60px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '120px', height: '28px', borderRadius: '20px' }}></div>
+            </div>
+          </div>
+          <div className="info-row-grid">
+            <div>
+              <div className="skeleton-box" style={{ width: '90px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '180px', height: '18px' }}></div>
+            </div>
+            <div>
+              <div className="skeleton-box" style={{ width: '110px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '160px', height: '18px' }}></div>
+            </div>
+            <div>
+              <div className="skeleton-box" style={{ width: '140px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '220px', height: '18px' }}></div>
+            </div>
+          </div>
+          <div className="info-row-grid">
+            <div>
+              <div className="skeleton-box" style={{ width: '70px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '130px', height: '18px' }}></div>
+            </div>
+            <div>
+              <div className="skeleton-box" style={{ width: '70px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '130px', height: '18px' }}></div>
+            </div>
+            <div>
+              <div className="skeleton-box" style={{ width: '120px', height: '14px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '100px', height: '18px' }}></div>
+            </div>
+          </div>
+          <div style={{ marginTop: '10px', borderTop: '1px solid #E5E7EB', paddingTop: '20px' }}>
+            <div className="skeleton-box" style={{ width: '180px', height: '14px', marginBottom: '12px' }}></div>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '14px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#F9FAFB', marginBottom: '12px' }}>
+              <div className="skeleton-box" style={{ width: '50px', height: '50px', borderRadius: '8px' }}></div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                <div className="skeleton-box" style={{ width: '40%', height: '18px' }}></div>
+                <div className="skeleton-box" style={{ width: '25%', height: '14px' }}></div>
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: '20px', borderTop: '1px solid #E5E7EB', paddingTop: '20px' }}>
+            <div className="skeleton-box" style={{ width: '160px', height: '14px', marginBottom: '8px' }}></div>
+            <div className="skeleton-box" style={{ width: '200px', height: '18px' }}></div>
+          </div>
+          <div style={{ marginTop: '20px', borderTop: '1px solid #E5E7EB', paddingTop: '20px' }}>
+            <div className="skeleton-box" style={{ width: '120px', height: '14px', marginBottom: '8px' }}></div>
+            <div className="skeleton-box" style={{ width: '90%', height: '18px' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !envio) return <div className="container"><p>{error || 'Envío no encontrado.'}</p></div>;
 
   return (
     <div className="container">

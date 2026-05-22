@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { logout as apiLogout } from '../services/api';
 import logo from '../assets/logo.png';
 
-function Navbar({ publicMode = false }) {
+function Navbar({ publicMode = false, buttonText, buttonRoute }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -14,16 +14,15 @@ function Navbar({ publicMode = false }) {
       console.error("Error al cerrar sesión:", error);
     } finally {
       logout();
-      navigate('/login');
+      navigate('/');
     }
   };
-
 
   return (
     <nav className="navbar">
       <div
         className="navbar-brand"
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/menu')}
         style={{
           cursor: 'pointer',
           display: 'flex',
@@ -49,7 +48,7 @@ function Navbar({ publicMode = false }) {
         {!user ? (
           <button
             className="btn btn-secondary"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate(buttonRoute || '/login')}
             style={{ 
               backgroundColor: '#2563eb',
               color: '#ffffff',
@@ -59,11 +58,10 @@ function Navbar({ publicMode = false }) {
               cursor: 'pointer',
               marginRight: '10px' }}
           >
-            LOGIN
+            {buttonText || 'EMPLEADOS'}
           </button>
         ) : (
           <>
-            {/* Solo mostrar el botón de tracking público si no estamos en modo público */}
             {!publicMode && (
               <div style={{ textAlign: 'right' }}>
                 <span style={{
@@ -74,7 +72,6 @@ function Navbar({ publicMode = false }) {
                 </span>
 
                 <span className={`badge badge-${user.role}`} style={{ fontSize: '10px' }}>
-
                   {user.role}
                 </span>
               </div>
