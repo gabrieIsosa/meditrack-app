@@ -158,4 +158,5 @@ public class UsuarioService {
         h.setUsuario(usuario);
         usuario.addHistorial(h);
     }
+    
 }

@@ -60,4 +60,5 @@ public class ReportesController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error interno al procesar el reporte"));
         }
     }
+
 }

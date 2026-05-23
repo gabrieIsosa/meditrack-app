@@ -143,4 +143,5 @@ public class AuthService {
 
         System.out.println("[TRAZABILIDAD] Contraseña reseteada para: " + email);
     }
+
 }

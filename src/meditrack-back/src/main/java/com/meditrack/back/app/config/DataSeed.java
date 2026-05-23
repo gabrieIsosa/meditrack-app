@@ -72,4 +72,5 @@ public class DataSeed implements CommandLineRunner {
             System.out.println("ℹ️ La base de datos ya tiene medicamentos. Se omite el sembrado.");
         }
     }
+
 }

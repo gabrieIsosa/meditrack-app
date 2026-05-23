@@ -57,4 +57,5 @@ public class JwtUtil {
             throw new RuntimeException("Token inválido o expirado");
         }
     }
+
 }

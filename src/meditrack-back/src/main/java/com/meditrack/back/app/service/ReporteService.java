@@ -41,6 +41,8 @@ public class ReporteService {
                 Query query = entityManager.createNativeQuery(sql);
                 query.setParameter("inicio", fechaInicio);
                 query.setParameter("fin", fechaFin);
+
+                @SuppressWarnings("unchecked")
                 List<Object[]> resultados = query.getResultList();
 
                 for (Object[] fila : resultados) {
@@ -63,6 +65,8 @@ public class ReporteService {
                 Query qTotal = entityManager.createNativeQuery(sqlTotal);
                 qTotal.setParameter("inicio", fechaInicio);
                 qTotal.setParameter("fin", fechaFin);
+
+                @SuppressWarnings("unchecked")
                 List<Object[]> resultadosTotal = qTotal.getResultList();
 
                 for (Object[] fila : resultadosTotal) {
@@ -104,6 +108,8 @@ public class ReporteService {
                 Query query = entityManager.createNativeQuery(sqlIncidencias);
                 query.setParameter("inicio", fechaInicio);
                 query.setParameter("fin", fechaFin);
+
+                @SuppressWarnings("unchecked")
                 List<Object[]> resultados = query.getResultList();
 
                 for (Object[] fila : resultados) {
@@ -125,4 +131,5 @@ public class ReporteService {
 
         throw new IllegalArgumentException("Tema de reporte no válido");
     }
+
 }

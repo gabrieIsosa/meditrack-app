@@ -1,6 +1,7 @@
 package com.meditrack.back.app.model;
 
 import jakarta.persistence.*;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -100,4 +101,5 @@ public class HistorialUsuario {
     public void setAutor(Usuario autor) {
         this.autor = autor;
     }
+
 }

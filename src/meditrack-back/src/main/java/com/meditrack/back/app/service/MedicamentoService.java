@@ -10,6 +10,7 @@ import com.meditrack.back.app.repository.MedicamentoRepository;
 
 @Service
 public class MedicamentoService {
+    
     private final MedicamentoRepository medicamentoRepository;
 
     public MedicamentoService(MedicamentoRepository medicamentoRepository) {
@@ -65,4 +66,5 @@ public class MedicamentoService {
         if (body.get("imagenUrl") != null && !body.get("imagenUrl").isBlank()) 
             medicamento.setImagenUrl(body.get("imagenUrl"));
     }
+
 }

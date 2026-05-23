@@ -19,10 +19,12 @@ public class CloudinaryService {
             @Value("${cloudinary.api_key}") String apiKey,
             @Value("${cloudinary.api_secret}") String apiSecret) {
         
-        Map<String, String> config = ObjectUtils.asMap(
+            Map<String, String> config = Map.of(
                 "cloud_name", cloudName,
                 "api_key", apiKey,
-                "api_secret", apiSecret);
+                "api_secret", apiSecret
+            );
+            
         this.cloudinary = new Cloudinary(config);
     }
 
@@ -34,7 +36,15 @@ public class CloudinaryService {
         if (!archivo.getContentType().startsWith("image/")) {
             throw new RuntimeException("El archivo debe ser una imagen");
         }
-        Map uploadResult = cloudinary.uploader().upload(archivo.getBytes(), ObjectUtils.emptyMap());
-        return uploadResult.get("secure_url").toString();
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> uploadResult =
+            (Map<String, Object>) cloudinary.uploader().upload(
+                archivo.getBytes(),
+                ObjectUtils.emptyMap()
+            );
+
+         return uploadResult.get("secure_url").toString();
     }
+
 }

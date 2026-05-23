@@ -246,4 +246,5 @@ public class EnvioService {
         Envio envio = buscarPorId(id);
         return new TrackingPublicoDTO(envio.getId(), envio.getEstado().name(), envio.getFechaCreacion(), envio.getHoraCreacion());
     }
+
 }

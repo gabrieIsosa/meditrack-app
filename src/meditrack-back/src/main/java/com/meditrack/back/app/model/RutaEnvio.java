@@ -1,6 +1,7 @@
 package com.meditrack.back.app.model;
 
 import jakarta.persistence.*;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity

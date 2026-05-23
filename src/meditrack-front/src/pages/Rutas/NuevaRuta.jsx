@@ -2,6 +2,68 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEnvios, getRutas, getUsuarios, createRuta } from '../../services/api';
 
+const haversineKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+// Genera la secuencia óptima de paradas (retiros y entregas) usando Nearest Neighbor TSP.
+// Retiros y entregas son stops independientes sin restricciones de precedencia.
+const planificarParadas = (envios) => {
+  const paradas = [];
+  envios.forEach(e => {
+    if (e.latitudOrigen != null && e.longitudOrigen != null) {
+      paradas.push({ tipo: 'RETIRO', envio: e, lat: e.latitudOrigen, lon: e.longitudOrigen, direccion: e.origen });
+    }
+    if (e.latitudDestino != null && e.longitudDestino != null) {
+      paradas.push({ tipo: 'ENTREGA', envio: e, lat: e.latitudDestino, lon: e.longitudDestino, direccion: e.destino });
+    }
+  });
+
+  const sinCoords = envios.filter(
+    e => (e.latitudOrigen == null || e.longitudOrigen == null) && (e.latitudDestino == null || e.longitudDestino == null)
+  );
+
+  if (paradas.length === 0) {
+    return sinCoords.sort((a, b) => (a.destino ?? '').localeCompare(b.destino ?? '')).flatMap(e => [
+      { tipo: 'RETIRO', envio: e, lat: null, lon: null, direccion: e.origen },
+      { tipo: 'ENTREGA', envio: e, lat: null, lon: null, direccion: e.destino },
+    ]);
+  }
+
+  // Nearest Neighbor sobre todos los stops con coordenadas
+  const pendientes = [...paradas];
+  const ruta = [];
+  let latActual = pendientes[0].lat;
+  let lonActual = pendientes[0].lon;
+
+  while (pendientes.length > 0) {
+    let idxMasCercano = 0;
+    let distMin = Infinity;
+    pendientes.forEach((p, idx) => {
+      const d = haversineKm(latActual, lonActual, p.lat, p.lon);
+      if (d < distMin) { distMin = d; idxMasCercano = idx; }
+    });
+    const siguiente = pendientes.splice(idxMasCercano, 1)[0];
+    ruta.push(siguiente);
+    latActual = siguiente.lat;
+    lonActual = siguiente.lon;
+  }
+
+  // Envíos sin coordenadas en ninguna parada se agregan al final
+  sinCoords.sort((a, b) => (a.destino ?? '').localeCompare(b.destino ?? '')).forEach(e => {
+    ruta.push({ tipo: 'RETIRO', envio: e, lat: null, lon: null, direccion: e.origen });
+    ruta.push({ tipo: 'ENTREGA', envio: e, lat: null, lon: null, direccion: e.destino });
+  });
+
+  return ruta;
+};
+
 const ESTADO_COLORS = {
   PENDIENTE: '#6b7280',
   ASIGNADO: '#4338CA',
@@ -29,7 +91,7 @@ function NuevaRuta() {
   const [busquedaEnvio, setBusquedaEnvio] = useState('');
   const [loadingEnvios, setLoadingEnvios] = useState(false);
 
-  const [ordenados, setOrdenados] = useState([]);
+  const [paradas, setParadas] = useState([]);
 
   useEffect(() => {
     getUsuarios()
@@ -75,35 +137,38 @@ function NuevaRuta() {
   const avanzarPaso2 = () => {
     if (seleccionados.length === 0) { setError('Seleccioná al menos un envío'); return; }
     setError('');
-    const sugeridos = [...seleccionados].sort((a, b) =>
-      (a.direccionEntrega ?? '').localeCompare(b.direccionEntrega ?? '')
-    );
-    setOrdenados(sugeridos);
+    setParadas(planificarParadas(seleccionados));
     setPaso(3);
   };
 
   const moverArriba = (idx) => {
     if (idx === 0) return;
-    const nuevo = [...ordenados];
+    const nuevo = [...paradas];
     [nuevo[idx - 1], nuevo[idx]] = [nuevo[idx], nuevo[idx - 1]];
-    setOrdenados(nuevo);
+    setParadas(nuevo);
   };
 
   const moverAbajo = (idx) => {
-    if (idx === ordenados.length - 1) return;
-    const nuevo = [...ordenados];
+    if (idx === paradas.length - 1) return;
+    const nuevo = [...paradas];
     [nuevo[idx], nuevo[idx + 1]] = [nuevo[idx + 1], nuevo[idx]];
-    setOrdenados(nuevo);
+    setParadas(nuevo);
   };
 
   const confirmarCreacion = async () => {
     setGuardando(true);
     setError('');
     try {
+      // Cada envío recibe el número de parada de su última ocurrencia (la entrega).
+      // Si solo tiene retiro, se usa ese número. El orden refleja la posición en la ruta completa.
+      const ordenPorEnvio = {};
+      paradas.forEach((p, idx) => {
+        ordenPorEnvio[p.envio.id] = idx + 1;
+      });
       await createRuta({
         fecha,
         repartidorId,
-        envios: ordenados.map((e, idx) => ({ envioId: e.id, orden: idx + 1 })),
+        envios: seleccionados.map(e => ({ envioId: e.id, orden: ordenPorEnvio[e.id] ?? 999 })),
       });
       navigate('/rutas', { state: { success: true } });
     } catch (e) {
@@ -118,7 +183,7 @@ function NuevaRuta() {
     return (
       e.id.toLowerCase().includes(term) ||
       e.destinatario?.toLowerCase().includes(term) ||
-      e.direccionEntrega?.toLowerCase().includes(term)
+      e.destino?.toLowerCase().includes(term)
     );
   });
 
@@ -303,7 +368,7 @@ function NuevaRuta() {
                         </td>
                         <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
                         <td>{e.destinatario}</td>
-                        <td style={{ fontSize: '13px', color: '#6b7280' }}>{e.direccionEntrega}</td>
+                        <td style={{ fontSize: '13px', color: '#6b7280' }}>{e.destino}</td>
                         <td>
                           {e.prioridad && (
                             <span className="status-tag" style={{ backgroundColor: '#FEF3C720', color: '#D97706' }}>
@@ -332,32 +397,46 @@ function NuevaRuta() {
         <div className="card">
           <div style={{ marginBottom: '16px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>
-              Confirmar orden de entrega
+              Confirmar secuencia de paradas
             </h2>
             <p style={{ fontSize: '13px', color: '#6b7280' }}>
-              Orden sugerido por dirección. Usá las flechas para ajustarlo.
+              Secuencia sugerida por proximidad geográfica (vecino más cercano) sobre retiros y entregas. Usá las flechas para ajustarla.
             </p>
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ width: '60px', textAlign: 'center' }}>Orden</th>
+                <th style={{ width: '60px', textAlign: 'center' }}>Parada</th>
+                <th style={{ width: '100px' }}>Tipo</th>
                 <th>Tracking ID</th>
-                <th>Destinatario</th>
-                <th>Dirección entrega</th>
+                <th>Contacto</th>
+                <th>Dirección</th>
                 <th style={{ width: '80px', textAlign: 'center' }}>Mover</th>
               </tr>
             </thead>
             <tbody>
-              {ordenados.map((e, idx) => (
-                <tr key={e.id}>
+              {paradas.map((p, idx) => (
+                <tr key={`${p.envio.id}-${p.tipo}`} style={{ backgroundColor: p.tipo === 'RETIRO' ? '#F0FDF4' : '#EFF6FF' }}>
                   <td style={{ textAlign: 'center', fontWeight: '900', fontSize: '18px', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
                     {idx + 1}
                   </td>
-                  <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
-                  <td>{e.destinatario}</td>
-                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{e.direccionEntrega}</td>
+                  <td>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      backgroundColor: p.tipo === 'RETIRO' ? '#D1FAE5' : '#DBEAFE',
+                      color: p.tipo === 'RETIRO' ? '#065F46' : '#1E40AF',
+                    }}>
+                      {p.tipo}
+                    </span>
+                  </td>
+                  <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{p.envio.id}</td>
+                  <td>{p.tipo === 'RETIRO' ? p.envio.remitente : p.envio.destinatario}</td>
+                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{p.direccion}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                       <button
@@ -368,8 +447,8 @@ function NuevaRuta() {
                       >↑</button>
                       <button
                         onClick={() => moverAbajo(idx)}
-                        disabled={idx === ordenados.length - 1}
-                        style={{ border: 'none', background: 'none', cursor: idx === ordenados.length - 1 ? 'default' : 'pointer', opacity: idx === ordenados.length - 1 ? 0.3 : 1, fontSize: '16px' }}
+                        disabled={idx === paradas.length - 1}
+                        style={{ border: 'none', background: 'none', cursor: idx === paradas.length - 1 ? 'default' : 'pointer', opacity: idx === paradas.length - 1 ? 0.3 : 1, fontSize: '16px' }}
                         title="Bajar"
                       >↓</button>
                     </div>
@@ -380,7 +459,7 @@ function NuevaRuta() {
           </table>
 
           <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px', fontSize: '13px', color: '#6b7280' }}>
-            <strong style={{ color: '#374151' }}>Resumen:</strong> Ruta para el <strong style={{ color: '#111827' }}>{fecha}</strong> | Repartidor: <strong style={{ color: '#111827' }}>{repartidores.find(r => r.id === repartidorId)?.nombre}</strong> | {ordenados.length} envíos
+            <strong style={{ color: '#374151' }}>Resumen:</strong> Ruta para el <strong style={{ color: '#111827' }}>{fecha}</strong> | Repartidor: <strong style={{ color: '#111827' }}>{repartidores.find(r => r.id === repartidorId)?.nombre}</strong> | {seleccionados.length} envíos · {paradas.length} paradas
           </div>
 
           <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between' }}>

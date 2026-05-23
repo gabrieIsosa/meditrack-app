@@ -1,24 +1,25 @@
 package com.meditrack.back.app;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.meditrack.back.app.service.ReporteService;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 
 @ExtendWith(MockitoExtension.class)
 class ReporteServiceTest {
@@ -113,4 +114,5 @@ class ReporteServiceTest {
             reporteService.generarReporteOperativo("tema_invalido", "2026-05-01", "2026-05-31", "diaria")
         );
     }
+
 }

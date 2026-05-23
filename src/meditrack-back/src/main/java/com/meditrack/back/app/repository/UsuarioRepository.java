@@ -1,6 +1,7 @@
 package com.meditrack.back.app.repository;
 
 import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,4 +17,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, String> {
     boolean existsByEmail(String email);
     
     boolean existsByDni(String dni);
+
 }
