@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEnvios, getRutas, getUsuarios, createRuta } from '../../services/api';
+import MapaRuta from '../../components/MapaRuta';
 
 const haversineKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -402,6 +403,10 @@ function NuevaRuta() {
             <p style={{ fontSize: '13px', color: '#6b7280' }}>
               Secuencia sugerida por proximidad geográfica (vecino más cercano) sobre retiros y entregas. Usá las flechas para ajustarla.
             </p>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <MapaRuta paradas={paradas} />
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

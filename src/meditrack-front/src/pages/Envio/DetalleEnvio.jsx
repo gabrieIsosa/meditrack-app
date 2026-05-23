@@ -543,7 +543,7 @@ function DetalleEnvio() {
                         {item.nombre} {item.presentacion ? `(${item.presentacion})` : ''} x{item.cantidad}
                       </span>
                       <span style={{ color: '#4B5563', fontSize: '13px', fontWeight: '500' }}>
-                        Lote: {item.lote} | Fecha de Vencimiento: {item.vencimiento}
+                        Lote: {item.lote} | Fecha de vencimiento: {item.vencimiento}
                       </span>
                     </div>
                   </div>
@@ -569,7 +569,7 @@ function DetalleEnvio() {
                     setRepartidorReasignar(envio.repartidorId);
                     setModalReasignarAbierto(true);
                   }}
-                  style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#3b82f6', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', transition: 'all 0.2s' }}
+                  style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#3b82f6', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', transition: 'all 0.2s' }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -721,7 +721,7 @@ function DetalleEnvio() {
       {modalReasignarAbierto && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '400px' }}>
-            <h2 style={{ marginBottom: '10px' }}>Reasignar Repartidor</h2>
+            <h2 style={{ marginBottom: '10px' }}>Reasignar repartidor</h2>
             <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
               El envío mantendrá su estado actual, pero se actualizará el responsable de la entrega.
             </p>

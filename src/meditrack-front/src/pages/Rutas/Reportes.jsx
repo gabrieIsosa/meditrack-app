@@ -79,7 +79,7 @@ function Reportes() {
   return (
     <div className="container" style={{ padding: '10px', maxWidth: '1200px', margin: '0 auto' }}>
       <div className="page-header" style={{ marginBottom: '20px' }}>
-        <h1 style={{ fontSize: 'calc(18px + 1vw)', margin: 0 }}>Reportes Operativos</h1>
+        <h1 style={{ fontSize: 'calc(18px + 1vw)', margin: 0 }}>Reportes operativos</h1>
       </div>
 
       <div className="card" style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -140,7 +140,7 @@ function Reportes() {
         {error && <div style={{ color: '#dc3545', backgroundColor: '#f8d7da', padding: '10px', borderRadius: '4px', marginBottom: '15px', fontWeight: 'bold', fontSize: '14px' }}>{error}</div>}
 
         <div className="card" style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', fontWeight: '700', color: '#374151' }}>Resultados del Análisis</h3>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', fontWeight: '700', color: '#374151' }}>Resultados del análisis</h3>
           
           {cargando && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

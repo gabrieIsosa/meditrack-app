@@ -348,7 +348,7 @@ function Home() {
             <button className="clear-filters-btn" onClick={() => { setFiltrosEstados([]); setFechaInicio(''); setFechaFin(''); setBusqueda(''); setMostrarBusquedaMobile(false); setCurrentPage(1); }} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✕</button>
           )}
           {(user?.role === 'SUPERVISOR' || user?.role === 'ADMINISTRADOR') && (
-            <button className="btn-new-shipment" onClick={() => navigate('/envios/nuevo')} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Plus size={16} /> NUEVO</button>
+            <button className="btn-new-shipment" onClick={() => navigate('/envios/nuevo')} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Plus size={16} />NUEVO</button>
           )}
         </div>
 

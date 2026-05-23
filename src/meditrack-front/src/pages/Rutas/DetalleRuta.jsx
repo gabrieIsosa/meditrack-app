@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getRutaById, getUsuarios, finalizarRuta } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import MapaRuta from '../../components/MapaRuta';
 
 const ESTADO_RUTA_COLORS = {
   PENDIENTE: '#f59e0b',
@@ -163,6 +164,22 @@ function DetalleRuta() {
 
       <div className="card">
         <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827', marginBottom: '16px' }}>
+          Recorrido planificado
+        </h2>
+        <MapaRuta paradas={(ruta?.envios ?? []).flatMap(re => {
+          const stops = [];
+          if (re.envio?.latitudOrigen != null && re.envio?.longitudOrigen != null) {
+            stops.push({ tipo: 'RETIRO', lat: re.envio.latitudOrigen, lon: re.envio.longitudOrigen, direccion: re.envio.origen, envio: re.envio });
+          }
+          if (re.envio?.latitudDestino != null && re.envio?.longitudDestino != null) {
+            stops.push({ tipo: 'ENTREGA', lat: re.envio.latitudDestino, lon: re.envio.longitudDestino, direccion: re.envio.destino, envio: re.envio });
+          }
+          return stops;
+        })} />
+      </div>
+
+      <div className="card">
+        <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827', marginBottom: '16px' }}>
           Envíos de la ruta ({ruta?.envios?.length ?? 0})
         </h2>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -191,7 +208,7 @@ function DetalleRuta() {
                   </td>
                   <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{re.envio?.id}</td>
                   <td>{re.envio?.destinatario}</td>
-                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{re.envio?.direccionEntrega}</td>
+                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{re.envio?.destino}</td>
                   <td>
                     <span
                       className="status-tag"
