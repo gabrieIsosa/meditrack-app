@@ -186,9 +186,15 @@ function EditarEnvio() {
     setOpenDestinatario(false);
   };
 
-  const clientesFiltradosRemitente = busquedaRemitente.trim() ? clientes.filter(c => c.nombre?.toLowerCase().includes(busquedaRemitente.toLowerCase())) : clientes;
+  const clientesFiltradosRemitente = clientes.filter(c =>
+    c.estadoActivo &&
+    c.nombre?.toLowerCase().includes(busquedaRemitente.toLowerCase())
+  );
 
-  const clientesFiltradosDestinatario = clientes.filter(c => c.nombre?.toLowerCase().includes(busquedaDestinatario.toLowerCase()));
+  const clientesFiltradosDestinatario = clientes.filter(c =>
+    c.estadoActivo &&
+    c.nombre?.toLowerCase().includes(busquedaDestinatario.toLowerCase())
+  );
 
   const opcionesFiltradas = catalogo.filter(m =>
     m.estadoActivo &&

@@ -1,7 +1,4 @@
 import { useEffect, useRef } from "react";
-import { LoadScript } from "@react-google-maps/api";
-
-const libraries = ["places"];
 
 function InputDireccion({ onSelect }) {
     const inputRef = useRef(null);
@@ -51,17 +48,8 @@ function InputDireccion({ onSelect }) {
     );
 }
 
-export default function DireccionAutocomplete({
-    onSelect,
-}) {
+export default function DireccionAutocomplete({onSelect,}) {
     return (
-        <LoadScript
-            googleMapsApiKey={
-                import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-            }
-            libraries={libraries}
-        >
-            <InputDireccion onSelect={onSelect} />
-        </LoadScript>
+        <InputDireccion onSelect={onSelect} />
     );
 }
