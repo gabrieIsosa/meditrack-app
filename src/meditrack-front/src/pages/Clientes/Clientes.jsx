@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { cambiarEstadoCliente, getClientes } from '../../services/api';
-import { getTipoStyles, iconos } from '../../util/Util';
+import { getTipoStyles, iconos, DefaultIcon } from '../../util/Util';
 
 const Skeleton = ({ width = '100%', height = '20px', borderRadius = '4px' }) => (
     <div style={{ width, height, borderRadius, backgroundColor: '#E5E7EB', animation: 'pulse 1.5s infinite' }} />
@@ -211,15 +211,16 @@ function Clientes() {
                                                         width: '42px',
                                                         height: '42px',
                                                         borderRadius: '50%',
-                                                        background: '#DCFCE7',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        fontWeight: '700',
                                                         ...getTipoStyles(c.tipoEstablecimiento),
                                                         border: '1px solid #E5E7EB'
                                                     }}>
-                                                        {iconos[c.tipoEstablecimiento] || '🏢'}
+                                                        {(() => {
+                                                            const IconComponent = iconos[c.tipoEstablecimiento] || DefaultIcon;
+                                                            return <IconComponent size={20} />;
+                                                        })()}
                                                     </div>
                                                     <div>
                                                         <div style={{ fontWeight: '700', color: '#111827' }}>

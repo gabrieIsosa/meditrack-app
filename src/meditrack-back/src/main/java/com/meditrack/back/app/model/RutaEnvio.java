@@ -21,14 +21,55 @@ public class RutaEnvio {
     @JoinColumn(name = "envio_id", nullable = false)
     private Envio envio;
 
-    @Column(nullable = false)
-    private int orden;
+    @Column(name = "retiro_orden", nullable = true)
+    private Integer retiroOrden;
+
+    @Column(name = "entrega_orden", nullable = true)
+    private Integer entregaOrden;
+
+    @Column(name = "orden", nullable = true)
+    private Integer orden;
 
     public RutaEnvio() {}
 
     public RutaEnvio(Envio envio, int orden) {
         this.envio = envio;
         this.orden = orden;
+        this.retiroOrden = orden;
+        this.entregaOrden = orden;
+    }
+
+    public RutaEnvio(Envio envio, int retiroOrden, int entregaOrden) {
+        this.envio = envio;
+        this.retiroOrden = retiroOrden;
+        this.entregaOrden = entregaOrden;
+        this.orden = entregaOrden;
+    }
+
+    public int getRetiroOrden() {
+        return retiroOrden != null ? retiroOrden : (orden != null ? orden : 0);
+    }
+
+    public void setRetiroOrden(Integer retiroOrden) {
+        this.retiroOrden = retiroOrden;
+    }
+
+    public int getEntregaOrden() {
+        return entregaOrden != null ? entregaOrden : (orden != null ? orden : 0);
+    }
+
+    public void setEntregaOrden(Integer entregaOrden) {
+        this.entregaOrden = entregaOrden;
+    }
+
+    public Integer getOrden() {
+        return orden != null ? orden : getEntregaOrden();
+    }
+
+    public void setOrden(Integer orden) {
+        this.orden = orden;
+        this.retiroOrden = orden;
+        this.entregaOrden = orden;
     }
 
     public Long getId() {
@@ -53,14 +94,6 @@ public class RutaEnvio {
 
     public void setEnvio(Envio envio) {
         this.envio = envio;
-    }
-
-    public int getOrden() {
-        return orden;
-    }
-
-    public void setOrden(int orden) {
-        this.orden = orden;
     }
     
 }

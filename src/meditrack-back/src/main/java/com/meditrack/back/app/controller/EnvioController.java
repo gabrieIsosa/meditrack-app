@@ -112,7 +112,9 @@ public class EnvioController {
             String repartidorId = body.get("repartidorId");
             String tipoIncidencia = body.get("tipoIncidencia");
             String descripcionIncidencia = body.get("descripcionIncidencia");
-            return ResponseEntity.ok(envioService.actualizarEstado(id, nuevoEstado, sesion.getNombre(), repartidorId, tipoIncidencia, descripcionIncidencia));
+            String receptorNombre = body.get("receptorNombre");
+            String receptorDni = body.get("receptorDni");
+            return ResponseEntity.ok(envioService.actualizarEstado(id, nuevoEstado, sesion.getNombre(), repartidorId, tipoIncidencia, descripcionIncidencia, receptorNombre, receptorDni));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Estado no válido"));
         } catch (RuntimeException e) {

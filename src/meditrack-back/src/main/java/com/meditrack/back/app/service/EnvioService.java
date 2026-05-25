@@ -17,6 +17,7 @@ import com.meditrack.back.app.model.DetalleEnvio;
 import com.meditrack.back.app.model.Envio;
 import com.meditrack.back.app.model.EstadoEnvio;
 import com.meditrack.back.app.model.HistorialEstado;
+import com.meditrack.back.app.model.Incidente;
 import com.meditrack.back.app.model.Medicamento;
 import com.meditrack.back.app.model.TrackingPublicoDTO;
 import com.meditrack.back.app.repository.EnvioRepository;
@@ -197,11 +198,21 @@ public class EnvioService {
 
     @Transactional
     public Envio actualizarEstado(String id, EstadoEnvio nuevoEstado, String usuario, String repartidorId, String tipoIncidencia, String descripcionIncidencia) {
+        return actualizarEstado(id, nuevoEstado, usuario, repartidorId, tipoIncidencia, descripcionIncidencia, null, null);
+    }
+
+    @Transactional
+    public Envio actualizarEstado(String id, EstadoEnvio nuevoEstado, String usuario, String repartidorId, String tipoIncidencia, String descripcionIncidencia, String receptorNombre, String receptorDni) {
         Envio envio = buscarPorId(id);
         if (nuevoEstado == EstadoEnvio.ASIGNADO) {
             envio.setRepartidorId(repartidorId);
         }
         envio.setEstado(nuevoEstado);
+        
+        if (nuevoEstado == EstadoEnvio.ENTREGADO) {
+            envio.setReceptorNombre(receptorNombre);
+            envio.setReceptorDni(receptorDni);
+        }
         
         String tipoHistorial = "CAMBIO_ESTADO";
         String detalleHistorial = "Cambio a " + nuevoEstado;
@@ -209,6 +220,16 @@ public class EnvioService {
         if (nuevoEstado == EstadoEnvio.INCIDENTE_REPORTADO) {
             tipoHistorial = tipoIncidencia;
             detalleHistorial = descripcionIncidencia;
+            
+            Incidente incidente = new Incidente(
+                envio, 
+                tipoIncidencia != null ? tipoIncidencia : "Incidente Reportado", 
+                descripcionIncidencia != null ? descripcionIncidencia : "Sin descripción", 
+                LocalDate.now().toString(), 
+                LocalTime.now().toString().substring(0, 5), 
+                usuario
+            );
+            envio.agregarIncidente(incidente);
         }
         
         registrarHistorial(envio, tipoHistorial, nuevoEstado, detalleHistorial, LocalDate.now().toString(), LocalTime.now().toString().substring(0, 5), usuario);

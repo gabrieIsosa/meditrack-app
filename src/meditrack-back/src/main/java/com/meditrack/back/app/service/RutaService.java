@@ -94,10 +94,23 @@ public class RutaService {
 
         for (Map<String, Object> envioData : enviosData) {
             String envioId = (String) envioData.get("envioId");
-            int orden = ((Number) envioData.get("orden")).intValue();
+
+            int retiroOrden = 0;
+            int entregaOrden = 0;
+            if (envioData.containsKey("retiroOrden")) {
+                retiroOrden = ((Number) envioData.get("retiroOrden")).intValue();
+            } else if (envioData.containsKey("orden")) {
+                retiroOrden = ((Number) envioData.get("orden")).intValue();
+            }
+
+            if (envioData.containsKey("entregaOrden")) {
+                entregaOrden = ((Number) envioData.get("entregaOrden")).intValue();
+            } else if (envioData.containsKey("orden")) {
+                entregaOrden = ((Number) envioData.get("orden")).intValue();
+            }
 
             Envio envio = envioRepository.findById(envioId).get();
-            ruta.agregarEnvio(new RutaEnvio(envio, orden));
+            ruta.agregarEnvio(new RutaEnvio(envio, retiroOrden, entregaOrden));
 
             envioService.actualizarEstado(envioId, EstadoEnvio.ASIGNADO, usuario, repartidorId, null, null);
         }

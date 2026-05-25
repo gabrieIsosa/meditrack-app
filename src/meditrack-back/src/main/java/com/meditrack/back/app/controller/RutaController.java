@@ -84,7 +84,7 @@ public class RutaController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             Sesion sesion = autenticar(authHeader);
-            if (sesion.getRole() != Role.SUPERVISOR && sesion.getRole() != Role.ADMINISTRADOR) {
+            if (sesion.getRole() != Role.SUPERVISOR && sesion.getRole() != Role.ADMINISTRADOR && sesion.getRole() != Role.REPARTIDOR) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Sin permisos para finalizar rutas"));
             }
             return ResponseEntity.ok(rutaService.finalizar(id, sesion.getNombre()));

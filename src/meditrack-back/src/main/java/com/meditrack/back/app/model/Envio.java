@@ -60,6 +60,12 @@ public class Envio {
     @Column(name = "repartidor_id")
     private String repartidorId;
 
+    @Column(name = "receptor_nombre", nullable = true)
+    private String receptorNombre;
+
+    @Column(name = "receptor_dni", nullable = true)
+    private String receptorDni;
+
     @Column(name = "fecha_creacion")
     private String fechaCreacion;
 
@@ -83,6 +89,9 @@ public class Envio {
 
     @OneToMany(mappedBy = "envio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleEnvio> detalles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "envio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Incidente> incidencias = new ArrayList<>();
 
     public Envio() {
     }
@@ -210,6 +219,21 @@ public class Envio {
         }
     }
 
+    public List<Incidente> getIncidencias() {
+        return incidencias;
+    }
+
+    public void setIncidencias(List<Incidente> incidencias) {
+        this.incidencias = incidencias;
+    }
+
+    public void agregarIncidente(Incidente incidente) {
+        if (incidente != null) {
+            incidente.setEnvio(this);
+            this.incidencias.add(incidente);
+        }
+    }
+
     public String getPrioridad() { 
         return prioridad; 
     }
@@ -304,6 +328,22 @@ public class Envio {
 
     public void setLongitudDestino(Double longitudDestino) {
         this.longitudDestino = longitudDestino;
+    }
+
+    public String getReceptorNombre() {
+        return receptorNombre;
+    }
+
+    public void setReceptorNombre(String receptorNombre) {
+        this.receptorNombre = receptorNombre;
+    }
+
+    public String getReceptorDni() {
+        return receptorDni;
+    }
+
+    public void setReceptorDni(String receptorDni) {
+        this.receptorDni = receptorDni;
     }
 
 }

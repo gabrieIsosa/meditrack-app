@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DireccionAutocomplete from '../../components/DireccionAutocomplete';
 import { getClienteById, updateCliente } from '../../services/api';
-import { getTipoStyles, iconos } from '../../util/Util';
+import { getTipoStyles, iconos, DefaultIcon, PinIcon } from '../../util/Util';
 
 function EditarCliente() {
 
@@ -124,13 +124,14 @@ function EditarCliente() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '34px',
-                            fontWeight: '700',
                             border: '1px solid #E5E7EB',
                             ...getTipoStyles(form.tipoEstablecimiento)
                         }}
                     >
-                        {iconos[form.tipoEstablecimiento] || '🏢'}
+                        {(() => {
+                            const IconComponent = iconos[form.tipoEstablecimiento] || DefaultIcon;
+                            return <IconComponent size={36} />;
+                        })()}
                     </div>
 
                     <div>
@@ -252,10 +253,14 @@ function EditarCliente() {
                                     border: '1px solid #E5E7EB',
                                     borderRadius: '10px',
                                     color: '#374151',
-                                    fontSize: '14px'
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
                                 }}
                             >
-                                📍 {form.direccion}
+                                <PinIcon size={18} style={{ color: '#EF4444', flexShrink: 0 }} />
+                                <span>{form.direccion}</span>
                             </div>
 
                         )}

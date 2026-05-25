@@ -87,7 +87,7 @@ class ReporteServiceTest {
     @SuppressWarnings("unchecked")
     void generarReporteOperativo_incidencias_retornaDatosCorrectamente() {
         List<Object[]> resultadosSimulados = new ArrayList<>();
-        resultadosSimulados.add(new Object[]{"2026-05-20", "FALLA_MECANICA", "Diego Torres", "INCIDENTE_REPORTADO"});
+        resultadosSimulados.add(new Object[]{"2026-05-20", "FALLA_MECANICA", "Diego Torres", "INCIDENTE_REPORTADO", "Problema en motor"});
 
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(anyString(), anyString())).thenReturn(query);
@@ -106,6 +106,7 @@ class ReporteServiceTest {
         assertEquals("FALLA_MECANICA", fila.get("tipo"));
         assertEquals("Diego Torres", fila.get("repartidor"));
         assertEquals("INCIDENTE_REPORTADO", fila.get("estado"));
+        assertEquals("Problema en motor", fila.get("descripcion"));
     }
 
     @Test

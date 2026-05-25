@@ -36,7 +36,7 @@ public class Ruta {
     private String horaCreacion;
 
     @OneToMany(mappedBy = "ruta", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("orden ASC")
+    @OrderBy("retiroOrden ASC")
     private List<RutaEnvio> envios = new ArrayList<>();
 
     public Ruta() {}

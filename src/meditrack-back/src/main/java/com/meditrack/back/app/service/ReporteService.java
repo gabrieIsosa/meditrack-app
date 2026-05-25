@@ -100,7 +100,7 @@ public class ReporteService {
             }
 
             if ("incidencias".equals(tema)) {
-                String sqlIncidencias = "SELECT " + formatoGrupoIncidencias + " as per, i.tipo, i.usuario, i.estado " +
+                String sqlIncidencias = "SELECT " + formatoGrupoIncidencias + " as per, i.tipo, i.usuario, i.estado, i.detalle " +
                                         "FROM historial_estados i " +
                                         "WHERE i.estado = 'INCIDENTE_REPORTADO' AND i.tipo <> 'CAMBIO_ESTADO' AND i.fecha BETWEEN :inicio AND :fin " +
                                         "ORDER BY per ASC, i.fecha DESC";
@@ -118,6 +118,7 @@ public class ReporteService {
                     map.put("tipo", fila[1]);
                     map.put("repartidor", fila[2] != null ? fila[2] : "No asignado");
                     map.put("estado", fila[3]);
+                    map.put("descripcion", fila[4] != null ? fila[4] : "Sin descripción");
                     dataList.add(map);
                 }
                 response.put("tipo", "incidencias");

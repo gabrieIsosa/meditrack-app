@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DireccionAutocomplete from '../../components/DireccionAutocomplete';
 import { createCliente } from '../../services/api';
-import { getTipoStyles, iconos } from '../../util/Util';
+import { getTipoStyles, iconos, DefaultIcon } from '../../util/Util';
 
 function NuevoCliente() {
 
@@ -94,19 +94,17 @@ function NuevoCliente() {
                                 width: '110px',
                                 height: '110px',
                                 borderRadius: '50%',
-                                background: '#DCFCE7',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '34px',
-                                fontWeight: '700',
-                                ...getTipoStyles(
-                                    form.tipoEstablecimiento
-                                ),
+                                ...getTipoStyles(form.tipoEstablecimiento),
                                 border: '1px solid #E5E7EB',
                             }}
                         >
-                            {iconos[form.tipoEstablecimiento] || '🏢'}
+                            {(() => {
+                                const IconComponent = iconos[form.tipoEstablecimiento] || DefaultIcon;
+                                return <IconComponent size={42} />;
+                            })()}
                         </div>
 
                         <div>

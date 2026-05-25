@@ -19,6 +19,8 @@ import TrackingPublico from './pages/Envio/TrackingPublico';
 import Rutas from './pages/Rutas/Rutas';
 import NuevaRuta from './pages/Rutas/NuevaRuta';
 import DetalleRuta from './pages/Rutas/DetalleRuta';
+import Viajes from './pages/Viajes/Viajes';
+import DetalleViaje from './pages/Viajes/DetalleViaje';
 import Clientes from './pages/Clientes/Clientes';
 import NuevoCliente from './pages/Clientes/NuevoCliente';
 import EditarCliente from './pages/Clientes/EditarCliente';
@@ -54,6 +56,8 @@ function App() {
               <Route path="/medicamentos" element={<Medicamentos />} />
               <Route path="/medicamentos/editar/:id" element={<EditarMedicamento />} />
               <Route path="/medicamentos/nuevoMedicamento" element={<NuevoMedicamento />} />
+              <Route path="/viajes" element={<ProtectedRoute roles={['REPARTIDOR']}><Viajes /></ProtectedRoute>} />
+              <Route path="/viajes/detalle" element={<ProtectedRoute roles={['REPARTIDOR']}><DetalleViaje /></ProtectedRoute>} />
               <Route path="/clientes" element={<Clientes />} />
               <Route path="/clientes/nuevo" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevoCliente /></ProtectedRoute>} />
               <Route path="/clientes/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}> <EditarCliente /></ProtectedRoute>} />

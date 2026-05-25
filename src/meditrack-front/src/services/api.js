@@ -107,8 +107,9 @@ export async function descargarEtiqueta(id) {
 }
 
 export async function getEnvios() {
-  const res = await fetch(`${BASE_URL}/api/envios`, {
+  const res = await fetch(`${BASE_URL}/api/envios?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
   await handleResponse(res);
   if (!res.ok) throw new Error('Error al obtener envíos');
@@ -116,8 +117,9 @@ export async function getEnvios() {
 }
 
 export async function getEnvioById(id) {
-  const res = await fetch(`${BASE_URL}/api/envios/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/envios/${id}?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
   await handleResponse(res);
   if (!res.ok) throw new Error('Envío no encontrado');
@@ -176,7 +178,7 @@ export async function updateEnvio(id, data) {
   return res.json();
 }
 
-export async function updateEstadoEnvio(id, estado, fecha, hora, usuario, repartidorId = null,tipoIncidencia = null, descripcionIncidencia = null) {
+export async function updateEstadoEnvio(id, estado, fecha, hora, usuario, repartidorId = null,tipoIncidencia = null, descripcionIncidencia = null, receptorNombre = null, receptorDni = null) {
   const bodyData = { estado, fecha, hora, usuario };
   if (repartidorId) {
     bodyData.repartidorId = repartidorId;
@@ -184,6 +186,12 @@ export async function updateEstadoEnvio(id, estado, fecha, hora, usuario, repart
   if (estado === 'INCIDENTE_REPORTADO') {
     bodyData.tipoIncidencia = tipoIncidencia;
     bodyData.descripcionIncidencia = descripcionIncidencia;
+  }
+  if (receptorNombre) {
+    bodyData.receptorNombre = receptorNombre;
+  }
+  if (receptorDni) {
+    bodyData.receptorDni = receptorDni;
   }
   const res = await fetch(`${BASE_URL}/api/envios/${id}/estado`, {
     method: 'PUT',
@@ -227,8 +235,9 @@ export async function cancelarEnvio(id, motivo, firma) {
 }
 
 export async function getUsuarios() {
-  const res = await fetch(`${BASE_URL}/api/usuarios`, {
+  const res = await fetch(`${BASE_URL}/api/usuarios?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
   await handleResponse(res);
   if (!res.ok) throw new Error('Error al obtener usuarios');
@@ -236,8 +245,9 @@ export async function getUsuarios() {
 }
 
 export async function getUsuarioById(id) {
-  const res = await fetch(`${BASE_URL}/api/usuarios/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/usuarios/${id}?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
   await handleResponse(res);
   if (!res.ok) throw new Error('Usuario no encontrado');
@@ -288,8 +298,9 @@ export async function updateUsuario(id, data) {
 
 // --- Medicamentos (stubs — conectar cuando exista el modelo) ---
 export async function getMedicamentos() {
-  const res = await fetch(`${BASE_URL}/api/medicamentos`, {
+  const res = await fetch(`${BASE_URL}/api/medicamentos?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
   await handleResponse(res);
   if (!res.ok) throw new Error('Error al obtener medicamentos');
@@ -297,8 +308,9 @@ export async function getMedicamentos() {
 }
 
 export async function getMedicamentoById(id) {
-  const res = await fetch(`${BASE_URL}/api/medicamentos/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/medicamentos/${id}?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
 
   await handleResponse(res);
@@ -377,8 +389,9 @@ export async function toggleEstadoUsuario(id) {
 }
 
 export async function getRutas() {
-  const res = await fetch(`${BASE_URL}/api/rutas`, {
+  const res = await fetch(`${BASE_URL}/api/rutas?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
   await handleResponse(res);
   if (!res.ok) throw new Error('Error al obtener rutas');
@@ -386,8 +399,9 @@ export async function getRutas() {
 }
 
 export async function getRutaById(id) {
-  const res = await fetch(`${BASE_URL}/api/rutas/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/rutas/${id}?_t=${Date.now()}`, {
     headers: { ...getAuthHeaders() },
+    cache: 'no-store'
   });
   await handleResponse(res);
   if (!res.ok) throw new Error('Ruta no encontrada');

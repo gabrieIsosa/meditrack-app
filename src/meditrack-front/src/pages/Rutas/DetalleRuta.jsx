@@ -169,26 +169,49 @@ function DetalleRuta() {
         <MapaRuta paradas={(ruta?.envios ?? []).flatMap(re => {
           const stops = [];
           if (re.envio?.latitudOrigen != null && re.envio?.longitudOrigen != null) {
-            stops.push({ tipo: 'RETIRO', lat: re.envio.latitudOrigen, lon: re.envio.longitudOrigen, direccion: re.envio.origen, envio: re.envio });
+            stops.push({
+              tipo: 'RETIRO',
+              lat: re.envio.latitudOrigen,
+              lon: re.envio.longitudOrigen,
+              direccion: re.envio.origen,
+              envio: re.envio,
+              orden: re.retiroOrden ?? re.orden
+            });
           }
           if (re.envio?.latitudDestino != null && re.envio?.longitudDestino != null) {
-            stops.push({ tipo: 'ENTREGA', lat: re.envio.latitudDestino, lon: re.envio.longitudDestino, direccion: re.envio.destino, envio: re.envio });
+            stops.push({
+              tipo: 'ENTREGA',
+              lat: re.envio.latitudDestino,
+              lon: re.envio.longitudDestino,
+              direccion: re.envio.destino,
+              envio: re.envio,
+              orden: re.entregaOrden ?? re.orden
+            });
           }
           return stops;
-        })} />
+        }).sort((a, b) => a.orden - b.orden)} />
       </div>
 
       <div className="card">
         <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827', marginBottom: '16px' }}>
-          Envíos de la ruta ({ruta?.envios?.length ?? 0})
+          Paradas de la ruta ({
+            (ruta?.envios ?? []).flatMap(re => {
+              if (!re.envio) return [];
+              return [
+                { tipo: 'RETIRO', envio: re.envio },
+                { tipo: 'ENTREGA', envio: re.envio }
+              ];
+            }).length
+          })
         </h2>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ width: '60px', textAlign: 'center' }}>Orden</th>
+              <th style={{ width: '60px', textAlign: 'center' }}>Parada</th>
+              <th style={{ width: '100px' }}>Tipo</th>
               <th>Tracking ID</th>
-              <th>Destinatario</th>
-              <th>Dirección entrega</th>
+              <th>Contacto</th>
+              <th>Dirección</th>
               <th>Estado</th>
               <th style={{ textAlign: 'center' }}>Acciones</th>
             </tr>
@@ -196,35 +219,66 @@ function DetalleRuta() {
           <tbody>
             {ruta?.envios?.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-                  Esta ruta no tiene envíos
+                <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                  Esta ruta no tiene paradas
                 </td>
               </tr>
             ) : (
-              ruta?.envios?.map(re => (
-                <tr key={re.id}>
+              (ruta?.envios ?? []).flatMap(re => {
+                if (!re.envio) return [];
+                return [
+                  {
+                    tipo: 'RETIRO',
+                    envio: re.envio,
+                    contacto: re.envio.remitente,
+                    direccion: re.envio.origen,
+                    orden: re.retiroOrden ?? re.orden,
+                  },
+                  {
+                    tipo: 'ENTREGA',
+                    envio: re.envio,
+                    contacto: re.envio.destinatario,
+                    direccion: re.envio.destino,
+                    orden: re.entregaOrden ?? re.orden,
+                  },
+                ];
+              }).sort((a, b) => a.orden - b.orden).map((p, idx) => (
+                <tr key={`${p.envio.id}-${p.tipo}`} style={{ backgroundColor: p.tipo === 'RETIRO' ? '#F0FDF4' : '#EFF6FF' }}>
                   <td style={{ textAlign: 'center', fontWeight: '900', fontSize: '18px', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
-                    {re.orden}
+                    {idx + 1}
                   </td>
-                  <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{re.envio?.id}</td>
-                  <td>{re.envio?.destinatario}</td>
-                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{re.envio?.destino}</td>
+                  <td>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      backgroundColor: p.tipo === 'RETIRO' ? '#D1FAE5' : '#DBEAFE',
+                      color: p.tipo === 'RETIRO' ? '#065F46' : '#1E40AF',
+                    }}>
+                      {p.tipo}
+                    </span>
+                  </td>
+                  <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{p.envio.id}</td>
+                  <td>{p.contacto}</td>
+                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{p.direccion}</td>
                   <td>
                     <span
                       className="status-tag"
                       style={{
-                        backgroundColor: `${ESTADO_ENVIO_COLORS[re.envio?.estado]}15`,
-                        color: ESTADO_ENVIO_COLORS[re.envio?.estado],
+                        backgroundColor: `${ESTADO_ENVIO_COLORS[p.envio.estado]}15`,
+                        color: ESTADO_ENVIO_COLORS[p.envio.estado],
                       }}
                     >
-                      {re.envio?.estado?.replace(/_/g, ' ')}
+                      {p.envio.estado?.replace(/_/g, ' ')}
                     </span>
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <button
                       className="action-icon-btn"
                       title="Ver detalle del envío"
-                      onClick={() => navigate(`/detalle/${re.envio?.id}`)}
+                      onClick={() => navigate(`/detalle/${p.envio.id}`)}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />

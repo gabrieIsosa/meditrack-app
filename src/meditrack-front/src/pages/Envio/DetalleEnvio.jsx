@@ -582,6 +582,70 @@ function DetalleEnvio() {
           </div>
         </div>
 
+        {envio.estado === 'ENTREGADO' && (
+          <div className="info-row-grid" style={{ marginTop: '20px', borderTop: '1px solid #E5E7EB', paddingTop: '20px', marginBottom: '0' }}>
+            <div className="detail-field" style={{ gridColumn: 'span 3' }}>
+              <label style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                INFORMACIÓN DE RECEPCIÓN
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '10px', padding: '16px', border: '1px solid #D1FAE5', borderRadius: '8px', background: '#F0FDF4' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#065F46', textTransform: 'uppercase' }}>Recibido Por</span>
+                  <span style={{ fontWeight: '600', color: '#0f172a', fontSize: '15px' }}>{envio.receptorNombre || 'No registrado'}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#065F46', textTransform: 'uppercase' }}>Número de DNI</span>
+                  <span style={{ fontWeight: '600', color: '#0f172a', fontSize: '15px' }}>{envio.receptorDni || 'No registrado'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {envio.incidencias && envio.incidencias.length > 0 && (
+          <div className="info-row-grid" style={{ marginTop: '20px', borderTop: '1px solid #E5E7EB', paddingTop: '20px', marginBottom: '0' }}>
+            <div className="detail-field" style={{ gridColumn: 'span 3' }}>
+              <label style={{ color: '#DC2626', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                INCIDENTES REPORTADOS
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                {envio.incidencias.map((inc, idx) => (
+                  <div key={inc.id || idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', border: '1px solid #FEE2E2', borderRadius: '8px', background: '#FEF2F2' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                      <span style={{ fontWeight: '700', color: '#991B1B', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                          <line x1="12" y1="9" x2="12" y2="13"></line>
+                          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        {inc.titulo?.replaceAll('_', ' ')}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#7F1D1D', background: '#FEE2E2', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
+                        {inc.fecha?.split('-').reverse().join('/')} {inc.hora}
+                      </span>
+                    </div>
+                    <p style={{ margin: '4px 0', fontSize: '14px', color: '#4B5563', lineHeight: '1.4' }}>
+                      {inc.descripcion || 'Sin descripción detallada.'}
+                    </p>
+                    <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'bold', alignSelf: 'flex-end' }}>
+                      Reportado por: {inc.usuario}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ marginTop: '20px', borderTop: '1px solid #E5E7EB', paddingTop: '20px' }}>
           <div className="detail-field">
             <label>OBSERVACIONES</label>
