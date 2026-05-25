@@ -71,7 +71,7 @@ class RutaServiceTest {
 
     private Map<String, Object> bodyValido() {
         return Map.of(
-            "fecha", "2026-05-18",
+            "fecha", java.time.LocalDate.now().toString(),
             "repartidorId", REPARTIDOR_ID,
             "envios", List.of(
                 Map.of("envioId", ENVIO_ID_1, "orden", 1),
@@ -112,7 +112,7 @@ class RutaServiceTest {
     @Test
     void crear_sinEnvios_debeLanzarExcepcion() {
         Map<String, Object> body = Map.of(
-            "fecha", "2026-05-18",
+            "fecha", java.time.LocalDate.now().toString(),
             "repartidorId", REPARTIDOR_ID,
             "envios", new ArrayList<>()
         );
@@ -127,14 +127,15 @@ class RutaServiceTest {
     @Test
     void crear_conRepartidorOcupado_debeLanzarExcepcion() {
         Usuario repartidor = repartidorDisponible();
-        repartidor.setHaciendoEntrega(true);
+        String fecha = java.time.LocalDate.now().toString();
 
         when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidor));
+        when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(eq(REPARTIDOR_ID), eq(fecha), eq(EstadoRuta.COMPLETADA))).thenReturn(true);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> rutaService.crear(bodyValido(), USUARIO_TEST));
 
-        assertEquals("El repartidor ya tiene una entrega activa", ex.getMessage());
+        assertEquals("El repartidor ya tiene una ruta asignada para el día: " + fecha, ex.getMessage());
     }
 
     @Test

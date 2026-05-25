@@ -70,8 +70,8 @@ public class RutaService {
             throw new IllegalArgumentException("El repartidor no está activo");
         }
 
-        if (repartidor.isHaciendoEntrega()) {
-            throw new IllegalArgumentException("El repartidor ya tiene una entrega activa");
+        if (rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(repartidorId, fecha, EstadoRuta.COMPLETADA)) {
+            throw new IllegalArgumentException("El repartidor ya tiene una ruta asignada para el día: " + fecha);
         }
 
         for (Map<String, Object> envioData : enviosData) {
@@ -115,8 +115,11 @@ public class RutaService {
             envioService.actualizarEstado(envioId, EstadoEnvio.ASIGNADO, usuario, repartidorId, null, null);
         }
 
-        repartidor.setHaciendoEntrega(true);
-        usuarioRepository.save(repartidor);
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        if (fecha.equals(hoy.toString())) {
+            repartidor.setHaciendoEntrega(true);
+            usuarioRepository.save(repartidor);
+        }
 
         return rutaRepository.save(ruta);
     }

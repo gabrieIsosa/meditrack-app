@@ -86,6 +86,8 @@ function NuevaRuta() {
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [repartidorId, setRepartidorId] = useState('');
   const [repartidores, setRepartidores] = useState([]);
+  const [todosRepartidores, setTodosRepartidores] = useState([]);
+  const [todasRutas, setTodasRutas] = useState([]);
 
   const [enviosDisponibles, setEnviosDisponibles] = useState([]);
   const [seleccionados, setSeleccionados] = useState([]);
@@ -95,12 +97,29 @@ function NuevaRuta() {
   const [paradas, setParadas] = useState([]);
 
   useEffect(() => {
-    getUsuarios()
-      .then(data => {
-        setRepartidores(data.filter(u => u.role === 'REPARTIDOR' && u.estadoActivo && !u.haciendoEntrega));
+    Promise.all([getUsuarios(), getRutas()])
+      .then(([usuarios, rutas]) => {
+        setTodosRepartidores(usuarios.filter(u => u.role === 'REPARTIDOR' && u.estadoActivo));
+        setTodasRutas(rutas);
       })
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    const filtrados = todosRepartidores.filter(repartidor => {
+      const tieneRutaAsignada = todasRutas.some(r => 
+        r.repartidorId === repartidor.id && 
+        r.fecha === fecha && 
+        r.estado !== 'COMPLETADA'
+      );
+      return !tieneRutaAsignada;
+    });
+    setRepartidores(filtrados);
+
+    if (repartidorId && !filtrados.some(r => r.id === repartidorId)) {
+      setRepartidorId('');
+    }
+  }, [fecha, todosRepartidores, todasRutas]);
 
   const cargarEnviosDisponibles = async () => {
     setLoadingEnvios(true);

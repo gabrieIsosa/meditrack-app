@@ -17,10 +17,12 @@ import com.meditrack.back.app.repository.UsuarioRepository;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final NotificacionService notificacionService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, NotificacionService notificacionService) {
         this.usuarioRepository = usuarioRepository;
+        this.notificacionService = notificacionService;
     }
 
     public List<Usuario> listarTodos() {
@@ -67,7 +69,19 @@ public class UsuarioService {
 
         agregarHistorial(nuevo, "Creación", "-", "-", LocalDateTime.now().toString(), autorDelCambio);
 
-        return usuarioRepository.save(nuevo);
+        Usuario saved = usuarioRepository.save(nuevo);
+
+        try {
+            notificacionService.crearNotificacion(
+                saved,
+                "Registro Confirmado",
+                "Se ha confirmado tu registro en el sistema por el administrador " + autorDelCambio.getNombre() + " (" + autorDelCambio.getRole() + ")."
+            );
+        } catch (Exception e) {
+            System.err.println("Error al enviar notificación de confirmación de registro: " + e.getMessage());
+        }
+
+        return saved;
     }
 
     public Usuario actualizar(String id, Map<String, String> datos, Usuario autorDelCambio) {
@@ -117,7 +131,19 @@ public class UsuarioService {
             }
         }
 
-        return usuarioRepository.save(usuario);
+        Usuario saved = usuarioRepository.save(usuario);
+
+        try {
+            notificacionService.crearNotificacion(
+                saved,
+                "Datos de Usuario Modificados",
+                "Tus datos personales o rol en la plataforma fueron modificados. Administrador responsable: " + autorDelCambio.getNombre() + "."
+            );
+        } catch (Exception e) {
+            System.err.println("Error al enviar notificación de actualización de usuario: " + e.getMessage());
+        }
+
+        return saved;
     }
 
     public Usuario toggleEstado(String id, Usuario autorDelCambio) {
