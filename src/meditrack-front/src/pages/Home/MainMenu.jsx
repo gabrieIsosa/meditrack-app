@@ -12,7 +12,8 @@ import {
   NotepadText,
   History,
   CircleAlert,
-  LayoutDashboard
+  LayoutDashboard,
+  Mail
 } from 'lucide-react';
 
 const MainMenu = () => {
@@ -61,7 +62,19 @@ const MainMenu = () => {
         { label: "Historial", icon: <History size={32} />, path: "/historial-repartidor", color: "#ec7f35" },
         { label: "Transportes", icon: <Truck size={32} />, path: "/transportes", color: "#ec7f35" },
       ]
-    }
+    },
+    {
+      title: "Comunicaciones",
+      rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'],
+      items: [
+        {
+          label: "Mails",
+          icon: <Mail size={32} />,
+          path: "/mails",
+          color: "#7c3aed"
+        },
+      ]
+    },
   ];
 
   const filteredSections = menuSections.filter(section => 

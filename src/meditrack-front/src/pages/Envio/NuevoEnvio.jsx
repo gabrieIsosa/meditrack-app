@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createEnvio, getMedicamentos, getClientes } from '../../services/api';
+import { crearMailSistema } from '../../util/Util';
 
 const FORM_INICIAL = {
   remitente: '',
@@ -162,6 +163,23 @@ function NuevoEnvio() {
       };
 
       await createEnvio(payload);
+
+      await crearMailSistema({
+        asunto: 'Nuevo envío creado',
+        remitente: 'sistema@meditrack.com',
+        destinatario: form.destinatario,
+        contenido: `Se creó un nuevo envío.
+
+        Remitente: ${form.remitente}
+        Destinatario: ${form.destinatario}
+        Dirección destino: ${form.destino}
+        Fecha estimada: ${form.fechaEstimada}
+
+        Medicamentos:
+        ${descripcionGenerada}
+      `
+      });
+
       navigate('/envios', { state: { success: true } });
     } catch (err) {
       setError(err.message || 'Error de conexión con el servidor.');

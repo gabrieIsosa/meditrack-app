@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 import { Hospital, Pill, FlaskConical, Warehouse, Building2, MapPin } from 'lucide-react';
+import { createMail } from '../services/api';
 
 export const getTipoStyles = (tipo) => {
     switch (tipo) {
@@ -40,4 +41,15 @@ export const iconos = {
 };
 
 export const DefaultIcon = Building2;
-export const PinIcon = MapPin;
+export const PinIcon = MapPin;
+
+export async function crearMailSistema({ asunto, remitente, destinatario, contenido, estado = 'Enviado' }) {
+    const mail = {
+        asunto,
+        remitente,
+        destinatario,
+        contenido,
+        estado,
+    };
+    return await createMail(mail);
+}
