@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getReporte } from '../../services/api';
 import { exportReporteCsv } from '../../services/api';
 function Reportes() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [tema, setTema] = useState(location.state?.tema || 'volumen');
   const [fechaInicio, setFechaInicio] = useState(location.state?.fechaInicio || '');
   const [fechaFin, setFechaFin] = useState(location.state?.fechaFin || '');
@@ -114,8 +116,9 @@ function Reportes() {
 
   return (
     <div className="container" style={{ padding: '10px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div className="page-header" style={{ marginBottom: '20px' }}>
-        <h1 style={{ fontSize: 'calc(18px + 1vw)', margin: 0 }}>Reportes operativos</h1>
+      <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+        <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
+        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Reportes Operativos</h1>
       </div>
 
       <div className="card" style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>

@@ -71,9 +71,47 @@ const DashboardKPI = () => {
     if (loading) {
         return (
             <div style={{ padding: '20px', fontFamily: 'sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <div style={{ height: '32px', width: '250px', backgroundColor: '#cbd5e1', borderRadius: '6px', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
-                    <div style={{ height: '38px', width: '38px', backgroundColor: '#cbd5e1', borderRadius: '50%', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+                <style>{`
+                    .skeleton-pulse {
+                        background: #e2e8f0;
+                        animation: skeleton-blink 1.5s infinite ease-in-out;
+                    }
+                    @keyframes skeleton-blink {
+                        0% { background-color: #e2e8f0; }
+                        50% { background-color: #cbd5e1; }
+                        100% { background-color: #e2e8f0; }
+                    }
+                `}</style>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+                        <div className="skeleton-pulse" style={{ height: '38px', width: '90px', borderRadius: '6px' }}></div>
+                        <div className="skeleton-pulse" style={{ height: '32px', width: '320px', borderRadius: '6px' }}></div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <div className="skeleton-pulse" style={{ height: '32px', width: '110px', borderRadius: '6px' }}></div>
+                        <div className="skeleton-pulse" style={{ height: '40px', width: '40px', borderRadius: '50%' }}></div>
+                    </div>
+                </div>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
+                    {[1, 2, 3].map((n) => (
+                        <div key={n} style={{ flex: '1 1 300px', background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '180px', justifyContent: 'space-between' }}>
+                            <div className="skeleton-pulse" style={{ height: '18px', width: '60%', borderRadius: '4px' }}></div>
+                            <div className="skeleton-pulse" style={{ height: '80px', width: '80%', borderRadius: '8px', margin: '15px 0' }}></div>
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                                <div className="skeleton-pulse" style={{ height: '26px', width: '32px', borderRadius: '6px' }}></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '20px' }}>
+                    {[1, 2].map((n) => (
+                        <div key={n} style={{ flex: '1 1 450px', background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', minHeight: '380px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                            <div className="skeleton-pulse" style={{ height: '22px', width: '40%', borderRadius: '4px', marginBottom: '20px' }}></div>
+                            <div className="skeleton-pulse" style={{ flex: 1, width: '100%', borderRadius: '8px', minHeight: '280px' }}></div>
+                        </div>
+                    ))}
                 </div>
             </div>
         );
@@ -98,7 +136,10 @@ const DashboardKPI = () => {
     return (
         <div style={{ padding: '20px', fontFamily: 'sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '10px' }}>
-                <h2 style={{ color: '#1e293b', margin: 0, fontSize: '1.5rem' }}>Panel de Control Meditrack</h2>
+                <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+                    <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
+                    <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Panel de Control Meditrack</h1>
+                </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '6px', padding: '2px' }}>
                         <button onClick={() => setHistorico(false)} style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: !historico ? 'white' : 'transparent', color: !historico ? '#1e293b' : '#64748b', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Hoy</button>

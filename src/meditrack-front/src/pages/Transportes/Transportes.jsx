@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTransportes, createTransporte, updateTransporte} from '../../services/api';
+import { getTransportes, createTransporte, updateTransporte } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { Plus, Search } from 'lucide-react';
 
 const ESTADO_COLORS = {
     ACTIVO: '#10b981',
@@ -18,8 +19,8 @@ function Transportes() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [errorModal, setErrorModal] = useState('');
+    const [searchExpanded, setSearchExpanded] = useState(false);
 
-    // modal alta/edición
     const [modalAbierto, setModalAbierto] = useState(false);
     const [modoEdicion, setModoEdicion] = useState(false);
     const [idEditando, setIdEditando] = useState(null);
@@ -34,7 +35,7 @@ function Transportes() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const puedeEditar = user?.role === 'ADMINISTRADOR'; // HU: "Como administrador"
+    const puedeEditar = user?.role === 'ADMINISTRADOR';
 
     const cargar = async () => {
         try {
@@ -56,16 +57,12 @@ function Transportes() {
                 setTransportes(data);
             } catch (e) {
                 setError(e.message || 'Error al cargar transportes');
-            }
-            finally {
+            } finally {
                 setLoading(false);
             }
         };
         fetchInitial();
-
-    },[]);
-
-
+    }, []);
 
     const transportesFiltrados = useMemo(() => {
         const term = busqueda.toLowerCase().trim();
@@ -164,7 +161,6 @@ function Transportes() {
         const anterior = t.estadoOperativo;
         const nuevoEstado = anterior === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
 
-        // ✅ 1) cambia UI al instante
         setTransportes(prev =>
             prev.map(x => (x.id === t.id ? { ...x, estadoOperativo: nuevoEstado } : x))
         );
@@ -179,7 +175,6 @@ function Transportes() {
                 estadoOperativo: nuevoEstado,
             });
         } catch (e) {
-
             setTransportes(prev =>
                 prev.map(x => (x.id === t.id ? { ...x, estadoOperativo: anterior } : x))
             );
@@ -190,48 +185,86 @@ function Transportes() {
     const getEstadoStyle = (estado) => {
         const color = ESTADO_COLORS[estado] || '#6b7280';
         return {
-            backgroundColor: `${color} 20`,
+            backgroundColor: `${color}20`,
             color,
         };
     };
 
     return (
         <div className="container">
+            <style>{`
+                .col-ocultar { display: table-cell; }
+                .col-estado { display: table-cell; }
+                .search-wrapper { display: flex; align-items: center; position: relative; }
+                .search-input-exp { width: 0px; padding: 0; opacity: 0; transition: all 0.3s ease; border: none; }
+                .search-input-exp.expanded { width: 140px; padding: 8px 12px; opacity: 1; border: 1px solid #ccc; border-radius: 4px; }
+                .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+                .modal-content { background: white; border-radius: 8px; width: 100%; max-width: 520px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-y: auto; max-height: calc(100vh - 30px); }
+                .table-responsive-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+                .table-header-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; box-sizing: border-box; }
+                .filters-left { display: flex; align-items: center; gap: 6px; flex-grow: 1; }
+                .select-estado-responsive { margin: 0; max-width: 150px; }
+                .skeleton-row { background: #f3f4f6; border-radius: 4px; height: 20px; width: 100%; animation: skeleton-loading 1.5s infinite ease-in-out; }
+                @keyframes skeleton-loading {
+                    0% { background-color: #f3f4f6; }
+                    50% { background-color: #e5e7eb; }
+                    100% { background-color: #f3f4f6; }
+                }
+                @media (max-width: 768px) {
+                    .col-ocultar { display: none !important; }
+                    .col-estado { display: none !important; }
+                    .table-header-actions { flex-wrap: nowrap; justify-content: space-between; }
+                    .search-input-exp.expanded { width: 90px; }
+                    .page-header-row h1 { font-size: 18px !important; }
+                    .select-estado-responsive { max-width: 95px; font-size: 13px; padding: 4px; }
+                    .filters-left button { padding: 6px 10px; font-size: 13px; }
+                }
+            `}</style>
+
             <div
                 className="page-header-row"
                 style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}
             >
-                <button className="btn btn-secondary" onClick={() => navigate('/')}>VOLVER</button>
+                <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
                 <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Gestión de transportes</h1>
             </div>
 
             <div className="card">
-                <div className="table-header-actions">
-                    <input
-                        className="search-input"
-                        style={{ margin: 0, flexGrow: 1 }}
-                        placeholder="Buscar por patente o tipo..."
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                    />
+                <div className="table-header-actions" style={{ padding: '10px' }}>
+                    <div className="filters-left">
+                        <div className="search-wrapper">
+                            <button 
+                                type="button"
+                                onClick={() => setSearchExpanded(!searchExpanded)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <Search size={20} />
+                            </button>
+                            <input
+                                className={`search-input-exp ${searchExpanded ? 'expanded' : ''}`}
+                                placeholder="Buscar..."
+                                value={busqueda}
+                                onChange={(e) => setBusqueda(e.target.value)}
+                            />
+                        </div>
 
-                    <select
-                        className="search-input"
-                        style={{ margin: 0, maxWidth: '240px' }}
-                        value={filtroEstado}
-                        onChange={(e) => setFiltroEstado(e.target.value)}
-                    >
-                        <option value="">Todos los estados</option>
-                        {ESTADOS.map((st) => (
-                            <option key={st} value={st}>{st}</option>
-                        ))}
-                    </select>
+                        <select
+                            className="search-input select-estado-responsive"
+                            value={filtroEstado}
+                            onChange={(e) => setFiltroEstado(e.target.value)}
+                        >
+                            <option value="">Estados</option>
+                            {ESTADOS.map((st) => (
+                                <option key={st} value={st}>{st}</option>
+                            ))}
+                        </select>
 
-                    <button className="btn btn-secondary" onClick={cargar}>BUSCAR</button>
+                        <button className="btn btn-secondary" onClick={cargar}>BUSCAR</button>
+                    </div>
 
                     {puedeEditar && (
-                        <button className="btn-new-shipment" onClick={abrirNuevo}>
-                            NUEVO TRANSPORTE
+                        <button className="btn-new-shipment" onClick={abrirNuevo} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '50%', minWidth: '40px', height: '40px', border: 'none', cursor: 'pointer' }}>
+                            <Plus size={20} />
                         </button>
                     )}
                 </div>
@@ -242,22 +275,31 @@ function Transportes() {
                     </p>
                 )}
 
-                {loading ? (
-                    <p style={{ padding: '20px', color: '#6b7280' }}>Cargando transportes...</p>
-                ) : (
+                <div className="table-responsive-container">
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr>
                                 <th>Patente</th>
                                 <th>Tipo</th>
-                                <th style={{ textAlign: 'center' }}>Capacidad (kg)</th>
-                                <th style={{ textAlign: 'center' }}>Capacidad (litros)</th>
-                                <th>Estado</th>
+                                <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (kg)</th>
+                                <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (litros)</th>
+                                <th className="col-estado">Estado</th>
                                 <th style={{ textAlign: 'center' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {transportesFiltrados.length === 0 ? (
+                            {loading ? (
+                                [1, 2, 3, 4, 5].map((n) => (
+                                    <tr key={n}>
+                                        <td><div className="skeleton-row" style={{ width: '80px' }}></div></td>
+                                        <td><div className="skeleton-row" style={{ width: '100px' }}></div></td>
+                                        <td className="col-ocultar"><div className="skeleton-row" style={{ width: '60px', margin: '0 auto' }}></div></td>
+                                        <td className="col-ocultar"><div className="skeleton-row" style={{ width: '60px', margin: '0 auto' }}></div></td>
+                                        <td className="col-estado"><div className="skeleton-row" style={{ width: '90px' }}></div></td>
+                                        <td><div className="skeleton-row" style={{ width: '40px', margin: '0 auto' }}></div></td>
+                                    </tr>
+                                ))
+                            ) : transportesFiltrados.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
                                         No hay transportes registrados
@@ -268,9 +310,9 @@ function Transportes() {
                                     <tr key={t.id}>
                                         <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{t.patente}</td>
                                         <td>{t.tipoVehiculo}</td>
-                                        <td style={{ textAlign: 'center' }}>{t.capacidadKg}</td>
-                                        <td style={{ textAlign: 'center' }}>{t.capacidadLitros}</td>
-                                        <td>
+                                        <td className="col-ocultar" style={{ textAlign: 'center' }}>{t.capacidadKg}</td>
+                                        <td className="col-ocultar" style={{ textAlign: 'center' }}>{t.capacidadLitros}</td>
+                                        <td className="col-estado">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
                                                 className="mt-estado-cell"
                                             >
@@ -302,7 +344,6 @@ function Transportes() {
                                                         </svg>
                                                     </button>
                                                 )}
-
                                             </div>
                                         </td>
                                     </tr>
@@ -310,12 +351,12 @@ function Transportes() {
                             )}
                         </tbody>
                     </table>
-                )}
+                </div>
             </div>
 
             {modalAbierto && (
                 <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '520px' }}>
+                    <div className="modal-content">
                         <h2 style={{ marginBottom: '14px' }}>
                             {modoEdicion ? 'Editar transporte' : 'Nuevo transporte'}
                         </h2>
@@ -388,7 +429,6 @@ function Transportes() {
             )}
         </div>
     );
-
 }
 
 export default Transportes;

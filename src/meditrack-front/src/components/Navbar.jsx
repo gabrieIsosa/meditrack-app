@@ -41,14 +41,12 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
     }
   };
 
-  // Consultar el conteo de no leídas una sola vez al iniciar sesión o cargar la página (cero consumo en reposo)
   useEffect(() => {
     if (user) {
       fetchUnreadCount();
     }
   }, [user]);
 
-  // Cargar el listado detallado únicamente cuando el usuario despliega la campanita o abre el modal de historial
   useEffect(() => {
     if (user && (isOpen || showHistoryModal)) {
       fetchNotificationList();
@@ -110,7 +108,16 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
   };
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-color, #e5e7eb)', position: 'relative', zIndex: 1000 }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .nav-user-info { display: none !important; }
+          .navbar-brand span { display: none !important; }
+          .notification-dropdown { width: 280px !important; right: -60px !important; }
+          .navbar { padding: 10px 12px !important; }
+        }
+      `}</style>
+      
       <div
         className="navbar-brand"
         onClick={() => navigate('/menu')}
@@ -135,7 +142,7 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
         </span>
       </div>
 
-      <div className="navbar-user-section">
+      <div className="navbar-user-section" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {!user ? (
           <button
             className="btn btn-secondary"
@@ -146,18 +153,18 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
               border: 'none',
               borderRadius: 8,
               padding: '8px 14px',
-              cursor: 'pointer',
-              marginRight: '10px' }}
+              cursor: 'pointer'
+            }}
           >
             {buttonText || 'EMPLEADOS'}
           </button>
         ) : (
           <>
             {!publicMode && (
-              <div style={{ textAlign: 'right' }}>
+              <div className="nav-user-info" style={{ textAlign: 'right' }}>
                 <span style={{
                   fontSize: '13px', fontWeight: 'bold', display: 'block',
-                  color: 'var(--text-black)'
+                  color: 'var(--text-black, #111827)'
                 }}>
                   {user.nombre}
                 </span>
@@ -168,49 +175,49 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
               </div>
             )}
 
-            <div className="notification-bell-container" onClick={() => setIsOpen(!isOpen)} ref={dropdownRef} style={{ marginLeft: '10px' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-black)' }}>
+            <div className="notification-bell-container" onClick={() => setIsOpen(!isOpen)} ref={dropdownRef} style={{ position: 'relative', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-black, #111827)' }}>
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
               {unreadCount > 0 && (
-                <div className="notification-badge">
+                <div className="notification-badge" style={{ position: 'absolute', top: '-2px', right: '-2px', backgroundColor: '#ef4444', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', borderRadius: '50%', minWidth: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                   {unreadCount}
                 </div>
               )}
 
               {isOpen && (
-                <div className="notification-dropdown" onClick={(e) => e.stopPropagation()}>
-                  <div className="notification-header">
-                    <h3>Notificaciones</h3>
+                <div className="notification-dropdown" onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', right: '0', marginTop: '12px', width: '360px', backgroundColor: '#ffffff', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                  <div className="notification-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e5e7eb' }}>
+                    <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#111827' }}>Notificaciones</h3>
                     {unreadCount > 0 && (
-                      <button className="notification-mark-all-btn" onClick={handleMarkAllAsRead}>
+                      <button className="notification-mark-all-btn" onClick={handleMarkAllAsRead} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '12px', fontWeight: '600', cursor: 'pointer', padding: 0 }}>
                         Marcar todas como leídas
                       </button>
                     )}
                   </div>
-                  <div className="notification-list">
+                  <div className="notification-list" style={{ maxHeight: '320px', overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
-                      <div className="notification-empty">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-gray)', opacity: 0.6 }}>
+                      <div className="notification-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', gap: '8px' }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#9ca3af', opacity: 0.6 }}>
                           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                           <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span className="notification-empty-text">No tenés notificaciones</span>
+                        <span className="notification-empty-text" style={{ fontSize: '13px', color: '#6b7280' }}>No tenés notificaciones</span>
                       </div>
                     ) : (
                       notifications.map(notif => (
-                        <div key={notif.id} className={`notification-item ${!notif.leido ? 'unread' : ''}`}>
-                          <div className="notification-item-header">
-                            <span className="notification-item-title">{notif.titulo}</span>
-                            <span className="notification-item-time">{formatFriendlyDate(notif.fechaCreacion)}</span>
+                        <div key={notif.id} className={`notification-item ${!notif.leido ? 'unread' : ''}`} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', backgroundColor: !notif.leido ? '#f0f7ff' : '#ffffff', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div className="notification-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' }}>
+                            <span className="notification-item-title" style={{ fontSize: '13px', fontWeight: 'bold', color: '#111827' }}>{notif.titulo}</span>
+                            <span className="notification-item-time" style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'nowrap' }}>{formatFriendlyDate(notif.fechaCreacion)}</span>
                           </div>
-                          <div className="notification-item-body">{notif.mensaje}</div>
+                          <div className="notification-item-body" style={{ fontSize: '13px', color: '#4b5563', lineHeight: '1.4' }}>{notif.mensaje}</div>
                           {!notif.leido && (
                             <button className="notification-item-action" onClick={(e) => {
                               e.stopPropagation();
                               handleMarkAsRead(notif.id);
-                            }}>
+                            }} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', alignmentSelf: 'flex-start', padding: '4px 0 0 0' }}>
                               Marcar como leída
                             </button>
                           )}
@@ -220,7 +227,7 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
                   </div>
                   <div style={{
                     padding: '12px 16px',
-                    borderTop: '1px solid var(--border-color)',
+                    borderTop: '1px solid #e5e7eb',
                     textAlign: 'center',
                     backgroundColor: '#f9fafb'
                   }}>
@@ -232,7 +239,7 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: 'var(--secondary-blue)',
+                        color: '#2563eb',
                         fontSize: '11px',
                         fontWeight: '800',
                         cursor: 'pointer',
@@ -260,7 +267,16 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
             <button
               className="btn btn-secondary"
               onClick={handleLogout}
-              style={{ marginLeft: '15px' }}
+              style={{
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                padding: '8px 14px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '13px'
+              }}
             >
               SALIR
             </button>
