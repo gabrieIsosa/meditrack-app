@@ -623,6 +623,7 @@ export const getKpisDashboard = async (historico = false) => {
     return await response.json();
 }
 
+//CSV
 export async function exportReporteCsv({ tema, fechaInicio, fechaFin, granularidad }) {
   const params = new URLSearchParams({
     tema,
@@ -650,6 +651,36 @@ export async function exportReporteCsv({ tema, fechaInicio, fechaFin, granularid
 
   return await res.blob();
 }
+
+//EXCEL
+export async function exportReporteExcel({ tema, fechaInicio, fechaFin, granularidad }) {
+  const params = new URLSearchParams({
+    tema,
+    fechaInicio,
+    fechaFin,
+    granularidad: granularidad || "diaria",
+  });
+
+  const url = (`${BASE_URL}/api/reportes/export/excel?${params.toString()}`);
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      ...getAuthHeaders(),
+      Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    },
+  });
+
+  await handleResponse(res);
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Error al exportar el reporte a Excel");
+  }
+
+  return await res.blob();
+}
+
 //Mails
 export async function getMails() {
   const response = await fetch(

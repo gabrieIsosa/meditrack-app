@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { getReporte } from '../../services/api';
-import { exportReporteCsv } from '../../services/api';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getReporte, exportReporteCsv, exportReporteExcel } from '../../services/api';
+
 function Reportes() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -13,6 +12,7 @@ function Reportes() {
   const [resultados, setResultados] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [mostrarMenuExport, setMostrarMenuExport] = useState(false);
 
   const puedeExportar = !!resultados && Array.isArray(resultados.data) && resultados.data.length > 0;
 
@@ -40,6 +40,7 @@ function Reportes() {
       handleGenerarReporte();
     }
   }, [location.state]);
+
   const handleExportarCsv = async () => {
 
     if (!fechaInicio || !fechaFin) {
@@ -62,6 +63,34 @@ function Reportes() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       setError(err.message || 'Error al exportar el reporte a CSV.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const handleExportarExcel = async () => {
+    if (!fechaInicio || !fechaFin) {
+      setError('Por favor, seleccione un rango de fechas válido.');
+      return;
+    }
+
+    setError('');
+    setCargando(true);
+
+    try {
+      const blob = await exportReporteExcel({ tema, fechaInicio, fechaFin, granularidad });
+      const url = window.URL.createObjectURL(blob);
+      const filename = `reporte_${tema}_${fechaInicio}_a_${fechaFin}.xlsx`;
+      const a = document.createElement('a');
+
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message || 'Error al exportar el reporte a Excel.');
     } finally {
       setCargando(false);
     }
@@ -166,47 +195,115 @@ function Reportes() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={handleExportarCsv}
-              disabled={!puedeExportar || cargando}
-              style={{
-                width: '100%',
-                maxWidth: '200px',
-                padding: '12px 25px',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: (!puedeExportar || cargando) ? 'not-allowed' : 'pointer',
-                backgroundColor: (!puedeExportar || cargando) ? '#F3F4F6' : '#2563EB',
-                color: (!puedeExportar || cargando) ? '#6B7280' : 'white',
-                opacity: (!puedeExportar || cargando) ? 0.6 : 1,
-                transition: 'all 0.2s ease'
-              }}
-            >
-              DESCARGAR
-            </button>
+         <div
+  style={{
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+    marginTop: '25px',
+    paddingTop: '20px',
+    borderTop: '1px solid #eee',
+    flexWrap: 'wrap'
+  }}
+>
+  <div style={{ position: 'relative', width: '100%', maxWidth: '200px' }}>
+    <button
+      type="button"
+      onClick={() => setMostrarMenuExport(prev => !prev)}
+      disabled={!puedeExportar || cargando}
+      style={{
+        width: '100%',
+        padding: '12px 25px',
+        border: 'none',
+        borderRadius: '8px',
+        fontWeight: 'bold',
+        fontSize: '14px',
+        cursor: (!puedeExportar || cargando) ? 'not-allowed' : 'pointer',
+        backgroundColor: (!puedeExportar || cargando) ? '#F3F4F6' : '#2563EB',
+        color: (!puedeExportar || cargando) ? '#6B7280' : 'white',
+        opacity: (!puedeExportar || cargando) ? 0.6 : 1,
+        transition: 'all 0.2s ease'
+      }}
+    >
+      EXPORTAR
+    </button>
 
-            <button
-              type="submit"
-              style={{
-                width: '100%',
-                maxWidth: '200px',
-                padding: '12px 25px',
-                backgroundColor: '#10B981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              GENERAR REPORTE
-            </button>
-          </div>
+    {mostrarMenuExport && puedeExportar && !cargando && (
+      <div
+        style={{
+          position: 'absolute',
+          top: '48px',
+          left: 0,
+          width: '100%',
+          backgroundColor: 'white',
+          border: '1px solid #E5E7EB',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          zIndex: 10,
+          overflow: 'hidden'
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setMostrarMenuExport(false);
+            handleExportarCsv();
+          }}
+          style={{
+            width: '100%',
+            padding: '12px',
+            border: 'none',
+            background: 'white',
+            textAlign: 'left',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Exportar a CSV
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMostrarMenuExport(false);
+            handleExportarExcel();
+          }}
+          style={{
+            width: '100%',
+            padding: '12px',
+            border: 'none',
+            borderTop: '1px solid #E5E7EB',
+            background: 'white',
+            textAlign: 'left',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Exportar a Excel
+        </button>
+      </div>
+    )}
+  </div>
+
+  <button
+    type="submit"
+    style={{
+      width: '100%',
+      maxWidth: '200px',
+      padding: '12px 25px',
+      backgroundColor: '#10B981',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      fontSize: '14px'
+    }}
+  >
+    GENERAR REPORTE
+  </button>
+</div>
+
         </form>
       </div>
 
@@ -215,7 +312,7 @@ function Reportes() {
 
         <div className="card" style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', fontWeight: '700', color: '#374151' }}>Resultados del análisis</h3>
-          
+
           {cargando && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[1, 2, 3, 4, 5].map(i => <div key={i} style={skeletonStyle}></div>)}
