@@ -294,7 +294,7 @@ class EnvioServiceTest {
 
             verify(notificacionService).crearNotificacion(
                     eq(repartidor),
-                    contains("Nuevo Envío Asignado"),
+                    contains("Nuevo envío asignado"),
                     anyString());
         }
     }

@@ -104,7 +104,7 @@ const Mails = () => {
                         color: '#111827',
                         marginBottom: '6px'
                     }}>
-                        Mails Internos
+                        Mails internos
                     </h1>
 
                     <p style={{

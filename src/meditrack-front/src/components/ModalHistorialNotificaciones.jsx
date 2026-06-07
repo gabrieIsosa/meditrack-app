@@ -48,7 +48,7 @@ const ModalHistorialNotificaciones = ({ notifications, alCerrar, alMarcarLeida }
         <div style={overlayStyle}>
             <div style={modalStyle}>
                 <div style={headerStyle}>
-                    <h2 style={titleStyle}>Historial Completo de Avisos</h2>
+                    <h2 style={titleStyle}>Historial completo de avisos</h2>
                     <button style={closeButtonStyle} onClick={alCerrar}>×</button>
                 </div>
 
@@ -122,7 +122,7 @@ const ModalHistorialNotificaciones = ({ notifications, alCerrar, alMarcarLeida }
                                                                 style={actionButtonStyle}
                                                                 onClick={() => alMarcarLeida(notif.id)}
                                                             >
-                                                                Marcar Leído
+                                                                Marcar leído
                                                             </button>
                                                         </>
                                                     )}

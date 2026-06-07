@@ -1,0 +1,388 @@
+/* ModalValidacionAptitud.css */
+
+@keyframes valMicPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+@keyframes valSuccessSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* === Overlay y Modal === */
+
+.val-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.75);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.val-modal {
+    background-color: #ffffff;
+    border: 1px solid #E5E7EB;
+    max-width: 420px;
+    width: 100%;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.2);
+}
+
+/* === Header === */
+
+.val-modal-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+    text-align: center;
+    gap: 6px;
+}
+
+.val-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.val-icon-idle {
+    background-color: #EFF6FF;
+    color: #2563EB;
+}
+
+.val-icon-recording {
+    background-color: #FEF2F2;
+    color: #DC2626;
+    animation: pulseActive 1.2s infinite ease-in-out;
+}
+
+.val-icon-processing {
+    background-color: #F5F3FF;
+    color: #7C3AED;
+}
+
+.val-icon-success {
+    background-color: #ECFDF5;
+    color: #059669;
+}
+
+.val-icon-error {
+    background-color: #FEF2F2;
+    color: #DC2626;
+}
+
+.val-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #9CA3AF;
+}
+
+.val-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+/* === Cuerpo === */
+
+.val-modal-body {
+    padding: 20px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+}
+
+/* Fila de intentos */
+
+.val-intentos-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background-color: #F9FAFB;
+    border-radius: 12px;
+    padding: 10px 14px;
+    border: 1px solid #E5E7EB;
+}
+
+.val-intentos-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4B5563;
+}
+
+.val-intentos-dots {
+    display: flex;
+    gap: 6px;
+}
+
+.val-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.val-dot-active {
+    background-color: #00A86B;
+}
+
+.val-dot-used {
+    background-color: #E5E7EB;
+    border: 1px solid #D1D5DB;
+}
+
+/* Descripción */
+
+.val-description {
+    font-size: 14px;
+    color: #4B5563;
+    text-align: center;
+    line-height: 1.65;
+    margin: 0;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Área de acción (botón / spinner / success) — altura fija para estabilizar el modal */
+/* 86px = altura del estado más alto (processing: spinner 34 + gap 12 + texto 21 + padding 16 + margen ~3) */
+
+.val-action-area {
+    width: 100%;
+    min-height: 86px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Oculta visualmente sin modificar el flujo del layout */
+
+.val-invisible {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Botón principal "Mantener presionado" */
+
+.val-mic-btn {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px -4px rgba(37, 99, 235, 0.3);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.val-mic-btn:active,
+.val-mic-recording {
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    box-shadow: 0 6px 20px -4px rgba(220, 38, 38, 0.35);
+}
+
+.val-mic-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.val-mic-pulse {
+    animation: valMicPulse 0.8s ease-in-out infinite;
+}
+
+/* Processing */
+
+.val-processing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.val-spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid #E5E7EB;
+    border-top-color: #7C3AED;
+    border-radius: 50%;
+    animation: spin 0.9s infinite linear;
+}
+
+.val-processing span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #7C3AED;
+}
+
+/* Success */
+
+.val-success-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #059669;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 0;
+}
+
+.val-success-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid #A7F3D0;
+    border-top-color: #059669;
+    border-radius: 50%;
+    animation: valSuccessSpin 0.8s infinite linear;
+}
+
+/* Footer */
+
+.val-modal-footer {
+    padding: 0 24px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.val-cancel-btn {
+    padding: 10px 28px;
+    border-radius: 10px;
+    border: 1.5px solid #E5E7EB;
+    background-color: transparent;
+    color: #6B7280;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.val-cancel-btn:hover {
+    background-color: #F3F4F6;
+    color: #374151;
+}
+
+/* === Pantalla de Bloqueo === */
+
+.val-bloqueo-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #F3F4F6;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.val-bloqueo-card {
+    background-color: white;
+    border-radius: 24px;
+    padding: 40px 28px;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.05);
+    gap: 16px;
+}
+
+.val-bloqueo-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #DC2626;
+    border: 2px solid #FECACA;
+    margin-bottom: 4px;
+}
+
+.val-bloqueo-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #DC2626;
+    background-color: #FEF2F2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #FECACA;
+}
+
+.val-bloqueo-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.4px;
+    line-height: 1.3;
+}
+
+.val-bloqueo-desc {
+    font-size: 14px;
+    color: #4B5563;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 340px;
+}
+
+.val-bloqueo-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px -4px rgba(220, 38, 38, 0.3);
+    margin-top: 8px;
+}
