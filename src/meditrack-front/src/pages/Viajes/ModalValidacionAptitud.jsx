@@ -3,35 +3,59 @@ import './ModalValidacionAptitud.css';
 
 const MAX_INTENTOS = 2;
 
-const simularRespuestaMock = () =>
-    new Promise(resolve => setTimeout(() => resolve(Math.random() > 0.45), 2200));
-
 export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) {
     const [fase, setFase] = useState('idle'); // idle | recording | processing | success | error
     const intentosRef = useRef(MAX_INTENTOS);
     const [intentosRestantes, setIntentosRestantes] = useState(MAX_INTENTOS);
     const grabandoRef = useRef(false);
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const [ultimoResultado, setUltimoResultado] = useState(null);
+    const horaInicioRef = useRef(0);
 
-    const iniciarGrabacion = useCallback((e) => {
-        e.preventDefault();
-        if (fase === 'processing' || fase === 'success') return;
-        if (fase === 'error' && intentosRef.current <= 0) return;
-        grabandoRef.current = true;
-        setFase('recording');
-    }, [fase]);
-
-    const finalizarGrabacion = useCallback(async (e) => {
-        e.preventDefault();
-        if (!grabandoRef.current) return;
-        grabandoRef.current = false;
+    const enviarAudio = useCallback(async (audioBlob) => {
         setFase('processing');
+        setUltimoResultado(null);
 
-        const aprobado = await simularRespuestaMock();
+        try {
+            const apiBaseUrl = import.meta.env.VITE_FATIGUE_API_URL || 'https://gabrieisosa-meditrack-fatigue-api.hf.space';
+            const formData = new FormData();
 
-        if (aprobado) {
-            setFase('success');
-            setTimeout(() => onAprobado(), 1400);
-        } else {
+            formData.append('file', audioBlob, 'recording.wav');
+
+            const response = await fetch(`${apiBaseUrl}/predict`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Error al procesar el audio en el servidor.');
+            }
+
+            const data = await response.json();
+            console.log("Respuesta del modelo de IA:", data);
+            setUltimoResultado(data);
+
+            const aprobado = data.success && data.riesgo !== 'CRÍTICO';
+
+            if (aprobado) {
+                setFase('success');
+                setTimeout(() => onAprobado(), 1400);
+            } else {
+                intentosRef.current -= 1;
+                setIntentosRestantes(intentosRef.current);
+                setFase('error');
+                if (intentosRef.current <= 0) {
+                    setTimeout(() => onBloqueado(), 1400);
+                }
+            }
+        } catch (error) {
+            console.error('Error al enviar el audio:', error);
+            setUltimoResultado({
+                nivel_fatiga: 'N/A',
+                estado: error.message || 'Error de conexión'
+            });
             intentosRef.current -= 1;
             setIntentosRestantes(intentosRef.current);
             setFase('error');
@@ -41,16 +65,92 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
         }
     }, [onAprobado, onBloqueado]);
 
+    const iniciarGrabacion = useCallback(async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (fase === 'processing' || fase === 'success') return;
+        if (fase === 'error' && intentosRef.current <= 0) return;
+
+        try {
+            audioChunksRef.current = [];
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            let options = {};
+            if (MediaRecorder.isTypeSupported('audio/webm')) {
+                options = { mimeType: 'audio/webm' };
+            } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                options = { mimeType: 'audio/ogg' };
+            } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                options = { mimeType: 'audio/mp4' };
+            }
+
+            const mediaRecorder = new MediaRecorder(stream, options);
+            mediaRecorderRef.current = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                stream.getTracks().forEach(track => track.stop());
+
+                const duracionMs = Date.now() - horaInicioRef.current;
+                if (duracionMs < 1500) {
+                    alert('La grabación es muy corta. Por favor, di la frase completa: "Confirmo que me encuentro en condiciones de conducir."');
+                    setFase('idle');
+                    return;
+                }
+
+                const audioBlob = new Blob(audioChunksRef.current, {
+                    type: mediaRecorder.mimeType || 'audio/webm'
+                });
+                await enviarAudio(audioBlob);
+            };
+
+            horaInicioRef.current = Date.now();
+            grabandoRef.current = true;
+            setFase('recording');
+            mediaRecorder.start();
+        } catch (err) {
+            console.error('Error al acceder al micrófono:', err);
+            alert('No se pudo acceder al micrófono. Por favor, habilitá los permisos del micrófono en tu navegador.');
+            setFase('idle');
+        }
+    }, [fase, enviarAudio]);
+
+    const finalizarGrabacion = useCallback((e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (!grabandoRef.current || !mediaRecorderRef.current) return;
+        grabandoRef.current = false;
+
+        if (mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+        }
+    }, []);
+
     const _puedeReintentar = fase === 'error' && intentosRestantes > 0;
     const bloqueadoFinal = fase === 'error' && intentosRestantes <= 0;
 
     const getMensaje = () => {
-        if (fase === 'idle') return 'Para iniciar la ruta debes superar una verificación de aptitud. Mantén presionado el botón y di en voz alta: "Confirmo que me encuentro en condiciones de conducir."';
+        if (fase === 'idle') return 'Para iniciar la ruta debes superar una verificación de aptitud. Hacé click en el botón y di en voz alta: "Confirmo que me encuentro en condiciones de conducir."';
         if (fase === 'recording') return 'Estás siendo grabado. Di claramente: "Confirmo que me encuentro en condiciones de conducir."';
         if (fase === 'processing') return 'Procesando tu grabación, por favor espera...';
         if (fase === 'success') return 'Tu aptitud ha sido verificada correctamente. Puedes iniciar la ruta de forma segura.';
-        if (bloqueadoFinal) return 'No fue posible verificar tu aptitud en ninguno de los intentos.';
-        return `No fue posible verificar tu aptitud. Te ${intentosRestantes === 1 ? 'queda 1 intento' : `quedan ${intentosRestantes} intentos`}.`;
+
+        let detalle = '';
+        if (ultimoResultado) {
+            if (ultimoResultado.nivel_fatiga === 'N/A') {
+                detalle = ` (${ultimoResultado.estado})`;
+            } else {
+                detalle = ` (Fatiga: ${ultimoResultado.nivel_fatiga}% - ${ultimoResultado.estado})`;
+            }
+        }
+
+        if (bloqueadoFinal) {
+            return `No fue posible verificar tu aptitud en ninguno de los intentos${detalle}.`;
+        }
+        return `No fue posible verificar tu aptitud${detalle}. Te ${intentosRestantes === 1 ? 'queda 1 intento' : `quedan ${intentosRestantes} intentos`}.`;
     };
 
     return (
@@ -85,8 +185,8 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
                     <span className="val-label">VERIFICACIÓN DE APTITUD</span>
                     <h2 className="val-title">
                         {fase === 'success' ? '¡Aptitud Verificada!' :
-                         bloqueadoFinal ? 'Validación Fallida' :
-                         'Validación de voz'}
+                            bloqueadoFinal ? 'Validación Fallida' :
+                                'Validación de voz'}
                     </h2>
                 </div>
 
@@ -109,10 +209,7 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
                         {fase !== 'processing' && fase !== 'success' && (
                             <button
                                 className={`val-mic-btn ${fase === 'recording' ? 'val-mic-recording' : ''} btn-action-hover`}
-                                onMouseDown={iniciarGrabacion}
-                                onMouseUp={finalizarGrabacion}
-                                onTouchStart={iniciarGrabacion}
-                                onTouchEnd={finalizarGrabacion}
+                                onClick={fase === 'recording' ? finalizarGrabacion : iniciarGrabacion}
                             >
                                 <div className={`val-mic-icon-wrap ${fase === 'recording' ? 'val-mic-pulse' : ''}`}>
                                     {fase === 'recording' ? (
@@ -128,7 +225,7 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
                                         </svg>
                                     )}
                                 </div>
-                                {fase === 'recording' ? 'Grabando... suelta para enviar' : 'Mantener presionado para hablar'}
+                                {fase === 'recording' ? 'Grabando... Hacé click para analizar' : 'Hacé click para hablar'}
                             </button>
                         )}
 
@@ -153,6 +250,49 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
                         Cancelar
                     </button>
                 </div>
+
+                {import.meta.env.DEV && (
+                    <div style={{
+                        padding: '12px 24px',
+                        background: '#f3f4f6',
+                        borderTop: '1px solid #e5e7eb',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: '8px'
+                    }}>
+                        <button
+                            style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#10B981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                            onClick={() => {
+                                setFase('success');
+                                setTimeout(() => onAprobado(), 1000);
+                            }}
+                        >
+                            🔧 Simular OK
+                        </button>
+                        <button
+                            style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                            onClick={() => {
+                                intentosRef.current = 0;
+                                setIntentosRestantes(0);
+                                setFase('error');
+                                setTimeout(() => onBloqueado(), 1000);
+                            }}
+                        >
+                            🔧 Simular Bloqueo
+                        </button>
+                        <button
+                            style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#6B7280', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                            onClick={() => {
+                                intentosRef.current = MAX_INTENTOS;
+                                setIntentosRestantes(MAX_INTENTOS);
+                                setFase('idle');
+                                setUltimoResultado(null);
+                            }}
+                        >
+                            Reset
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
