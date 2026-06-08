@@ -1,22 +1,24 @@
 import { useState } from "react";
+import { Link } from 'react-router-dom';
 import { getTrackingPublico } from "../../services/api";
 import Navbar from '../../components/Navbar';
 import bg from '../../assets/bg.png';
 import { Search } from 'lucide-react';
 import LegalModal from "../../components/LegalModal";
 
-const PASOS =[
-    {key: 'PENDIENTE', label: 'PENDIENTE'},
-    {key: 'ASIGNADO', label: 'ASIGNADO'},
-    {key: 'EN_PREPARACION', label: 'EN PREPARACION'},
-    {key: 'EN_TRANSITO', label: 'EN TRANSITO'},
-    {key: 'EN_PUNTO_DE_ENTREGA', label: 'EN PUNTO DE ENTREGA'},
-    {key: 'ENTREGADO', label: 'ENTREGADO'},
-    {key: 'CANCELADO', label: 'CANCELADO'},
+
+const PASOS = [
+    { key: 'PENDIENTE', label: 'PENDIENTE' },
+    { key: 'ASIGNADO', label: 'ASIGNADO' },
+    { key: 'EN_PREPARACION', label: 'EN PREPARACION' },
+    { key: 'EN_TRANSITO', label: 'EN TRANSITO' },
+    { key: 'EN_PUNTO_DE_ENTREGA', label: 'EN PUNTO DE ENTREGA' },
+    { key: 'ENTREGADO', label: 'ENTREGADO' },
+    { key: 'CANCELADO', label: 'CANCELADO' },
 ];
 
-function formaUltimaActualizacion(fecha, hora){
-    if(!fecha && !hora) return '';
+function formaUltimaActualizacion(fecha, hora) {
+    if (!fecha && !hora) return '';
     const [y, m, d] = (fecha || '').split('-');
     const fechaFormateada = y && m && d ? `${d}/${m}/${y}` : (fecha || '');
     return `${fechaFormateada} ${hora ? `${hora}` : ''}`.trim();
@@ -33,8 +35,8 @@ export default function TrackingPublico() {
     const [modalType, setModalType] = useState('terms');
 
     const idxActual = resultado
-    ? PASOS.findIndex(p => p.key === resultado.estado)
-    : -1;
+        ? PASOS.findIndex(p => p.key === resultado.estado)
+        : -1;
 
     const pasosFiltrados = resultado?.estado === 'CANCELADO'
         ? PASOS.filter(p => p.key !== 'ENTREGADO')
@@ -185,41 +187,50 @@ export default function TrackingPublico() {
                         </h2>
 
                         <div style={{ display: 'flex', flexDirection: 'column', marginTop: 22 }}>
-                                {pasosFiltrados.map((p, i) => {
-                                    const idxEnOriginal = PASOS.findIndex(orig => orig.key === p.key);
-                                    const completado = idxActual !== -1 && idxEnOriginal <= idxActual;
-                                    const actual = idxActual !== -1 && idxEnOriginal === idxActual;
+                            {pasosFiltrados.map((p, i) => {
+                                const idxEnOriginal = PASOS.findIndex(orig => orig.key === p.key);
+                                const completado = idxActual !== -1 && idxEnOriginal <= idxActual;
+                                const actual = idxActual !== -1 && idxEnOriginal === idxActual;
 
-                                    const borderCircleColor = actual || completado ? '#00A86B' : '#9CA3AF';
-                                    const bgCircleColor = actual ? '#00A86B' : '#ffffff';
-                                    const lineBg = completado && idxActual > idxEnOriginal ? '#00A86B' : '#F3F4F6';
-                                
-                                return(
+                                const borderCircleColor = actual || completado ? '#00A86B' : '#9CA3AF';
+                                const bgCircleColor = actual ? '#00A86B' : '#ffffff';
+                                const lineBg = completado && idxActual > idxEnOriginal ? '#00A86B' : '#F3F4F6';
+
+                                return (
                                     <div key={p.key} style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <div style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            justifyContent: 'space-between', 
-                                            gap: 16,
-                                            flexWrap: 'wrap'
-                                        }}>
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: 16,
+                                                flexWrap: 'wrap'
+                                            }}
+                                        >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                                <div style={{
-                                                    width: 24,
-                                                    height: 24,
-                                                    borderRadius: '50%',
-                                                    border: `3px solid ${borderCircleColor}`,
-                                                    background: bgCircleColor,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    flexShrink: 0,
-                                                    boxSizing: 'border-box'
-                                                }}
-                                                title={p.label}
+                                                <div
+                                                    style={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        borderRadius: '50%',
+                                                        border: `3px solid ${borderCircleColor}`,
+                                                        background: bgCircleColor,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        flexShrink: 0,
+                                                        boxSizing: 'border-box'
+                                                    }}
+                                                    title={p.label}
                                                 />
 
-                                                <div style={{ fontSize: 14, fontWeight: actual ? 700 : 500, color: actual ? '#00A86B' : '#111827' }}>
+                                                <div
+                                                    style={{
+                                                        fontSize: 14,
+                                                        fontWeight: actual ? 700 : 500,
+                                                        color: actual ? '#00A86B' : '#111827'
+                                                    }}
+                                                >
                                                     {p.label}
                                                 </div>
                                             </div>
@@ -250,7 +261,27 @@ export default function TrackingPublico() {
                                     </div>
                                 );
                             })}
+                            
+                            
                         </div>
+                        
+                        <div style={{ marginTop: 24 }}>
+                          <Link
+                            to="/reclamo-cambio-datos"
+                            state={{ trackingId: resultado.trackingId || trackingId }}
+                            style={{
+                                display: 'inline-block',
+                                background: '#2563EB',
+                                color: '#fff',
+                                padding: '10px 16px',
+                                borderRadius: 8,
+                                textDecoration: 'none',
+                                fontWeight: 600
+                            }}
+                         >
+                           ¿Tenés un problema con tu envío? Hacé clic acá para registrar un reclamo.
+                          </Link>
+                      </div>                        
                     </div>
                 )}
                 </div>
@@ -314,7 +345,8 @@ export default function TrackingPublico() {
                 type={modalType}
                 onClose={() => setIsModalOpen(false)}
             />
-            </div>
-        );
+           
+        </div>
+    );
 
-    }
+}

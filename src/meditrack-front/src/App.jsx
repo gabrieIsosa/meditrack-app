@@ -29,6 +29,7 @@ import Reportes from './pages/Reportes/Reportes';
 import DashboardKPI from './pages/Reportes/DashboardKPI';
 import { LoadScript } from "@react-google-maps/api";
 import Mails from './pages/Mails/Mails';
+import ReclamoCambioDatos from './pages/ReclamoCambioDato/ReclamoCambioDatos';
 import Repartidores from './pages/Usuarios/Repartidores';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <Route path="/" element={<TrackingPublico />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reclamo-cambio-datos" element={ <ReclamoCambioDatos />}/>
             <Route element={<ProtectedLayout />}>
               <Route path="/menu" element={<MainMenu />} />
               <Route path="/envios" element={<Home />} />
