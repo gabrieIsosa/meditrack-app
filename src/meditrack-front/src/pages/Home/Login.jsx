@@ -5,6 +5,7 @@ import { login as apiLogin, verify2fa } from '../../services/api';
 import Navbar from '../../components/Navbar';
 import bg from '../../assets/bg.png';
 import { Eye, EyeOff } from 'lucide-react';
+import LegalModal from '../../components/LegalModal';
 
 function Login() {
   const { user, login } = useAuth();
@@ -20,6 +21,11 @@ function Login() {
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const inputRefs = useRef([]);
 
+  // States for terms acceptance checkbox and modal display
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState('terms');
+
   if (user) return <Navigate to="/menu" replace />;
 
   const handleFormSubmit = async (e) => {
@@ -29,6 +35,13 @@ function Login() {
 
     try {
       if (step === 1) {
+        // Enforce terms and privacy policy agreement
+        if (!termsAccepted) {
+          setError("Debe aceptar los Términos y Condiciones y la Política de Privacidad para continuar.");
+          setLoading(false);
+          return;
+        }
+
         const responseData = await apiLogin(form.email, form.password);
         
         if (responseData.require2fa) {
@@ -156,6 +169,64 @@ function Login() {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: '8px', 
+                marginBottom: '20px', 
+                marginTop: '16px',
+                textAlign: 'left'
+              }}>
+                <input
+                  id="accept-terms-checkbox"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  style={{
+                    marginTop: '3px',
+                    cursor: 'pointer',
+                    width: '16px',
+                    height: '16px',
+                    accentColor: '#00A86B'
+                  }}
+                />
+                <label 
+                  htmlFor="accept-terms-checkbox"
+                  style={{ 
+                    fontSize: '13px', 
+                    color: '#4B5563', 
+                    lineHeight: '1.4', 
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  He leído y acepto los{" "}
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setModalType('terms');
+                      setIsModalOpen(true);
+                    }}
+                    style={{ color: '#00A86B', fontWeight: '600', textDecoration: 'underline', cursor: 'pointer' }}
+                  >
+                    Términos y Condiciones
+                  </span>{" "}
+                  y la{" "}
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setModalType('privacy');
+                      setIsModalOpen(true);
+                    }}
+                    style={{ color: '#00A86B', fontWeight: '600', textDecoration: 'underline', cursor: 'pointer' }}
+                  >
+                    Política de Privacidad
+                  </span>
+                </label>
+              </div>
             </>
           )}
 
@@ -188,7 +259,7 @@ function Login() {
             </>
           )}
 
-          {error && <p style={{ color: '#DC2626', marginBottom: 16, textAlign: 'center' }}>{error}</p>}
+          {error && <p style={{ color: '#DC2626', marginBottom: 16, textAlign: 'center', fontSize: '14px' }}>{error}</p>}
 
           <button type="submit" disabled={loading} style={{ 
               width: '100%', padding: 12, background: '#00A86B', color: '#fff', border: 'none', 
@@ -222,6 +293,13 @@ function Login() {
           </div>
         )}
       </div>
+
+      {/* Legal documents display dialog */}
+      <LegalModal 
+        isOpen={isModalOpen}
+        type={modalType}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
