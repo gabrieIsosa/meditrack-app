@@ -991,3 +991,88 @@ input:checked+.slider:before {
   font-size: 13px;
   font-weight: 600;
 }
+
+/* --- PWA Offline Banner Styles --- */
+.offline-banner-container {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 16px;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  animation: slide-down 0.4s ease;
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.offline-banner-offline {
+  background: rgba(239, 68, 68, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.offline-banner-syncing {
+  background: rgba(37, 99, 235, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.offline-banner-online {
+  background: rgba(16, 185, 129, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.offline-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 1200px;
+  width: 100%;
+  justify-content: center;
+}
+
+.offline-banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.offline-banner-pulse {
+  animation: pulse-dot 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0.5; }
+}
+
+.offline-banner-spin {
+  animation: spin-icon 1s infinite linear;
+}
+
+@keyframes spin-icon {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -5,7 +5,7 @@ function ProtectedRoute({ children, roles }) {
   const { user } = useAuth();
 
   if (roles && !roles.includes(user?.role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/menu" replace />;
   }
 
   return children;

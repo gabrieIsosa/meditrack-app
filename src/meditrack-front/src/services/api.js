@@ -1,5 +1,152 @@
 const BASE_URL = 'http://localhost:8080';
 
+// --- Offline Helpers & Caching ---
+const OFFLINE_CACHE_PREFIX = 'meditrack_cache_';
+const SYNC_QUEUE_KEY = 'meditrack_sync_queue';
+
+function setLocalCache(key, data) {
+  try {
+    localStorage.setItem(OFFLINE_CACHE_PREFIX + key, JSON.stringify(data));
+  } catch (e) {
+    console.error('Error writing to offline cache:', e);
+  }
+}
+
+function getLocalCache(key) {
+  try {
+    const data = localStorage.getItem(OFFLINE_CACHE_PREFIX + key);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.error('Error reading from offline cache:', e);
+    return null;
+  }
+}
+
+export function isOnline() {
+  return navigator.onLine;
+}
+
+export function getPendingSyncCount() {
+  try {
+    const queue = JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]');
+    return queue.length;
+  } catch {
+    return 0;
+  }
+}
+
+function addToSyncQueue(type, url, method, body) {
+  try {
+    const queue = JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]');
+    queue.push({
+      id: Date.now() + Math.random().toString(36).substr(2, 9),
+      type,
+      url,
+      method,
+      body,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+    window.dispatchEvent(new CustomEvent('meditrack-sync-changed', { detail: { count: queue.length } }));
+  } catch (e) {
+    console.error('Error adding to sync queue:', e);
+  }
+}
+
+export async function syncOfflineQueue() {
+  if (!isOnline()) return { success: false, reason: 'offline' };
+  
+  try {
+    const queue = JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]');
+    if (queue.length === 0) return { success: true, count: 0 };
+    
+    console.log(`[Offline Sync] Sincronizando ${queue.length} elementos pendientes...`);
+    
+    for (const item of queue) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      };
+      
+      const res = await fetch(item.url, {
+        method: item.method,
+        headers,
+        body: JSON.stringify(item.body)
+      });
+      
+      if (!res.ok) {
+        console.error(`[Offline Sync] Error al sincronizar el item ${item.id}:`, res.status);
+        if (res.status >= 500 || res.status === 0) {
+          throw new Error('Error del servidor o de red al sincronizar');
+        }
+      }
+    }
+    
+    localStorage.setItem(SYNC_QUEUE_KEY, '[]');
+    window.dispatchEvent(new CustomEvent('meditrack-sync-changed', { detail: { count: 0 } }));
+    return { success: true, count: queue.length };
+  } catch (err) {
+    console.error('[Offline Sync] Error de sincronización:', err);
+    return { success: false, reason: err.message };
+  }
+}
+
+function updateLocalCacheEnvio(envioId, nuevoEstado, receptorNombre = null, receptorDni = null) {
+  const cachedRutas = getLocalCache('rutas');
+  if (cachedRutas) {
+    const updatedRutas = cachedRutas.map(ruta => {
+      if (ruta.envios) {
+        return {
+          ...ruta,
+          envios: ruta.envios.map(re => {
+            if (re.envio && re.envio.id === envioId) {
+              return {
+                ...re,
+                envio: {
+                  ...re.envio,
+                  estado: nuevoEstado,
+                  receptorNombre: receptorNombre || re.envio.receptorNombre,
+                  receptorDni: receptorDni || re.envio.receptorDni
+                }
+              };
+            }
+            return re;
+          })
+        };
+      }
+      return ruta;
+    });
+    setLocalCache('rutas', updatedRutas);
+  }
+
+  const cachedEnvio = getLocalCache(`envio_${envioId}`);
+  if (cachedEnvio) {
+    const updatedEnvio = {
+      ...cachedEnvio,
+      estado: nuevoEstado,
+      receptorNombre: receptorNombre || cachedEnvio.receptorNombre,
+      receptorDni: receptorDni || cachedEnvio.receptorDni
+    };
+    setLocalCache(`envio_${envioId}`, updatedEnvio);
+  }
+}
+
+function updateLocalCacheFinalizarRuta(rutaId) {
+  const cachedRutas = getLocalCache('rutas');
+  if (cachedRutas) {
+    const updatedRutas = cachedRutas.map(ruta => {
+      if (ruta.id === rutaId) {
+        return {
+          ...ruta,
+          estado: 'COMPLETADA'
+        };
+      }
+      return ruta;
+    });
+    setLocalCache('rutas', updatedRutas);
+  }
+}
+
 function getAuthHeaders() {
   try {
     const user = JSON.parse(localStorage.getItem('meditrack_user'));
@@ -117,13 +264,30 @@ export async function getEnvios() {
 }
 
 export async function getEnvioById(id) {
-  const res = await fetch(`${BASE_URL}/api/envios/${id}?_t=${Date.now()}`, {
-    headers: { ...getAuthHeaders() },
-    cache: 'no-store'
-  });
-  await handleResponse(res);
-  if (!res.ok) throw new Error('Envío no encontrado');
-  return res.json();
+  const cacheKey = `envio_${id}`;
+  if (!isOnline()) {
+    const cached = getLocalCache(cacheKey);
+    if (cached) return cached;
+    throw new Error('Sin conexión y envío no disponible en la caché local.');
+  }
+  try {
+    const res = await fetch(`${BASE_URL}/api/envios/${id}?_t=${Date.now()}`, {
+      headers: { ...getAuthHeaders() },
+      cache: 'no-store'
+    });
+    await handleResponse(res);
+    if (!res.ok) throw new Error('Envío no encontrado');
+    const data = await res.json();
+    setLocalCache(cacheKey, data);
+    return data;
+  } catch (error) {
+    const cached = getLocalCache(cacheKey);
+    if (cached) {
+      console.warn('Fallo de red, sirviendo envío desde caché local:', error);
+      return cached;
+    }
+    throw error;
+  }
 }
 
 export async function createEnvio(data) {
@@ -193,17 +357,39 @@ export async function updateEstadoEnvio(id, estado, fecha, hora, usuario, repart
   if (receptorDni) {
     bodyData.receptorDni = receptorDni;
   }
-  const res = await fetch(`${BASE_URL}/api/envios/${id}/estado`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify(bodyData),
-  });
-  await handleResponse(res);
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Error al actualizar estado');
+  
+  const url = `${BASE_URL}/api/envios/${id}/estado`;
+
+  if (!isOnline()) {
+    console.log('[Offline Queue] Encolando cambio de estado para envío:', id);
+    addToSyncQueue('updateEstadoEnvio', url, 'PUT', bodyData);
+    updateLocalCacheEnvio(id, estado, receptorNombre, receptorDni);
+    return { success: true, offline: true, id, estado };
   }
-  return res.json();
+
+  try {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(bodyData),
+    });
+    await handleResponse(res);
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Error al actualizar estado');
+    }
+    const data = await res.json();
+    updateLocalCacheEnvio(id, estado, receptorNombre, receptorDni);
+    return data;
+  } catch (error) {
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || !isOnline()) {
+      console.warn('[Offline Queue] Error de red. Encolando cambio de estado:', error);
+      addToSyncQueue('updateEstadoEnvio', url, 'PUT', bodyData);
+      updateLocalCacheEnvio(id, estado, receptorNombre, receptorDni);
+      return { success: true, offline: true, id, estado };
+    }
+    throw error;
+  }
 }
 
 export async function reasignarRepartidorEnvio(id, repartidorId) {
@@ -298,13 +484,26 @@ export async function updateUsuario(id, data) {
 
 // --- Medicamentos (stubs — conectar cuando exista el modelo) ---
 export async function getMedicamentos() {
-  const res = await fetch(`${BASE_URL}/api/medicamentos?_t=${Date.now()}`, {
-    headers: { ...getAuthHeaders() },
-    cache: 'no-store'
-  });
-  await handleResponse(res);
-  if (!res.ok) throw new Error('Error al obtener medicamentos');
-  return res.json();
+  if (!isOnline()) {
+    const cached = getLocalCache('medicamentos');
+    if (cached) return cached;
+    return [];
+  }
+  try {
+    const res = await fetch(`${BASE_URL}/api/medicamentos?_t=${Date.now()}`, {
+      headers: { ...getAuthHeaders() },
+      cache: 'no-store'
+    });
+    await handleResponse(res);
+    if (!res.ok) throw new Error('Error al obtener medicamentos');
+    const data = await res.json();
+    setLocalCache('medicamentos', data);
+    return data;
+  } catch (error) {
+    const cached = getLocalCache('medicamentos');
+    if (cached) return cached;
+    throw error;
+  }
 }
 
 export async function getMedicamentoById(id) {
@@ -390,20 +589,29 @@ export async function toggleEstadoUsuario(id) {
 
 
 export async function getRutas() {
-
-  const headers = {
-    ...getAuthHeaders()
-  };
-
-  console.log("HEADERS RUTAS:", headers);
-
-  const res = await fetch(`${BASE_URL}/api/rutas?_t=${Date.now()}`, {
-    headers: { ...getAuthHeaders() },
-    cache: 'no-store'
-  });
-  await handleResponse(res);
-  if (!res.ok) throw new Error('Error al obtener rutas');
-  return res.json();
+  if (!isOnline()) {
+    const cached = getLocalCache('rutas');
+    if (cached) return cached;
+    throw new Error('Sin conexión a Internet y sin datos guardados localmente.');
+  }
+  try {
+    const res = await fetch(`${BASE_URL}/api/rutas?_t=${Date.now()}`, {
+      headers: { ...getAuthHeaders() },
+      cache: 'no-store'
+    });
+    await handleResponse(res);
+    if (!res.ok) throw new Error('Error al obtener rutas');
+    const data = await res.json();
+    setLocalCache('rutas', data);
+    return data;
+  } catch (error) {
+    const cached = getLocalCache('rutas');
+    if (cached) {
+      console.warn('Fallo de red, sirviendo rutas desde la caché local:', error);
+      return cached;
+    }
+    throw error;
+  }
 }
 
 export async function getRutaById(id) {
@@ -431,16 +639,37 @@ export async function createRuta(data) {
 }
 
 export async function finalizarRuta(id) {
-  const res = await fetch(`${BASE_URL}/api/rutas/${id}/finalizar`, {
-    method: 'PUT',
-    headers: { ...getAuthHeaders() },
-  });
-  await handleResponse(res);
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Error al finalizar ruta');
+  const url = `${BASE_URL}/api/rutas/${id}/finalizar`;
+
+  if (!isOnline()) {
+    console.log('[Offline Queue] Encolando finalización de ruta:', id);
+    addToSyncQueue('finalizarRuta', url, 'PUT', {});
+    updateLocalCacheFinalizarRuta(id);
+    return { success: true, offline: true, id };
   }
-  return res.json();
+
+  try {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { ...getAuthHeaders() },
+    });
+    await handleResponse(res);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al finalizar ruta');
+    }
+    const data = await res.json();
+    updateLocalCacheFinalizarRuta(id);
+    return data;
+  } catch (error) {
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || !isOnline()) {
+      console.warn('[Offline Queue] Error de red. Encolando finalización de ruta:', error);
+      addToSyncQueue('finalizarRuta', url, 'PUT', {});
+      updateLocalCacheFinalizarRuta(id);
+      return { success: true, offline: true, id };
+    }
+    throw error;
+  }
 }
 
 export async function getTrackingPublico(id) {
@@ -531,15 +760,25 @@ export async function desactivarTransporte(id) {
 
 //Clientes
 export async function getClientes() {
-  const response = await fetch(`${BASE_URL}/api/clientes`, {
-    headers: { ...getAuthHeaders() },
+  if (!isOnline()) {
+    const cached = getLocalCache('clientes');
+    if (cached) return cached;
+    return [];
   }
-  );
-
-  if (!response.ok)
-    throw new Error('Error al obtener clientes');
-
-  return response.json();
+  try {
+    const response = await fetch(`${BASE_URL}/api/clientes`, {
+      headers: { ...getAuthHeaders() },
+    });
+    if (!response.ok)
+      throw new Error('Error al obtener clientes');
+    const data = await response.json();
+    setLocalCache('clientes', data);
+    return data;
+  } catch (error) {
+    const cached = getLocalCache('clientes');
+    if (cached) return cached;
+    throw error;
+  }
 }
 
 export async function getClienteById(id) {

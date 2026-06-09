@@ -1,0 +1,153 @@
+/* DetalleRuta CSS styling with mobile responsive layout */
+
+/* Page layout modifications */
+.detalle-ruta-container .detalle-ruta-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.detalle-ruta-container .detalle-ruta-meta-grid.first {
+  margin-bottom: 25px;
+}
+
+.detalle-ruta-container .detalle-ruta-table-container {
+  display: block;
+  width: 100%;
+}
+
+.detalle-ruta-container .detalle-ruta-mobile-grid {
+  display: none;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Confirm container stack */
+.detalle-ruta-container .detalle-ruta-confirm-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .detalle-ruta-container .detalle-ruta-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .detalle-ruta-container .detalle-ruta-meta-grid.first {
+    margin-bottom: 16px;
+  }
+  
+  .detalle-ruta-container .detalle-ruta-table-container {
+    display: none;
+  }
+  
+  .detalle-ruta-container .detalle-ruta-mobile-grid {
+    display: grid;
+  }
+  
+  .detalle-ruta-container .page-header-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  
+  .detalle-ruta-container .page-header-row button {
+    width: 100%;
+  }
+  
+  .detalle-ruta-container .detalle-ruta-confirm-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .detalle-ruta-container .detalle-ruta-confirm-container button {
+    width: 100%;
+  }
+}
+
+/* Stop Card Styling */
+.detalle-ruta-container .parada-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.detalle-ruta-container .parada-card:hover {
+  transform: translateY(-2px);
+}
+
+.detalle-ruta-container .parada-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 8px;
+}
+
+.detalle-ruta-container .parada-card-number {
+  font-weight: 900;
+  font-size: 18px;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  color: #111827;
+}
+
+.detalle-ruta-container .parada-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detalle-ruta-container .parada-card-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.detalle-ruta-container .parada-card-detail-item svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.detalle-ruta-container .parada-card-footer {
+  margin-top: 4px;
+}
+
+.detalle-ruta-container .parada-card-btn {
+  width: 100%;
+  height: 40px;
+  background: #ffffff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.detalle-ruta-container .parada-card-btn:hover {
+  background: #f0fdf4;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}

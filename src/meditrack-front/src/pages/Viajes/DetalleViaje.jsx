@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getRutas, updateEstadoEnvio, finalizarRuta, getEnvioById, getMedicamentos, getClientes } from '../../services/api';
 import { getTipoStyles, iconos, DefaultIcon } from '../../util/Util';
+import OfflineBanner from '../../components/OfflineBanner';
 import './DetalleViaje.css';
 
 function DetalleViaje() {
@@ -241,6 +242,14 @@ function DetalleViaje() {
 
     useEffect(() => {
         if (user) fetchRutas();
+
+        const handleOnlineReload = () => {
+            if (user) fetchRutas(true);
+        };
+        window.addEventListener('online', handleOnlineReload);
+        return () => {
+            window.removeEventListener('online', handleOnlineReload);
+        };
     }, [user]);
 
     const avanzarEstado = async (envioId, estadoActual) => {
@@ -510,6 +519,7 @@ function DetalleViaje() {
 
     return (
         <div className="detalle-page">
+            <OfflineBanner />
             <div className="detalle-content-container">
                 <div className="detalle-nav-bar animate-fade-in">
                     <button

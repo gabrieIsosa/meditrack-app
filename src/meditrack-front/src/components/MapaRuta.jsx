@@ -112,9 +112,13 @@ function MapaRuta({ paradas }) {
   }, [isLoaded, paradasConCoords]);
 
   if (!isLoaded) {
+    const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
     return (
-      <div style={{ height: '420px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB', borderRadius: '8px', color: '#6b7280', fontSize: '14px' }}>
-        Cargando mapa...
+      <div style={{ height: '220px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F4F6', borderRadius: '8px', color: '#6b7280', fontSize: '13px', border: '1px dashed #d1d5db', padding: '20px', textAlign: 'center' }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '4px' }}>
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        <span>{!online ? 'Mapa no disponible sin conexión' : 'Cargando mapa...'}</span>
       </div>
     );
   }

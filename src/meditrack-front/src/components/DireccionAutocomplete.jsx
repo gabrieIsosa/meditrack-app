@@ -1,10 +1,17 @@
 import { useEffect, useRef } from "react";
+import { useJsApiLoader } from "@react-google-maps/api";
+
+const LIBRARIES = ["places"];
 
 function InputDireccion({ onSelect }) {
+    const { isLoaded } = useJsApiLoader({
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        libraries: LIBRARIES,
+    });
     const inputRef = useRef(null);
 
     useEffect(() => {
-        if (!window.google || !inputRef.current) return;
+        if (!isLoaded || !inputRef.current || !window.google) return;
 
         const autocomplete =
             new window.google.maps.places.Autocomplete(
@@ -36,13 +43,14 @@ function InputDireccion({ onSelect }) {
                 placeId: place.place_id,
             });
         });
-    }, [onSelect]);
+    }, [isLoaded, onSelect]);
 
     return (
         <input
             ref={inputRef}
             type="text"
-            placeholder="Ingrese dirección"
+            placeholder={isLoaded ? "Ingrese dirección" : "Cargando buscador de direcciones..."}
+            disabled={!isLoaded}
             className="w-full border rounded px-3 py-2"
         />
     );

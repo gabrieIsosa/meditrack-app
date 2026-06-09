@@ -27,7 +27,6 @@ import EditarCliente from './pages/Clientes/EditarCliente';
 import Transportes from './pages/Transportes/Transportes';
 import Reportes from './pages/Reportes/Reportes';
 import DashboardKPI from './pages/Reportes/DashboardKPI';
-import { LoadScript } from "@react-google-maps/api";
 import Mails from './pages/Mails/Mails';
 import ReclamoCambioDatos from './pages/ReclamoCambioDato/ReclamoCambioDatos';
 import Repartidores from './pages/Usuarios/Repartidores';
@@ -35,48 +34,43 @@ import Repartidores from './pages/Usuarios/Repartidores';
 
 function App() {
   return (
-    <LoadScript
-      googleMapsApiKey={ import.meta.env.VITE_GOOGLE_MAPS_API_KEY }
-      libraries={["places"]}
-    >
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<TrackingPublico />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reclamo-cambio-datos" element={ <ReclamoCambioDatos />}/>
-            <Route element={<ProtectedLayout />}>
-              <Route path="/menu" element={<MainMenu />} />
-              <Route path="/envios" element={<Home />} />
-              <Route path="/detalle/:id" element={<DetalleEnvio />} />
-              <Route path="/envios/nuevo" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevoEnvio /></ProtectedRoute>} />
-              <Route path="/envios/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><EditarEnvio /></ProtectedRoute>} />
-              <Route path="/usuarios" element={<Usuarios />} />
-              <Route path="/usuarios/nuevo" element={<NuevoUsuario />} />
-              <Route path="/usuarios/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><EditarUsuario /></ProtectedRoute>} />
-              <Route path="/rutas" element={<Rutas />} />
-              <Route path="/rutas/nueva" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevaRuta /></ProtectedRoute>} />
-              <Route path="/rutas/:id" element={<DetalleRuta />} />
-              <Route path="/medicamentos" element={<Medicamentos />} />
-              <Route path="/medicamentos/editar/:id" element={<EditarMedicamento />} />
-              <Route path="/medicamentos/nuevoMedicamento" element={<NuevoMedicamento />} />
-              <Route path="/viajes" element={<ProtectedRoute roles={['REPARTIDOR']}><Viajes /></ProtectedRoute>} />
-              <Route path="/viajes/detalle" element={<ProtectedRoute roles={['REPARTIDOR']}><DetalleViaje /></ProtectedRoute>} />
-              <Route path="/clientes" element={<Clientes />} />
-              <Route path="/clientes/nuevo" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevoCliente /></ProtectedRoute>} />
-              <Route path="/clientes/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}> <EditarCliente /></ProtectedRoute>} />
-              <Route path="/reportes" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Reportes /></ProtectedRoute>} />
-              <Route path="/kpis" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><DashboardKPI /></ProtectedRoute>} />
-              <Route path="/transportes" element={<ProtectedRoute roles={['ADMINISTRADOR', 'SUPERVISOR', 'REPARTIDOR']}><Transportes /></ProtectedRoute>} />
-              <Route path="/mails" element={ <ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Mails /></ProtectedRoute> }/>
-              <Route path="/repartidor" element={ <ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Repartidores /></ProtectedRoute> }/>
-            </Route>
-            <Route path="*" element={<Navigate to="/menu" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </LoadScript>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<TrackingPublico />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reclamo-cambio-datos" element={ <ReclamoCambioDatos />}/>
+          <Route element={<ProtectedLayout />}>
+            <Route path="/menu" element={<MainMenu />} />
+            <Route path="/envios" element={<Home />} />
+            <Route path="/detalle/:id" element={<DetalleEnvio />} />
+            <Route path="/envios/nuevo" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevoEnvio /></ProtectedRoute>} />
+            <Route path="/envios/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><EditarEnvio /></ProtectedRoute>} />
+            <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/usuarios/nuevo" element={<NuevoUsuario />} />
+            <Route path="/usuarios/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><EditarUsuario /></ProtectedRoute>} />
+            <Route path="/rutas" element={<Rutas />} />
+            <Route path="/rutas/nueva" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevaRuta /></ProtectedRoute>} />
+            <Route path="/rutas/:id" element={<DetalleRuta />} />
+            <Route path="/medicamentos" element={<Medicamentos />} />
+            <Route path="/medicamentos/editar/:id" element={<EditarMedicamento />} />
+            <Route path="/medicamentos/nuevoMedicamento" element={<NuevoMedicamento />} />
+            <Route path="/viajes" element={<ProtectedRoute roles={['REPARTIDOR']}><Viajes /></ProtectedRoute>} />
+            <Route path="/viajes/detalle" element={<ProtectedRoute roles={['REPARTIDOR']}><DetalleViaje /></ProtectedRoute>} />
+            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/clientes/nuevo" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><NuevoCliente /></ProtectedRoute>} />
+            <Route path="/clientes/editar/:id" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}> <EditarCliente /></ProtectedRoute>} />
+            <Route path="/reportes" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Reportes /></ProtectedRoute>} />
+            <Route path="/kpis" element={<ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><DashboardKPI /></ProtectedRoute>} />
+            <Route path="/transportes" element={<ProtectedRoute roles={['ADMINISTRADOR', 'SUPERVISOR', 'REPARTIDOR']}><Transportes /></ProtectedRoute>} />
+            <Route path="/mails" element={ <ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Mails /></ProtectedRoute> }/>
+            <Route path="/repartidor" element={ <ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Repartidores /></ProtectedRoute> }/>
+          </Route>
+          <Route path="*" element={<Navigate to="/menu" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
 
   );
 }
