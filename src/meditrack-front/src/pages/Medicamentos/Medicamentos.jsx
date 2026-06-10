@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { inactivarMedicamento, getMedicamentos } from '../../services/api';
+import { inactivarMedicamento, getMedicamentos, BASE_URL } from '../../services/api';
 
 const Skeleton = ({ width = '100%', height = '20px', borderRadius = '4px' }) => (
     <div style={{ width, height, borderRadius, backgroundColor: '#E5E7EB', animation: 'pulse 1.5s infinite' }} />
@@ -271,7 +271,7 @@ function Medicamentos() {
                                                             m.imagenUrl
                                                                 ? (m.imagenUrl.startsWith('http') 
                                                                     ? m.imagenUrl 
-                                                                    : `http://localhost:8080${m.imagenUrl}`)
+                                                                    : `${BASE_URL}${m.imagenUrl}`)
                                                                 : '/placeholder-medicamento.png'
                                                         }
                                                         alt={m.nombre}
@@ -386,7 +386,7 @@ function Medicamentos() {
                                                 m.imagenUrl
                                                     ? (m.imagenUrl.startsWith('http') 
                                                         ? m.imagenUrl 
-                                                        : `http://localhost:8080${m.imagenUrl}`)
+                                                        : `${BASE_URL}${m.imagenUrl}`)
                                                     : '/placeholder-medicamento.png'
                                             }
                                             alt={m.nombre}

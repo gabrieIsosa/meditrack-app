@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { BASE_URL } from '../services/api';
 
-const WS_URL = 'http://localhost:8080/ws';
+const WS_URL = `${BASE_URL}/ws`;
 
 /**
  * Abre una conexión WebSocket/STOMP autenticada y llama a onNotificacion

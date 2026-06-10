@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getEnvioById, updateEstadoEnvio, cancelarEnvio, getUsuarios, reasignarRepartidorEnvio, descargarEtiqueta, getMedicamentos } from '../../services/api';
+import { getEnvioById, updateEstadoEnvio, cancelarEnvio, getUsuarios, reasignarRepartidorEnvio, descargarEtiqueta, getMedicamentos, BASE_URL } from '../../services/api';
 import ModalHistorial from '../../components/ModalHistorial';
 import StatusLine from '../../components/StatusLine';
 import ModalCancelacion from '../../components/ModalCancelacion';
@@ -560,7 +560,7 @@ function DetalleEnvio() {
                   <div key={item.id} style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '14px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#F9FAFB' }}>
                     <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {item.imagenUrl ? (
-                        <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `http://localhost:8080${item.imagenUrl}`} alt={item.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `${BASE_URL}${item.imagenUrl}`} alt={item.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#9CA3AF' }}>
                           {item.esManual ? 'TXT' : 'N/A'}
