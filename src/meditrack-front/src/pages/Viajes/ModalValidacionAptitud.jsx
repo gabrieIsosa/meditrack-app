@@ -251,48 +251,46 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
                     </button>
                 </div>
 
-                {import.meta.env.DEV && (
-                    <div style={{
-                        padding: '12px 24px',
-                        background: '#f3f4f6',
-                        borderTop: '1px solid #e5e7eb',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: '8px'
-                    }}>
-                        <button
-                            style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#10B981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                            onClick={() => {
-                                setFase('success');
-                                setTimeout(() => onAprobado(), 1000);
-                            }}
-                        >
-                            🔧 Simular OK
-                        </button>
-                        <button
-                            style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                            onClick={() => {
-                                intentosRef.current = 0;
-                                setIntentosRestantes(0);
-                                setFase('error');
-                                setTimeout(() => onBloqueado(), 1000);
-                            }}
-                        >
-                            🔧 Simular Bloqueo
-                        </button>
-                        <button
-                            style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#6B7280', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                            onClick={() => {
-                                intentosRef.current = MAX_INTENTOS;
-                                setIntentosRestantes(MAX_INTENTOS);
-                                setFase('idle');
-                                setUltimoResultado(null);
-                            }}
-                        >
-                            Reset
-                        </button>
-                    </div>
-                )}
+                <div style={{
+                    padding: '12px 24px',
+                    background: '#f3f4f6',
+                    borderTop: '1px solid #e5e7eb',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                }}>
+                    <button
+                        style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#10B981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                        onClick={() => {
+                            setFase('success');
+                            setTimeout(() => onAprobado(), 1000);
+                        }}
+                    >
+                        🔧 Simular OK
+                    </button>
+                    <button
+                        style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                        onClick={() => {
+                            intentosRef.current = 0;
+                            setIntentosRestantes(0);
+                            setFase('error');
+                            setTimeout(() => onBloqueado(), 1000);
+                        }}
+                    >
+                        🔧 Simular Bloqueo
+                    </button>
+                    <button
+                        style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 'bold', background: '#6B7280', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                        onClick={() => {
+                            intentosRef.current = MAX_INTENTOS;
+                            setIntentosRestantes(MAX_INTENTOS);
+                            setFase('idle');
+                            setUltimoResultado(null);
+                        }}
+                    >
+                        Reset
+                    </button>
+                </div>
             </div>
         </div>
     );

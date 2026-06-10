@@ -474,36 +474,34 @@ function Viajes() {
                             </span>
                         </div>
                     </div>
-                    {import.meta.env.DEV && (
-                        <button
-                            onClick={() => {
-                                setModoTestMic(true);
-                                setMostrarValidacionAptitud(true);
-                            }}
-                            style={{
-                                padding: '10px 18px',
-                                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '10px',
-                                fontWeight: '700',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                <line x1="12" y1="19" x2="12" y2="23" />
-                                <line x1="8" y1="23" x2="16" y2="23" />
-                            </svg>
-                            Probar Micrófono (Dev)
-                        </button>
-                    )}
+                    <button
+                        onClick={() => {
+                            setModoTestMic(true);
+                            setMostrarValidacionAptitud(true);
+                        }}
+                        style={{
+                            padding: '10px 18px',
+                            background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                        Probar Micrófono (Demo)
+                    </button>
                 </div>
 
                 {/* Sección de Viaje Principal (de Hoy o más cercano) */}
