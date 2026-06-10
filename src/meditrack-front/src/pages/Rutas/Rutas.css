@@ -11,6 +11,26 @@
   gap: 16px;
 }
 
+.rutas-container .table-header-actions .search-input {
+  margin: 0;
+  flex: 2 1 0%;
+  width: 0;
+  min-width: 200px;
+}
+
+.rutas-container .table-header-actions .status-filter-select {
+  padding: 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #fff;
+  cursor: pointer;
+  flex: 1 1 0%;
+  min-width: 140px;
+  max-width: 220px;
+  box-sizing: border-box;
+}
+
 @media (max-width: 768px) {
   .rutas-container .rutas-table-container {
     display: none;
@@ -27,7 +47,16 @@
   }
   
   .rutas-container .table-header-actions .search-input {
-    width: 100%;
+    width: 100% !important;
+    flex: none !important;
+    min-width: 0 !important;
+  }
+  
+  .rutas-container .table-header-actions .status-filter-select {
+    width: 100% !important;
+    max-width: none !important;
+    flex: none !important;
+    min-width: 0 !important;
   }
   
   .rutas-container .table-header-actions .btn-new-shipment {

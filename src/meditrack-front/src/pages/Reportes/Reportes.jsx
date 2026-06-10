@@ -146,7 +146,7 @@ function Reportes() {
   return (
     <div className="container" style={{ padding: '10px', maxWidth: '1200px', margin: '0 auto' }}>
       <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-        <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
+        <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Reportes Operativos</h1>
       </div>
 

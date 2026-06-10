@@ -126,7 +126,7 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
   };
 
   return (
-    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-color, #e5e7eb)', position: 'relative', zIndex: 1000 }}>
+    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-color, #e5e7eb)', position: 'sticky', top: '0', zIndex: 1000 }}>
       <style>{`
         @media (max-width: 768px) {
           .nav-user-info { display: none !important; }

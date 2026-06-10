@@ -229,7 +229,7 @@ function NuevaRuta() {
   return (
     <div className="container">
       <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-        <button className="btn btn-secondary" onClick={() => navigate('/rutas')}>VOLVER</button>
+        <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Nueva ruta</h1>
       </div>
 

@@ -54,7 +54,7 @@ function Repartidores() {
             >
                 <button
                     className="btn btn-secondary"
-                    onClick={() => navigate('/menu')}
+                    onClick={() => navigate(-1)}
                 >
                     VOLVER
                 </button>
