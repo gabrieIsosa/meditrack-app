@@ -343,7 +343,7 @@ function DetalleViaje() {
         try {
             await finalizarRuta(rutaActiva.id);
             alert("¡Ruta completada con éxito!");
-            navigate('/inicio-repartidor');
+            navigate('/menu');
         } catch (error) {
             console.error("Error al finalizar ruta:", error);
             alert("Error al finalizar la ruta");
