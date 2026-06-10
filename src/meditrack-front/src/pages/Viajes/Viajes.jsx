@@ -482,7 +482,7 @@ function Viajes() {
                 <div className="viajes-header animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <button 
-                            onClick={() => navigate('/inicio-repartidor')} 
+                            onClick={() => navigate('/menu')} 
                             className="viajes-header-back-btn btn-action-hover"
                             style={{ margin: 0 }}
                         >
