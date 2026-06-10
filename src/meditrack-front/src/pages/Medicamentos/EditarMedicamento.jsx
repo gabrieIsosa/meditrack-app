@@ -47,7 +47,16 @@ function EditarMedicamento() {
         }
     };
 
-    if (!form) return <div className="container">Cargando...</div>;
+    if (!form) {
+        return (
+            <div className="container">
+                <div className="loading-container">
+                    <div className="premium-spinner"></div>
+                    <span>Cargando datos del medicamento...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container">

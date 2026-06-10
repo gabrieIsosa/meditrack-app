@@ -133,7 +133,7 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
     const bloqueadoFinal = fase === 'error' && intentosRestantes <= 0;
 
     const getMensaje = () => {
-        if (fase === 'idle') return 'Para iniciar la ruta debes superar una verificación de aptitud. Hacé click en el botón y di en voz alta: "Confirmo que me encuentro en condiciones de conducir."';
+        if (fase === 'idle') return 'Para iniciar la ruta debes superar una verificación de aptitud. Pulsa el botón y di en voz alta: "Confirmo que me encuentro en condiciones de conducir."';
         if (fase === 'recording') return 'Estás siendo grabado. Di claramente: "Confirmo que me encuentro en condiciones de conducir."';
         if (fase === 'processing') return 'Procesando tu grabación, por favor espera...';
         if (fase === 'success') return 'Tu aptitud ha sido verificada correctamente. Puedes iniciar la ruta de forma segura.';
@@ -157,7 +157,29 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
         <div className="val-overlay animate-fade-in">
             <div className="val-modal animate-slide-up" onClick={e => e.stopPropagation()}>
 
-                <div className="val-modal-top">
+                <div className="val-modal-top" style={{ position: 'relative' }}>
+                    {fase !== 'success' && !bloqueadoFinal && (
+                        <button 
+                            onClick={onCancelar}
+                            style={{
+                                position: 'absolute',
+                                top: '16px',
+                                right: '20px',
+                                background: 'none',
+                                border: 'none',
+                                fontSize: '28px',
+                                color: '#9CA3AF',
+                                cursor: 'pointer',
+                                lineHeight: 1,
+                                padding: '4px',
+                                transition: 'color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.color = '#4B5563'}
+                            onMouseLeave={(e) => e.target.style.color = '#9CA3AF'}
+                        >
+                            &times;
+                        </button>
+                    )}
                     <div className={`val-icon-wrapper val-icon-${fase}`}>
                         {fase === 'success' ? (
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -225,7 +247,7 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
                                         </svg>
                                     )}
                                 </div>
-                                {fase === 'recording' ? 'Grabando... Hacé click para analizar' : 'Hacé click para hablar'}
+                                {fase === 'recording' ? 'Grabando... Pulsa para analizar' : 'Pulsa para hablar'}
                             </button>
                         )}
 
@@ -245,13 +267,9 @@ export function ModalValidacionAptitud({ onAprobado, onBloqueado, onCancelar }) 
                     </div>
                 </div>
 
-                <div className={`val-modal-footer${(fase === 'success' || bloqueadoFinal) ? ' val-invisible' : ''}`}>
-                    <button className="val-cancel-btn btn-sec-hover" onClick={onCancelar}>
-                        Cancelar
-                    </button>
-                </div>
 
-                <div style={{
+
+                <div className="val-sim-row" style={{
                     padding: '12px 24px',
                     background: '#f3f4f6',
                     borderTop: '1px solid #e5e7eb',

@@ -4,13 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 import { login as apiLogin, verify2fa } from '../../services/api';
 import Navbar from '../../components/Navbar';
 import bg from '../../assets/bg.png';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Copy, Check } from 'lucide-react';
 import LegalModal from '../../components/LegalModal';
 
 function Login() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
-  
+
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +25,10 @@ function Login() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('terms');
+
+  const handleAutoFill = (email, password) => {
+    setForm({ email, password });
+  };
 
   if (user) return <Navigate to="/menu" replace />;
 
@@ -43,7 +47,7 @@ function Login() {
         }
 
         const responseData = await apiLogin(form.email, form.password);
-        
+
         if (responseData.require2fa) {
           setTempData(responseData);
           setOtp(new Array(6).fill(""));
@@ -72,7 +76,7 @@ function Login() {
   };
 
   const handleOtpChange = (element, index) => {
-    if (isNaN(element.value)) return false; 
+    if (isNaN(element.value)) return false;
     setOtp([...otp.map((d, id) => (id === index ? element.value : d))]);
     if (element.value !== "" && element.nextSibling) {
       element.nextSibling.focus();
@@ -90,7 +94,7 @@ function Login() {
     const pasteData = e.clipboardData.getData('text');
     const pasteArray = pasteData.split('').slice(0, 6);
     const newOtp = [...otp];
-    
+
     pasteArray.forEach((char, index) => {
       if (!isNaN(char)) {
         newOtp[index] = char;
@@ -103,30 +107,30 @@ function Login() {
 
   return (
     <div style={{
-        backgroundImage: `url(${bg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        minHeight: '100vh',
-        width: '100vw',
-        overflowX: 'hidden',
-        overflowY: 'auto',
-        boxSizing: 'border-box'
+      backgroundImage: `url(${bg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      minHeight: '100vh',
+      width: '100vw',
+      overflowX: 'hidden',
+      overflowY: 'auto',
+      boxSizing: 'border-box'
     }}>
       <Navbar buttonText="VOLVER" buttonRoute="/" />
-      
+
       <div style={{
-          maxWidth: 450, 
-          margin: '40px auto', 
-          padding: '32px 24px', 
-          color: '#111827',
-          background: '#ffffff',
-          borderRadius: 16,
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-          width: 'calc(100% - 32px)',
-          boxSizing: 'border-box'
+        maxWidth: 450,
+        margin: '40px auto',
+        padding: '32px 24px',
+        color: '#111827',
+        background: '#ffffff',
+        borderRadius: 16,
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        width: 'calc(100% - 32px)',
+        boxSizing: 'border-box'
       }}>
-        <h1 style={{ fontSize: '1.8rem', textAlign: 'center', marginBottom: 8, color:'#00A86B'}}>MediTrack</h1>
+        <h1 style={{ fontSize: '1.8rem', textAlign: 'center', marginBottom: 8, color: '#00A86B' }}>MediTrack</h1>
         <p style={{ textAlign: 'center', marginBottom: 24, color: '#6b7280' }}>Gestión logística farmacéutica</p>
 
         <form onSubmit={handleFormSubmit}>
@@ -170,11 +174,11 @@ function Login() {
                 </button>
               </div>
 
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start', 
-                gap: '8px', 
-                marginBottom: '20px', 
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px',
+                marginBottom: '20px',
                 marginTop: '16px',
                 textAlign: 'left'
               }}>
@@ -191,12 +195,12 @@ function Login() {
                     accentColor: '#00A86B'
                   }}
                 />
-                <label 
+                <label
                   htmlFor="accept-terms-checkbox"
-                  style={{ 
-                    fontSize: '13px', 
-                    color: '#4B5563', 
-                    lineHeight: '1.4', 
+                  style={{
+                    fontSize: '13px',
+                    color: '#4B5563',
+                    lineHeight: '1.4',
                     cursor: 'pointer',
                     userSelect: 'none'
                   }}
@@ -261,9 +265,9 @@ function Login() {
 
           {error && <p style={{ color: '#DC2626', marginBottom: 16, textAlign: 'center', fontSize: '14px' }}>{error}</p>}
 
-          <button type="submit" disabled={loading} style={{ 
-              width: '100%', padding: 12, background: '#00A86B', color: '#fff', border: 'none', 
-              borderRadius: 8, cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' 
+          <button type="submit" disabled={loading} style={{
+            width: '100%', padding: 12, background: '#00A86B', color: '#fff', border: 'none',
+            borderRadius: 8, cursor: 'pointer', fontWeight: 'bold', fontSize: '16px'
           }}>
             {loading ? 'PROCESANDO...' : (step === 1 ? 'INGRESAR' : 'VERIFICAR Y ENTRAR')}
           </button>
@@ -284,18 +288,52 @@ function Login() {
         </form>
 
         {step === 1 && (
-          <div style={{ marginTop: 32, fontSize: '12px', color: '#6b7280', borderTop: '1px solid #e5e7eb', paddingTop: 16, textAlign: 'center' }}>
-            <strong style={{ display: 'block', marginBottom: 8 }}>Usuarios de prueba:</strong>
-            supervisor@meditrack.com · 1234<br />
-            repartidor@meditrack.com · 1234<br />
-            operador@meditrack.com · 1234<br />
-            admin@meditrack.com · admin123
+          <div style={{ marginTop: 32, fontSize: '12px', color: '#6b7280', borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+            <strong style={{ display: 'block', marginBottom: 12, textAlign: 'center' }}>Usuarios de prueba (haz click para autocompletar):</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { email: 'supervisor@meditrack.com', pass: '1234', label: 'Supervisor' },
+                { email: 'repartidor@meditrack.com', pass: '1234', label: 'Repartidor' },
+                { email: 'operador@meditrack.com', pass: '1234', label: 'Operador' },
+                { email: 'admin@meditrack.com', pass: 'admin123', label: 'Administrador' }
+              ].map(testUser => (
+                <div
+                  key={testUser.email}
+                  onClick={() => handleAutoFill(testUser.email, testUser.pass)}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: '#F9FAFB',
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #F3F4F6',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = '#00A86B';
+                    e.currentTarget.style.background = '#F0FDF4';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = '#F3F4F6';
+                    e.currentTarget.style.background = '#F9FAFB';
+                  }}
+                  title="Click para autocompletar"
+                >
+                  <span style={{ fontSize: '11px', color: '#374151' }}>{testUser.email}</span>
+                  <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: 'bold' }}>
+                    {testUser.pass}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       {/* Legal documents display dialog */}
-      <LegalModal 
+      <LegalModal
         isOpen={isModalOpen}
         type={modalType}
         onClose={() => setIsModalOpen(false)}

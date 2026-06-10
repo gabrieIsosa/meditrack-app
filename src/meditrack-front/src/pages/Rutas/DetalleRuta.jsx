@@ -482,7 +482,7 @@ function DetalleRuta() {
                       <circle cx="5.5" cy="18.5" r="2.5" />
                       <circle cx="18.5" cy="18.5" r="2.5" />
                     </svg>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', wordBreak: 'break-all' }}>
                       <strong>Tracking ID:</strong> {p.envio.id}
                       <button
                         onClick={() => handleCopiarEnvioId(p.envio.id)}

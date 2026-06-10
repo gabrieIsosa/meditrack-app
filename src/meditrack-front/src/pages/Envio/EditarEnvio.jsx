@@ -240,14 +240,14 @@ function EditarEnvio() {
             <div style={{ height: '20px', backgroundColor: '#E5E7EB', borderRadius: '4px', width: '250px', marginBottom: '8px' }}></div>
             <div style={{ height: '14px', backgroundColor: '#E5E7EB', borderRadius: '4px', width: '400px', marginBottom: '20px' }}></div>
             <div style={{ ...skeletonItemStyle, height: '42px', marginBottom: '12px' }}></div>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="add-medicine-row" style={{ display: 'flex', gap: '12px' }}>
               <div style={skeletonItemStyle}></div>
               <div style={skeletonItemStyle}></div>
-              <div style={{ ...skeletonItemStyle, width: '100px' }}></div>
+              <div className="qty-wrapper" style={{ ...skeletonItemStyle, width: '100px' }}></div>
               <div style={{ ...skeletonItemStyle, width: '100px', backgroundColor: '#D1D5DB' }}></div>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+          <div className="form-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
             <div style={{ height: '38px', backgroundColor: '#E5E7EB', borderRadius: '8px', width: '110px' }}></div>
             <div style={{ height: '38px', backgroundColor: '#D1D5DB', borderRadius: '8px', width: '160px' }}></div>
           </div>
@@ -448,17 +448,17 @@ function EditarEnvio() {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+            <div className="add-medicine-row" style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1 }}><label style={{ fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '4px', display: 'block' }}>Lote *</label><input type="text" value={loteMed} onChange={e => setLoteMed(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }} /></div>
               <div style={{ flex: 1 }}><label style={{ fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '4px', display: 'block' }}>Fecha de vencimiento *</label><input type="date" value={vencimientoMed} onChange={e => setVencimientoMed(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }} /></div>
-              <div style={{ width: '100px' }}><label style={{ fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '4px', display: 'block' }}>Cantidad</label><input type="number" value={cantidadMed} onChange={e => setCantidadMed(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }} /></div>
+              <div className="qty-wrapper" style={{ width: '100px' }}><label style={{ fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '4px', display: 'block' }}>Cantidad</label><input type="number" value={cantidadMed} onChange={e => setCantidadMed(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' }} /></div>
               <button type="button" onClick={handleAñadirCarga} style={{ padding: '11px 20px', backgroundColor: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>AÑADIR</button>
             </div>
           </div>
 
           {itemsCarga.length > 0 && (
-            <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+            <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', overflowX: 'auto', background: '#fff' }}>
+              <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead style={{ backgroundColor: '#F3F4F6' }}>
                   <tr><th style={{ padding: '10px', textAlign: 'left' }}>Detalle</th><th style={{ padding: '10px', textAlign: 'left' }}>Lote</th><th style={{ padding: '10px', textAlign: 'left' }}>Vencimiento</th><th style={{ padding: '10px', textAlign: 'center' }}>Cantidad</th><th style={{ padding: '10px', textAlign: 'center' }}>Acción</th></tr>
                 </thead>
@@ -483,7 +483,7 @@ function EditarEnvio() {
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+        <div className="form-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
           <button className="btn btn-secondary" onClick={() => navigate('/envios')}>CANCELAR</button>
           <button className="btn btn-primary" onClick={handleGuardar}>ACTUALIZAR ENVÍO</button>
         </div>

@@ -13,7 +13,111 @@
     <title>MediTrack</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="pwa-splash">
+        <div class="splash-container">
+          <div class="splash-logo">
+            <span class="logo-plus">+</span>
+            <span class="logo-text">MediTrack</span>
+          </div>
+          <div class="splash-subtitle">Gestión logística farmacéutica</div>
+          <div class="splash-loader">
+            <div class="splash-loader-bar"></div>
+          </div>
+        </div>
+        <style>
+          #pwa-splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            z-index: 99999;
+          }
+          .splash-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+          }
+          .splash-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #00A86B;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+            animation: splash-pulse 2s infinite ease-in-out;
+          }
+          .logo-plus {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            background-color: #00A86B;
+            color: #ffffff;
+            border-radius: 8px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            line-height: 1;
+            box-shadow: 0 4px 10px rgba(0, 168, 107, 0.25);
+          }
+          .logo-text {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+          }
+          .splash-subtitle {
+            font-size: 0.95rem;
+            color: #6b7280;
+            margin-bottom: 28px;
+            font-weight: 500;
+          }
+          .splash-loader {
+            width: 140px;
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+          }
+          .splash-loader-bar {
+            width: 50%;
+            height: 100%;
+            background-color: #00A86B;
+            border-radius: 4px;
+            position: absolute;
+            animation: splash-loading 1.4s infinite ease-in-out;
+            box-shadow: 0 0 6px rgba(0, 168, 107, 0.4);
+          }
+          @keyframes splash-pulse {
+            0%, 100% {
+              transform: scale(0.98);
+              opacity: 0.95;
+            }
+            50% {
+              transform: scale(1.02);
+              opacity: 1;
+            }
+          }
+          @keyframes splash-loading {
+            0% {
+              left: -50%;
+            }
+            100% {
+              left: 100%;
+            }
+          }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
