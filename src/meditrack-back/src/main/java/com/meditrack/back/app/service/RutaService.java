@@ -10,14 +10,18 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.meditrack.back.app.model.Envio;
 import com.meditrack.back.app.model.EstadoEnvio;
+import com.meditrack.back.app.model.EstadoOperativo;
 import com.meditrack.back.app.model.EstadoRuta;
 import com.meditrack.back.app.model.Ruta;
 import com.meditrack.back.app.model.RutaEnvio;
+import com.meditrack.back.app.model.Transporte;
 import com.meditrack.back.app.model.Usuario;
 import com.meditrack.back.app.repository.EnvioRepository;
 import com.meditrack.back.app.repository.RutaEnvioRepository;
 import com.meditrack.back.app.repository.RutaRepository;
+import com.meditrack.back.app.repository.TransporteRepository;
 import com.meditrack.back.app.repository.UsuarioRepository;
+
 
 @Service
 public class RutaService {
@@ -27,15 +31,17 @@ public class RutaService {
     private final UsuarioRepository usuarioRepository;
     private final RutaEnvioRepository rutaEnvioRepository;
     private final EnvioService envioService;
+    private final TransporteRepository transporteRepository;
 
     public RutaService(RutaRepository rutaRepository, EnvioRepository envioRepository,
-                       UsuarioRepository usuarioRepository, RutaEnvioRepository rutaEnvioRepository,
-                       EnvioService envioService) {
+            UsuarioRepository usuarioRepository, RutaEnvioRepository rutaEnvioRepository,
+            EnvioService envioService, TransporteRepository transporteRepository) {
         this.rutaRepository = rutaRepository;
         this.envioRepository = envioRepository;
         this.usuarioRepository = usuarioRepository;
         this.rutaEnvioRepository = rutaEnvioRepository;
         this.envioService = envioService;
+        this.transporteRepository = transporteRepository;
     }
 
     public List<Ruta> listarTodos() {
@@ -51,6 +57,14 @@ public class RutaService {
     public Ruta crear(Map<String, Object> datos, String usuario) {
         String fecha = (String) datos.get("fecha");
         String repartidorId = (String) datos.get("repartidorId");
+        
+        Long transporteId = datos.get("transporteId") != null
+            ? Long.valueOf(datos.get("transporteId").toString())
+            : null;
+            
+        if (rutaRepository.existsByTransporteIdAndFechaAndEstadoNot(transporteId, fecha, EstadoRuta.COMPLETADA)) {
+            throw new IllegalArgumentException("El transporte ya tiene una ruta asignada para el día: " + fecha);
+        }
 
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> enviosData = (List<Map<String, Object>>) datos.get("envios");
@@ -70,9 +84,21 @@ public class RutaService {
             throw new IllegalArgumentException("El repartidor no está activo");
         }
 
+        if (transporteId == null) {
+            throw new IllegalArgumentException("El transporte es obligatorio");
+        }
+
+        Transporte transporte = transporteRepository.findById(transporteId)
+                .orElseThrow(() -> new IllegalArgumentException("Transporte no encontrado"));
+
+        if (transporte.getEstadoOperativo() != EstadoOperativo.ACTIVO) {
+            throw new IllegalArgumentException("El transporte no está activo");
+        }
+
         if (rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(repartidorId, fecha, EstadoRuta.COMPLETADA)) {
             throw new IllegalArgumentException("El repartidor ya tiene una ruta asignada para el día: " + fecha);
         }
+
 
         for (Map<String, Object> envioData : enviosData) {
             String envioId = (String) envioData.get("envioId");
@@ -89,7 +115,7 @@ public class RutaService {
             }
         }
 
-        Ruta ruta = new Ruta(fecha, repartidorId, usuario);
+        Ruta ruta = new Ruta(fecha, repartidorId, transporteId, usuario);
         rutaRepository.save(ruta);
 
         for (Map<String, Object> envioData : enviosData) {
@@ -142,5 +168,5 @@ public class RutaService {
 
         return rutaRepository.save(ruta);
     }
-    
+
 }

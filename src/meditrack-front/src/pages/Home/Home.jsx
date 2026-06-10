@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Calendar, Eye, Clock, Download, Plus, ArrowLeft, ArrowRight, Search, EllipsisVertical } from 'lucide-react';
+import { Calendar, Eye, Clock, Download, Plus, ArrowLeft, ArrowRight, Search, EllipsisVertical, Copy, Check, User, MapPin } from 'lucide-react';
 import { getEnvios, descargarEtiqueta } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import ModalHistorial from '../../components/ModalHistorial';
@@ -43,6 +43,7 @@ function Home() {
   const [activeIndex, setActiveIndex] = useState(null);
   const [envioSeleccionado, setEnvioSeleccionado] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [copiadoId, setCopiadoId] = useState(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -139,6 +140,12 @@ function Home() {
   const totalPages = Math.ceil(filtradosYOrdenados.length / ITEMS_PER_PAGE);
   const paginatedData = filtradosYOrdenados.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+  const handleCopiarId = (id) => {
+    navigator.clipboard.writeText(id);
+    setCopiadoId(id);
+    setTimeout(() => setCopiadoId(null), 2000);
+  };
+
   return (
     <div className="container">
       <style>{`
@@ -159,14 +166,73 @@ function Home() {
             .acciones-desktop { display: flex !important; }
             .acciones-mobile { display: none !important; }
         }
+        .envios-mobile-grid { display: none; grid-template-columns: 1fr; gap: 16px; padding: 15px 0; }
+        .envio-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+        }
+        .envio-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+        }
+        .envio-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 10px;
+        }
+        .envio-card-id-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .envio-card-id {
+            font-weight: 800;
+            font-size: 15px;
+            color: #2563eb;
+        }
+        .envio-card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .envio-card-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        .envio-card-detail-item svg {
+            color: #9ca3af;
+            flex-shrink: 0;
+        }
+        .envio-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+            padding-top: 8px;
+            border-top: 1px solid #f3f4f6;
+        }
         @media (max-width: 768px) {
             .mobile-hidden { display: none !important; }
+            .envios-table-container { display: none !important; }
+            .envios-mobile-grid { display: grid !important; }
         }
       `}</style>
       {showSnackbar && <div className="snackbar-msg">¡Envío creado correctamente!</div>}
 
       <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-        <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
+        <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Gestión de envíos</h1>
       </div>
 
@@ -352,71 +418,211 @@ function Home() {
           )}
         </div>
 
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
-          <thead>
-            <tr>
-              <th>Tracking ID</th>
-              <th>Destinatario</th>
-              <th className="mobile-hidden">Estado</th>
-              <th className="mobile-hidden" onClick={() => handleSort('fechaCreacion')} style={{ cursor: 'pointer', userSelect: 'none' }}>F. Creación</th>
-              <th className="mobile-hidden" onClick={() => handleSort('fechaEstimada')} style={{ cursor: 'pointer', userSelect: 'none' }}>F. Envío</th>
-              <th className="mobile-hidden">Responsable</th>
-              <th style={{ textAlign: 'center' }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-                [...Array(5)].map((_, i) => (
-                    <tr key={i}>
-                        <td style={{ padding: '15px' }}><Skeleton /></td>
-                        <td style={{ padding: '15px' }}><Skeleton /></td>
-                        <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
-                        <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
-                        <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
-                        <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
-                        <td style={{ padding: '15px' }}><Skeleton /></td>
-                    </tr>
-                ))
-            ) : (
-                paginatedData.map(e => (
-                    <tr key={e.id}>
-                        <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
-                        <td>{e.destinatario}</td>
-                        <td className="mobile-hidden"><span className="status-tag" style={{ backgroundColor: `${ESTADO_COLORS[e.estado]}15`, color: ESTADO_COLORS[e.estado] }}>{e.estado?.replace(/_/g, ' ')}</span></td>
-                        <td className="mobile-hidden" style={{ fontSize: '13px' }}>{e.fechaCreacion}</td>
-                        <td className="mobile-hidden" style={{ fontSize: '13px' }}>{e.fechaEstimada || '-'}</td>
-                        <td className="mobile-hidden">{e.usuarioResponsable}</td>
-                        <td>
-                            <div className="acciones-desktop" style={{ justifyContent: 'center', gap: '8px' }}>
-                                <button className="action-icon-btn" title="Ver detalle" onClick={() => navigate(`/detalle/${e.id}`)}><Eye size={18} /></button>
-                                <button className="action-icon-btn" title="Ver historial" onClick={() => setEnvioSeleccionado(e)}><Clock size={18} /></button>
-                                <button className="action-icon-btn" title="Descargar etiqueta" onClick={() => descargarEtiqueta(e.id).catch(console.error)}><Download size={18} /></button>
-                            </div>
+        <div className="table-responsive-container envios-table-container">
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
+            <thead>
+              <tr>
+                <th>Tracking ID</th>
+                <th>Destinatario</th>
+                <th className="mobile-hidden">Estado</th>
+                <th className="mobile-hidden" onClick={() => handleSort('fechaCreacion')} style={{ cursor: 'pointer', userSelect: 'none' }}>F. Creación</th>
+                <th className="mobile-hidden" onClick={() => handleSort('fechaEstimada')} style={{ cursor: 'pointer', userSelect: 'none' }}>F. Envío</th>
+                <th className="mobile-hidden">Responsable</th>
+                <th style={{ textAlign: 'center' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                  [...Array(5)].map((_, i) => (
+                      <tr key={i}>
+                          <td style={{ padding: '15px' }}><Skeleton /></td>
+                          <td style={{ padding: '15px' }}><Skeleton /></td>
+                          <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
+                          <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
+                          <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
+                          <td className="mobile-hidden" style={{ padding: '15px' }}><Skeleton /></td>
+                          <td style={{ padding: '15px' }}><Skeleton /></td>
+                      </tr>
+                  ))
+              ) : (
+                  paginatedData.map(e => (
+                      <tr key={e.id}>
+                          <td style={{ fontWeight: 'bold', color: '#2563EB' }}>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                  {e.id}
+                                  <button
+                                      onClick={() => handleCopiarId(e.id)}
+                                      style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          padding: '2px',
+                                          cursor: 'pointer',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          color: copiadoId === e.id ? '#10B981' : '#9CA3AF',
+                                          transition: 'color 0.2s'
+                                      }}
+                                      title="Copiar ID al portapapeles"
+                                  >
+                                      {copiadoId === e.id ? <Check size={14} /> : <Copy size={14} />}
+                                  </button>
+                              </div>
+                          </td>
+                          <td>{e.destinatario}</td>
+                          <td className="mobile-hidden"><span className="status-tag" style={{ backgroundColor: `${ESTADO_COLORS[e.estado]}15`, color: ESTADO_COLORS[e.estado] }}>{e.estado?.replace(/_/g, ' ')}</span></td>
+                          <td className="mobile-hidden" style={{ fontSize: '13px' }}>{e.fechaCreacion}</td>
+                          <td className="mobile-hidden" style={{ fontSize: '13px' }}>{e.fechaEstimada || '-'}</td>
+                          <td className="mobile-hidden">{e.usuarioResponsable}</td>
+                          <td>
+                              <div className="acciones-desktop" style={{ justifyContent: 'center', gap: '8px' }}>
+                                  <button className="action-icon-btn" title="Ver detalle" onClick={() => navigate(`/detalle/${e.id}`)}><Eye size={18} /></button>
+                                  <button className="action-icon-btn" title="Ver historial" onClick={() => setEnvioSeleccionado(e)}><Clock size={18} /></button>
+                                  <button className="action-icon-btn" title="Descargar etiqueta" onClick={() => descargarEtiqueta(e.id).catch(console.error)}><Download size={18} /></button>
+                              </div>
 
-                            <div className="acciones-mobile" style={{ position: 'relative', textAlign: 'center' }}>
-                                <button className="action-icon-btn" style={{ margin: '0 auto' }} onClick={(event) => { event.stopPropagation(); setMenuActivoEnvioId(menuActivoEnvioId === e.id ? null : e.id); }}>
-                                    <EllipsisVertical size={20} />
-                                </button>
-                                {menuActivoEnvioId === e.id && (
-                                    <div ref={menuRef} style={{ position: 'absolute', right: '10px', top: '25px', zIndex: 50, background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', minWidth: '120px', overflow: 'hidden' }}>
-                                        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontSize: '13px', color: '#374151' }} onClick={() => { setMenuActivoEnvioId(null); navigate(`/detalle/${e.id}`); }}>
-                                            <Eye size={16} /> Ver detalle
-                                        </button>
-                                        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontSize: '13px', color: '#374151' }} onClick={() => { setMenuActivoEnvioId(null); setEnvioSeleccionado(e); }}>
-                                            <Clock size={16} /> Historial
-                                        </button>
-                                        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontSize: '13px', color: '#374151' }} onClick={() => { setMenuActivoEnvioId(null); descargarEtiqueta(e.id).catch(console.error); }}>
-                                            <Download size={16} /> Etiqueta
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </td>
-                    </tr>
-                ))
-            )}
-          </tbody>
-        </table>
+                              <div className="acciones-mobile" style={{ position: 'relative', textAlign: 'center' }}>
+                                  <button className="action-icon-btn" style={{ margin: '0 auto' }} onClick={(event) => { event.stopPropagation(); setMenuActivoEnvioId(menuActivoEnvioId === e.id ? null : e.id); }}>
+                                      <EllipsisVertical size={20} />
+                                  </button>
+                                  {menuActivoEnvioId === e.id && (
+                                      <div ref={menuRef} style={{ position: 'absolute', right: '10px', top: '25px', zIndex: 50, background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', minWidth: '120px', overflow: 'hidden' }}>
+                                          <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontSize: '13px', color: '#374151' }} onClick={() => { setMenuActivoEnvioId(null); navigate(`/detalle/${e.id}`); }}>
+                                              <Eye size={16} /> Ver detalle
+                                          </button>
+                                          <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontSize: '13px', color: '#374151' }} onClick={() => { setMenuActivoEnvioId(null); setEnvioSeleccionado(e); }}>
+                                              <Clock size={16} /> Historial
+                                          </button>
+                                          <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', fontSize: '13px', color: '#374151' }} onClick={() => { setMenuActivoEnvioId(null); descargarEtiqueta(e.id).catch(console.error); }}>
+                                              <Download size={16} /> Etiqueta
+                                          </button>
+                                      </div>
+                                  )}
+                              </div>
+                          </td>
+                      </tr>
+                  ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="envios-mobile-grid">
+          {loading ? (
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="envio-card">
+                <div className="envio-card-header">
+                  <Skeleton width="100px" height="18px" />
+                  <Skeleton width="90px" height="22px" borderRadius="20px" />
+                </div>
+                <div className="envio-card-details">
+                  <div className="envio-card-detail-item">
+                    <Skeleton width="16px" height="16px" borderRadius="50%" />
+                    <Skeleton width="140px" height="14px" />
+                  </div>
+                  <div className="envio-card-detail-item">
+                    <Skeleton width="16px" height="16px" borderRadius="50%" />
+                    <Skeleton width="120px" height="14px" />
+                  </div>
+                  <div className="envio-card-detail-item">
+                    <Skeleton width="16px" height="16px" borderRadius="50%" />
+                    <Skeleton width="120px" height="14px" />
+                  </div>
+                  <div className="envio-card-detail-item">
+                    <Skeleton width="16px" height="16px" borderRadius="50%" />
+                    <Skeleton width="100px" height="14px" />
+                  </div>
+                </div>
+                <div className="envio-card-footer" style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                  <Skeleton width="24px" height="24px" borderRadius="50%" />
+                  <Skeleton width="24px" height="24px" borderRadius="50%" />
+                  <Skeleton width="24px" height="24px" borderRadius="50%" />
+                </div>
+              </div>
+            ))
+          ) : filtradosYOrdenados.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+              No se encontraron envíos.
+            </div>
+          ) : (
+            paginatedData.map(e => (
+              <div key={e.id} className="envio-card">
+                <div className="envio-card-header">
+                  <div className="envio-card-id-wrapper">
+                    <span className="envio-card-id">{e.id}</span>
+                    <button
+                      onClick={() => handleCopiarId(e.id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '2px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: copiadoId === e.id ? '#10B981' : '#9CA3AF',
+                        transition: 'color 0.2s'
+                      }}
+                      title="Copiar ID al portapapeles"
+                    >
+                      {copiadoId === e.id ? <Check size={14} /> : <Copy size={14} />}
+                    </button>
+                  </div>
+                  <span
+                    className="status-tag"
+                    style={{
+                      backgroundColor: `${ESTADO_COLORS[e.estado]}15`,
+                      color: ESTADO_COLORS[e.estado],
+                    }}
+                  >
+                    {e.estado?.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div className="envio-card-details">
+                  <div className="envio-card-detail-item">
+                    <MapPin size={16} />
+                    <span><strong>Destinatario:</strong> {e.destinatario}</span>
+                  </div>
+                  <div className="envio-card-detail-item">
+                    <Calendar size={16} />
+                    <span><strong>F. Creación:</strong> {e.fechaCreacion}</span>
+                  </div>
+                  <div className="envio-card-detail-item">
+                    <Clock size={16} />
+                    <span><strong>F. Envío:</strong> {e.fechaEstimada || '-'}</span>
+                  </div>
+                  <div className="envio-card-detail-item">
+                    <User size={16} />
+                    <span><strong>Responsable:</strong> {e.usuarioResponsable}</span>
+                  </div>
+                </div>
+                <div className="envio-card-footer" style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                  <button
+                    className="action-icon-btn"
+                    title="Ver detalle"
+                    onClick={() => navigate(`/detalle/${e.id}`)}
+                  >
+                    <Eye size={20} />
+                  </button>
+                  <button
+                    className="action-icon-btn"
+                    title="Ver historial"
+                    onClick={() => setEnvioSeleccionado(e)}
+                  >
+                    <Clock size={20} />
+                  </button>
+                  <button
+                    className="action-icon-btn"
+                    title="Descargar etiqueta"
+                    onClick={() => descargarEtiqueta(e.id).catch(console.error)}
+                  >
+                    <Download size={20} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
 
         {totalPages > 1 && !loading && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '20px', padding: '10px' }}>

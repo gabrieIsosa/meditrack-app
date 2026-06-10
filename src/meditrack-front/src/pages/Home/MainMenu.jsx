@@ -26,41 +26,40 @@ const MainMenu = () => {
       title: "Logística y Envíos",
       rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'OPERADOR'],
       items: [
-        { label: "Panel de Envíos", icon: <Package size={32} />, path: "/envios", color: "#3b82f6" },
-        { label: "Rutas Activas", icon: <Truck size={32} />, path: "/rutas", color: "#3b82f6" },
+        { label: "Panel de Envíos", icon: <Package size={32} />, path: "/envios", color: "#3b82f6", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'OPERADOR'] },
+        { label: "Rutas Activas", icon: <Truck size={32} />, path: "/rutas", color: "#3b82f6", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'OPERADOR'] },
       ]
     },
     {
       title: "Logística Farmacéutica",
       rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'OPERADOR'],
       items: [
-        { label: "Medicamentos", icon: <Pill size={32} />, path: "/medicamentos", color: "#00A86B" },
-        { label: "Clientes", icon: <Users size={32} />, path: "/clientes", color: "#00A86B" },
+        { label: "Medicamentos", icon: <Pill size={32} />, path: "/medicamentos", color: "#00A86B", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'OPERADOR'] },
+        { label: "Clientes", icon: <Users size={32} />, path: "/clientes", color: "#00A86B", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'OPERADOR'] },
       ]
     },
     {
       title: "Administración de Usuarios",
       rolesPermitidos: ['ADMINISTRADOR'],
       items: [
-        { label: "Usuarios", icon: <Users size={32} />, path: "/usuarios", color: "#6b7280" },
+        { label: "Usuarios", icon: <Users size={32} />, path: "/usuarios", color: "#6b7280", rolesPermitidos: ['ADMINISTRADOR'] },
       ]
     },
     {
       title: "Reportes",
       rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'],
       items: [
-        { label: "KPIs", icon: <LayoutDashboard size={32} />, path: "/kpis", color: "#4338CA" },
-        { label: "Reportes", icon: <ShieldAlert size={32} />, path: "/reportes", color: "#4338CA" },
+        { label: "KPIs", icon: <LayoutDashboard size={32} />, path: "/kpis", color: "#4338CA", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'] },
+        { label: "Reportes", icon: <ShieldAlert size={32} />, path: "/reportes", color: "#4338CA", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'] },
       ]
     },
     {
       title: "Repartidores y Transportes",
       rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'REPARTIDOR'],
       items: [
-        { label: "Repartidor", icon: <Users size={32} />, path: "/repartidor", color: "#ec7f35" },
-        { label: "Asignaciones", icon: <NotepadText size={32} />, path: "/viajes", color: "#ec7f35" },
-        { label: "Historial", icon: <History size={32} />, path: "/historial-repartidor", color: "#ec7f35" },
-        { label: "Transportes", icon: <Truck size={32} />, path: "/transportes", color: "#ec7f35" },
+        { label: "Repartidor", icon: <Users size={32} />, path: "/repartidor", color: "#ec7f35", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'] },
+        { label: "Asignaciones", icon: <NotepadText size={32} />, path: "/viajes", color: "#ec7f35", rolesPermitidos: ['REPARTIDOR'] },
+        { label: "Transportes", icon: <Truck size={32} />, path: "/transportes", color: "#ec7f35", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'REPARTIDOR'] },
       ]
     },
     {
@@ -71,15 +70,24 @@ const MainMenu = () => {
           label: "Mails",
           icon: <Mail size={32} />,
           path: "/mails",
-          color: "#7c3aed"
+          color: "#7c3aed",
+          rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR']
         },
       ]
     },
   ];
 
-  const filteredSections = menuSections.filter(section => 
-    section.rolesPermitidos.includes(userRole)
-  );
+  const filteredSections = menuSections
+    .map(section => {
+      const itemsPermitidos = section.items.filter(item =>
+        (item.rolesPermitidos || section.rolesPermitidos).includes(userRole)
+      );
+      return {
+        ...section,
+        items: itemsPermitidos
+      };
+    })
+    .filter(section => section.items.length > 0 && section.rolesPermitidos.includes(userRole));
 
   return (
     <div style={{
@@ -88,19 +96,19 @@ const MainMenu = () => {
       minHeight: '100vh',
       fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
     }}>
-      <div style={{ 
-        display: 'flex', 
+      <div style={{
+        display: 'flex',
         flexWrap: 'wrap',
-        gap: '40px', 
+        gap: '40px',
         alignItems: 'flex-start'
       }}>
         {filteredSections.map((section, idx) => (
           <div key={idx} style={{ flex: '0 1 auto', marginBottom: '20px' }}>
-            <h2 style={{ 
-              fontSize: '12px', 
-              fontWeight: '800', 
-              color: '#374151', 
-              textTransform: 'uppercase', 
+            <h2 style={{
+              fontSize: '12px',
+              fontWeight: '800',
+              color: '#374151',
+              textTransform: 'uppercase',
               marginBottom: '20px',
               letterSpacing: '0.05em',
               display: 'flex',
@@ -110,10 +118,10 @@ const MainMenu = () => {
               <div style={{ width: '4px', height: '16px', backgroundColor: '#00A86B', borderRadius: '2px' }} />
               {section.title}
             </h2>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, 125px)', 
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, 125px)',
               gap: '12px',
               width: section.items.length > 1 ? '262px' : '125px'
             }}>

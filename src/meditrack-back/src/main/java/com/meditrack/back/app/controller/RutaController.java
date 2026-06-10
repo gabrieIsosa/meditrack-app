@@ -41,6 +41,7 @@ public class RutaController {
 
     @GetMapping
     public ResponseEntity<?> listarTodos(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+
         try {
             autenticar(authHeader);
             return ResponseEntity.ok(rutaService.listarTodos());

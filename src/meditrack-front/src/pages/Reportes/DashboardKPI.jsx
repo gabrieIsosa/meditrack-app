@@ -137,7 +137,7 @@ const DashboardKPI = () => {
         <div style={{ padding: '20px', fontFamily: 'sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '10px' }}>
                 <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-                    <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
+                    <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
                     <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Panel de Control Meditrack</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

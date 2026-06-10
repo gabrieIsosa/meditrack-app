@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
+import {
   logout as apiLogout,
   getNotificaciones,
   getNotificacionesUnreadCount,
   marcarNotificacionLeida,
   marcarTodasNotificacionesLeidas
 } from '../services/api';
+import { useNotificacionesWS } from '../hooks/useNotificacionesWS';
+import NotificacionToast from './NotificacionToast';
 import logo from '../assets/logo.png';
 import ModalHistorialNotificaciones from './ModalHistorialNotificaciones';
 
@@ -19,7 +21,23 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [toasts, setToasts] = useState([]);
   const dropdownRef = useRef(null);
+
+  const wsToken = user?.token ?? null;
+  const wsUserId = user?.id ?? null;
+
+  const handleNuevaNotificacion = useCallback((notif) => {
+    setUnreadCount(prev => prev + 1);
+    setNotifications(prev => [notif, ...prev]);
+    setToasts(prev => [...prev, notif]);
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  useNotificacionesWS(wsUserId, wsToken, handleNuevaNotificacion);
 
   const fetchUnreadCount = async () => {
     if (!user) return;
@@ -108,7 +126,7 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
   };
 
   return (
-    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-color, #e5e7eb)', position: 'relative', zIndex: 1000 }}>
+    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-color, #e5e7eb)', position: 'sticky', top: '0', zIndex: 1000 }}>
       <style>{`
         @media (max-width: 768px) {
           .nav-user-info { display: none !important; }
@@ -283,6 +301,7 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
           </>
         )}
       </div>
+      <NotificacionToast toasts={toasts} onRemove={removeToast} />
     </nav>
   );
 }

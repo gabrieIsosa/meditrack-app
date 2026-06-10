@@ -7,7 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "rutas")
@@ -22,6 +30,9 @@ public class Ruta {
     @Column(name = "repartidor_id", nullable = false)
     private String repartidorId;
 
+    @Column(name = "transporte_id")
+    private Long transporteId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoRuta estado;
@@ -35,16 +46,18 @@ public class Ruta {
     @Column(name = "hora_creacion")
     private String horaCreacion;
 
+
     @OneToMany(mappedBy = "ruta", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("retiroOrden ASC")
     private List<RutaEnvio> envios = new ArrayList<>();
 
     public Ruta() {}
 
-    public Ruta(String fecha, String repartidorId, String usuarioResponsable) {
+    public Ruta(String fecha, String repartidorId, Long transporteId, String usuarioResponsable) {
         this.id = "RUT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.fecha = fecha;
         this.repartidorId = repartidorId;
+        this.transporteId = transporteId;
         this.estado = EstadoRuta.PENDIENTE;
         this.usuarioResponsable = usuarioResponsable;
         this.fechaCreacion = LocalDate.now().toString();
@@ -78,6 +91,14 @@ public class Ruta {
 
     public void setRepartidorId(String repartidorId) {
         this.repartidorId = repartidorId;
+    }
+
+    public Long getTransporteId() {
+        return transporteId;
+    }
+
+    public void setTransporteId(Long transporteId) {
+        this.transporteId = transporteId;
     }
 
     public EstadoRuta getEstado() {

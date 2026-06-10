@@ -63,6 +63,10 @@ function Clientes() {
             <style>{`
                 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
                 
+                .clientes-mobile-grid {
+                    display: none;
+                }
+
                 .table-responsive-container {
                     width: 100%;
                     overflow-x: auto;
@@ -128,6 +132,57 @@ function Clientes() {
                 }
 
                 @media (max-width: 768px) {
+                    .clientes-table-container {
+                        display: none !important;
+                    }
+                    .clientes-mobile-grid {
+                        display: flex !important;
+                        flex-direction: column;
+                        gap: 16px;
+                    }
+                    .client-card {
+                        background: #ffffff;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 12px;
+                        padding: 16px;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                        transition: transform 0.2s, border-color 0.2s;
+                    }
+                    .client-card:hover {
+                        transform: translateY(-2px);
+                        border-color: #10B981;
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+                    }
+                    .client-card-header {
+                        display: flex;
+                        gap: 12px;
+                        align-items: center;
+                        border-bottom: 1px solid #f3f4f6;
+                        padding-bottom: 10px;
+                    }
+                    .client-card-details {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                    .client-card-detail-item {
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 8px;
+                        font-size: 13px;
+                        color: #4b5563;
+                    }
+                    .client-card-footer {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: 4px;
+                        padding-top: 8px;
+                        border-top: 1px solid #f3f4f6;
+                    }
                     .mobile-hidden { 
                         display: none !important; 
                     }
@@ -146,7 +201,7 @@ function Clientes() {
             `}</style>
             
             <div className="page-header-row">
-                <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
+                <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
                 <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Gestión de clientes</h1>
             </div>
 
@@ -169,7 +224,7 @@ function Clientes() {
                     </button>
                 </div>
 
-                <div className="table-responsive-container">
+                <div className="table-responsive-container clientes-table-container">
                     <table>
                         <thead>
                             <tr>
@@ -292,6 +347,113 @@ function Clientes() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="clientes-mobile-grid">
+                    {loading ? (
+                        [...Array(3)].map((_, i) => (
+                            <div key={i} className="client-card">
+                                <div className="client-card-header">
+                                    <Skeleton width="42px" height="42px" borderRadius="50%" />
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <Skeleton width="120px" height="16px" />
+                                        <Skeleton width="80px" height="12px" />
+                                    </div>
+                                </div>
+                                <div className="client-card-details">
+                                    <div className="client-card-detail-item">
+                                        <Skeleton width="100%" height="14px" />
+                                    </div>
+                                </div>
+                                <div className="client-card-footer">
+                                    <Skeleton width="120px" height="24px" />
+                                    <Skeleton width="30px" height="30px" borderRadius="50%" />
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <>
+                            {clientesPagina.map(c => (
+                                <div key={c.id} className="client-card">
+                                    <div className="client-card-header">
+                                        <div style={{
+                                            width: '42px',
+                                            height: '42px',
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            ...getTipoStyles(c.tipoEstablecimiento),
+                                            border: '1px solid #E5E7EB',
+                                            flexShrink: 0
+                                        }}>
+                                            {(() => {
+                                                const IconComponent = iconos[c.tipoEstablecimiento] || DefaultIcon;
+                                                return <IconComponent size={20} />;
+                                            })()}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: '700', color: '#111827', fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {c.nombre}
+                                            </div>
+                                            <span style={{
+                                                display: 'inline-block',
+                                                marginTop: '4px',
+                                                padding: '2px 8px',
+                                                borderRadius: '999px',
+                                                fontWeight: '600',
+                                                fontSize: '11px',
+                                                ...getTipoStyles(c.tipoEstablecimiento)
+                                            }}>
+                                                {c.tipoEstablecimiento}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="client-card-details">
+                                        <div className="client-card-detail-item">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                                <circle cx="12" cy="10" r="3" />
+                                            </svg>
+                                            <span style={{ fontSize: '13px', color: '#4B5563', wordBreak: 'break-word' }}>
+                                                {c.direccion}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="client-card-footer">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <label className="switch">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={c.estadoActivo}
+                                                    onChange={() => handleInactivar(c.id)}
+                                                />
+                                                <span className="slider"></span>
+                                            </label>
+                                            <span className={`user-status-label ${c.estadoActivo ? 'status-active' : 'status-inactive'}`}>
+                                                {c.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
+                                            </span>
+                                        </div>
+                                        <button
+                                            className="action-icon-btn"
+                                            title="Editar cliente"
+                                            onClick={() => navigate(`/clientes/editar/${c.id}`)}
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {filtrados.length === 0 && (
+                                <div style={{ textAlign: 'center', color: '#6B7280', padding: '30px' }}>
+                                    No se encontraron clientes.
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
 
                 {!loading && filtrados.length > 0 && (

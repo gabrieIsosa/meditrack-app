@@ -1,7 +1,9 @@
 package com.meditrack.back.app.service;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +15,12 @@ import com.meditrack.back.app.repository.NotificacionRepository;
 public class NotificacionService {
 
     private final NotificacionRepository notificacionRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public NotificacionService(NotificacionRepository notificacionRepository) {
+    public NotificacionService(NotificacionRepository notificacionRepository,
+            SimpMessagingTemplate messagingTemplate) {
         this.notificacionRepository = notificacionRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -24,7 +29,20 @@ public class NotificacionService {
             throw new IllegalArgumentException("El usuario destino de la notificación no puede ser nulo");
         }
         Notificacion notificacion = new Notificacion(usuarioDestino, titulo, mensaje);
-        return notificacionRepository.save(notificacion);
+        notificacionRepository.save(notificacion);
+
+        messagingTemplate.convertAndSend(
+            "/topic/notificaciones/" + usuarioDestino.getId(),
+            Map.of(
+                "id", notificacion.getId(),
+                "titulo", notificacion.getTitulo(),
+                "mensaje", notificacion.getMensaje(),
+                "fechaCreacion", notificacion.getFechaCreacion(),
+                "leido", false
+            )
+        );
+
+        return notificacion;
     }
 
     public List<Notificacion> listarPorUsuario(Usuario usuarioDestino) {

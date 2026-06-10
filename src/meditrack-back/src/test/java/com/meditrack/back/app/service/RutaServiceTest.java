@@ -31,6 +31,8 @@ class RutaServiceTest {
     @Mock
     RutaEnvioRepository rutaEnvioRepository;
     @Mock
+    TransporteRepository transporteRepository;
+    @Mock
     EnvioService envioService;
 
     @InjectMocks
@@ -52,10 +54,27 @@ class RutaServiceTest {
         return e;
     }
 
+    private Transporte transporteActivo(Long id){
+        Transporte t = new Transporte();
+        t.setEstadoOperativo(EstadoOperativo.ACTIVO);
+
+        try{
+            java.lang.reflect.Field field = Transporte.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(t, id);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return t;
+
+    }
+
     private Map<String, Object> datosValidos(String fecha, String repartidorId, List<Map<String, Object>> envios) {
         Map<String, Object> datos = new HashMap<>();
         datos.put("fecha", fecha);
         datos.put("repartidorId", repartidorId);
+        datos.put("transporteId", 1L);
         datos.put("envios", envios);
         return datos;
     }
@@ -125,6 +144,12 @@ class RutaServiceTest {
         private void setupFlujoFeliz() {
             when(rutaRepository.save(any(Ruta.class))).thenAnswer(inv -> inv.getArgument(0));
             when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+        }
+        
+        private void mockTransporteDisponible() {
+
+            when(transporteRepository.findById(1L)).thenReturn(Optional.of(transporteActivo(1L)));
+                when(rutaRepository.existsByTransporteIdAndFechaAndEstadoNot(anyLong(), anyString(), any(EstadoRuta.class))).thenReturn(false);
         }
 
         // ── validaciones de entrada ────────────────────────────────────────────
@@ -200,6 +225,7 @@ class RutaServiceTest {
         void repartidorConRutaActivaMismoDia() {
             Map<String, Object> datos = datosValidos(HOY, REPARTIDOR_ID, List.of(envioData(ENVIO_ID, 1)));
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidorActivo(REPARTIDOR_ID)));
+            mockTransporteDisponible();
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(REPARTIDOR_ID, HOY, EstadoRuta.COMPLETADA))
                     .thenReturn(true);
 
@@ -214,6 +240,7 @@ class RutaServiceTest {
         @DisplayName("lanza excepción si un envío no existe")
         void envioNoExiste() {
             Map<String, Object> datos = datosValidos(HOY, REPARTIDOR_ID, List.of(envioData(ENVIO_ID, 1)));
+            mockTransporteDisponible();
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidorActivo(REPARTIDOR_ID)));
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(any(), any(), any())).thenReturn(false);
             when(envioRepository.findById(ENVIO_ID)).thenReturn(Optional.empty());
@@ -230,6 +257,7 @@ class RutaServiceTest {
             asignado.setEstado(EstadoEnvio.ASIGNADO);
             Map<String, Object> datos = datosValidos(HOY, REPARTIDOR_ID, List.of(envioData(ENVIO_ID, 1)));
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidorActivo(REPARTIDOR_ID)));
+            mockTransporteDisponible();
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(any(), any(), any())).thenReturn(false);
             when(envioRepository.findById(ENVIO_ID)).thenReturn(Optional.of(asignado));
 
@@ -243,6 +271,7 @@ class RutaServiceTest {
         void envioYaEnOtraRuta() {
             Map<String, Object> datos = datosValidos(HOY, REPARTIDOR_ID, List.of(envioData(ENVIO_ID, 1)));
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidorActivo(REPARTIDOR_ID)));
+            mockTransporteDisponible();
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(any(), any(), any())).thenReturn(false);
             when(envioRepository.findById(ENVIO_ID)).thenReturn(Optional.of(envioPendiente(ENVIO_ID)));
             when(rutaEnvioRepository.existsByEnvio_Id(ENVIO_ID)).thenReturn(true);
@@ -265,6 +294,7 @@ class RutaServiceTest {
             when(envioRepository.findById(ENVIO_ID))
                     .thenReturn(Optional.of(envioPendiente(ENVIO_ID)));
             when(rutaEnvioRepository.existsByEnvio_Id(ENVIO_ID)).thenReturn(false);
+            mockTransporteDisponible();
 
             Ruta resultado = rutaService.crear(datos, "operador");
 
@@ -281,10 +311,10 @@ class RutaServiceTest {
             Map<String, Object> datos = datosValidos(HOY, REPARTIDOR_ID, List.of(envioData(ENVIO_ID, 1)));
             Usuario repartidor = repartidorActivo(REPARTIDOR_ID);
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidor));
+            mockTransporteDisponible();
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(any(), any(), any())).thenReturn(false);
             when(envioRepository.findById(ENVIO_ID)).thenReturn(Optional.of(envioPendiente(ENVIO_ID)));
             when(rutaEnvioRepository.existsByEnvio_Id(ENVIO_ID)).thenReturn(false);
-
             rutaService.crear(datos, "operador");
 
             assertThat(repartidor.isHaciendoEntrega()).isTrue();
@@ -298,6 +328,7 @@ class RutaServiceTest {
             Map<String, Object> datos = datosValidos(manana, REPARTIDOR_ID, List.of(envioData(ENVIO_ID, 1)));
             Usuario repartidor = repartidorActivo(REPARTIDOR_ID);
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidor));
+            mockTransporteDisponible();
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(any(), any(), any())).thenReturn(false);
             when(envioRepository.findById(ENVIO_ID)).thenReturn(Optional.of(envioPendiente(ENVIO_ID)));
             when(rutaEnvioRepository.existsByEnvio_Id(ENVIO_ID)).thenReturn(false);
@@ -319,6 +350,7 @@ class RutaServiceTest {
 
             Map<String, Object> datos = datosValidos(HOY, REPARTIDOR_ID, List.of(envioConOrdenes));
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidorActivo(REPARTIDOR_ID)));
+            mockTransporteDisponible();
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(any(), any(), any())).thenReturn(false);
             when(envioRepository.findById(ENVIO_ID)).thenReturn(Optional.of(envioPendiente(ENVIO_ID)));
             when(rutaEnvioRepository.existsByEnvio_Id(ENVIO_ID)).thenReturn(false);
@@ -336,6 +368,7 @@ class RutaServiceTest {
             Map<String, Object> datos = datosValidos(HOY, REPARTIDOR_ID, envios);
 
             when(usuarioRepository.findById(REPARTIDOR_ID)).thenReturn(Optional.of(repartidorActivo(REPARTIDOR_ID)));
+            mockTransporteDisponible();
             when(rutaRepository.existsByRepartidorIdAndFechaAndEstadoNot(any(), any(), any())).thenReturn(false);
             when(envioRepository.findById(ENVIO_ID)).thenReturn(Optional.of(envioPendiente(ENVIO_ID)));
             when(envioRepository.findById(ENVIO_2)).thenReturn(Optional.of(envioPendiente(ENVIO_2)));

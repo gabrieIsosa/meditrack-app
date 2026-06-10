@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getEnvios, getRutas, getUsuarios, createRuta } from '../../services/api';
+import { getEnvios, getRutas, getUsuarios, createRuta, getTransportes } from '../../services/api';
 import MapaRuta from '../../components/MapaRuta';
+
 
 const haversineKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -89,6 +90,9 @@ function NuevaRuta() {
   const [todosRepartidores, setTodosRepartidores] = useState([]);
   const [todasRutas, setTodasRutas] = useState([]);
 
+  const [transporteId, setTransporteId] = useState('');
+  const [transportes, setTransportes] = useState([]);
+
   const [enviosDisponibles, setEnviosDisponibles] = useState([]);
   const [seleccionados, setSeleccionados] = useState([]);
   const [busquedaEnvio, setBusquedaEnvio] = useState('');
@@ -97,19 +101,20 @@ function NuevaRuta() {
   const [paradas, setParadas] = useState([]);
 
   useEffect(() => {
-    Promise.all([getUsuarios(), getRutas()])
-      .then(([usuarios, rutas]) => {
+    Promise.all([getUsuarios(), getRutas(), getTransportes('', 'ACTIVO')])
+      .then(([usuarios, rutas, transportesData]) => {
         setTodosRepartidores(usuarios.filter(u => u.role === 'REPARTIDOR' && u.estadoActivo));
         setTodasRutas(rutas);
+        setTransportes(transportesData);
       })
       .catch(console.error);
   }, []);
 
   useEffect(() => {
     const filtrados = todosRepartidores.filter(repartidor => {
-      const tieneRutaAsignada = todasRutas.some(r => 
-        r.repartidorId === repartidor.id && 
-        r.fecha === fecha && 
+      const tieneRutaAsignada = todasRutas.some(r =>
+        r.repartidorId === repartidor.id &&
+        r.fecha === fecha &&
         r.estado !== 'COMPLETADA'
       );
       return !tieneRutaAsignada;
@@ -141,6 +146,7 @@ function NuevaRuta() {
   const avanzarPaso1 = () => {
     if (!fecha) { setError('Seleccioná una fecha'); return; }
     if (!repartidorId) { setError('Seleccioná un repartidor'); return; }
+    if (!transporteId) { setError('Seleccioná un transporte'); return; }
     setError('');
     cargarEnviosDisponibles();
     setPaso(2);
@@ -191,6 +197,7 @@ function NuevaRuta() {
       await createRuta({
         fecha,
         repartidorId,
+        transporteId,
         envios: seleccionados.map(e => ({
           envioId: e.id,
           retiroOrden: retiroOrdenPorEnvio[e.id] ?? 999,
@@ -214,10 +221,15 @@ function NuevaRuta() {
     );
   });
 
+  const getNombreTransporte = (id) => {
+    const t = transportes.find(t => String(t.id) === String(id));
+    return t ? `${t.patente} - ${t.tipoVehiculo}` : id;
+  };
+
   return (
     <div className="container">
       <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-        <button className="btn btn-secondary" onClick={() => navigate('/rutas')}>VOLVER</button>
+        <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Nueva ruta</h1>
       </div>
 
@@ -337,6 +349,25 @@ function NuevaRuta() {
               </p>
             )}
           </div>
+
+          <div className="form-group">
+            <label>Transporte *</label>
+            <select
+              value={transporteId}
+              onChange={e => setTransporteId(e.target.value)}
+            >
+              <option value="">Seleccionar transporte...</option>
+              {transportes.map(t => (
+                <option key={t.id} value={t.id}>{t.patente} - {t.tipoVehiculo}</option>
+              ))}
+            </select>
+            {transportes.length === 0 && (
+              <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                No hay transportes disponibles en este momento
+              </p>
+            )}
+          </div>
+
 
           <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
             <button className="btn-new-shipment" onClick={avanzarPaso1}>
@@ -490,7 +521,14 @@ function NuevaRuta() {
           </table>
 
           <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px', fontSize: '13px', color: '#6b7280' }}>
-            <strong style={{ color: '#374151' }}>Resumen:</strong> Ruta para el <strong style={{ color: '#111827' }}>{fecha}</strong>&nbsp;&nbsp;•&nbsp;&nbsp;Repartidor: <strong style={{ color: '#111827' }}>{repartidores.find(r => r.id === repartidorId)?.nombre}</strong>&nbsp;&nbsp;•&nbsp;&nbsp;{seleccionados.length} {seleccionados.length === 1 ? 'envío' : 'envíos'}&nbsp;&nbsp;•&nbsp;&nbsp;{paradas.length} {paradas.length === 1 ? 'parada' : 'paradas'}
+
+            <strong style={{ color: '#374151' }}>Resumen:</strong>{" "}
+            Ruta para el <strong style={{ color: '#111827' }}>{fecha}</strong> |{" "}
+            Repartidor: <strong style={{ color: '#111827' }}>{repartidores.find(r => r.id === repartidorId)?.nombre}</strong> |{" "}
+            Transporte: <strong style={{ color: '#111827' }}>{getNombreTransporte(transporteId)}</strong> |{" "}
+            {seleccionados.length} {seleccionados.length === 1 ? 'envío' : 'envíos' } · 
+            {paradas.length} {paradas.length === 1 ? 'parada' : 'paradas' }
+
           </div>
 
           <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between' }}>

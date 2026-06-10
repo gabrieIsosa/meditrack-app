@@ -17,18 +17,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.meditrack.back.app.model.Notificacion;
 import com.meditrack.back.app.model.Role;
 import com.meditrack.back.app.model.Usuario;
 import com.meditrack.back.app.repository.NotificacionRepository;
-import com.meditrack.back.app.service.NotificacionService;
 
 @ExtendWith(MockitoExtension.class)
 class NotificacionServiceTest {
 
     @Mock
     private NotificacionRepository notificacionRepository;
+
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
 
     @InjectMocks
     private NotificacionService service;

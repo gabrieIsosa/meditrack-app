@@ -344,7 +344,7 @@ public class EnvioService {
             usuarioRepository.findById(nuevoRepartidorId).ifPresent(rep -> {
                 notificacionService.crearNotificacion(
                     rep,
-                    "Nuevo Envío Asignado (Reasignación)",
+                    "Nuevo envío asignado (Reasignación)",
                     "Se te ha asignado el envío " + envio.getId() + " por reasignación. Detalles - Origen: " + envio.getOrigen() + ", Destino: " + envio.getDestino() + ", Prioridad: " + envio.getPrioridad() + ", Carga: " + envio.getDescripcionCarga() + "."
                 );
             });

@@ -45,14 +45,59 @@ const ModalHistorialNotificaciones = ({ notifications, alCerrar, alMarcarLeida }
     };
 
     return (
-        <div style={overlayStyle}>
-            <div style={modalStyle}>
-                <div style={headerStyle}>
-                    <h2 style={titleStyle}>Historial completo de avisos</h2>
+        <div style={overlayStyle} className="notif-overlay">
+            <style>{`
+                .notif-mobile-grid {
+                    display: none;
+                }
+                @media (max-width: 768px) {
+                    .notif-table-container {
+                        display: none !important;
+                    }
+                    .notif-mobile-grid {
+                        display: flex !important;
+                        flex-direction: column;
+                        gap: 12px;
+                        max-height: 380px;
+                        overflow-y: auto;
+                        padding-bottom: 10px;
+                    }
+                    .notif-modal-box {
+                        padding: 20px 16px !important;
+                        max-width: 95% !important;
+                        border-radius: 16px !important;
+                    }
+                    .notif-header {
+                        margin-bottom: 16px !important;
+                    }
+                    .notif-title {
+                        font-size: 18px !important;
+                    }
+                    .notif-mobile-card {
+                        border: 1px solid #E5E7EB;
+                        border-radius: 12px;
+                        padding: 12px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .notif-card-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                        margin-bottom: 6px;
+                    }
+                }
+            `}</style>
+            <div style={modalStyle} className="notif-modal-box">
+                <div style={headerStyle} className="notif-header">
+                    <h2 style={titleStyle} className="notif-title">Historial completo de avisos</h2>
                     <button style={closeButtonStyle} onClick={alCerrar}>×</button>
                 </div>
 
-                <div style={tableWrapper}>
+                <div style={tableWrapper} className="notif-table-container">
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr>
@@ -140,6 +185,76 @@ const ModalHistorialNotificaciones = ({ notifications, alCerrar, alMarcarLeida }
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="notif-mobile-grid">
+                    {paginatedNotifications.length > 0 ? (
+                        paginatedNotifications.map((notif) => {
+                            const style = getTitleStyle(notif.titulo);
+                            return (
+                                <div key={notif.id} className="notif-mobile-card" style={{ borderLeft: `4px solid ${style.text}`, backgroundColor: !notif.leido ? 'rgba(37, 99, 235, 0.02)' : '#ffffff' }}>
+                                    <div className="notif-card-header">
+                                        <span style={{
+                                            backgroundColor: style.bg,
+                                            color: style.text,
+                                            padding: '4px 10px',
+                                            borderRadius: '6px',
+                                            fontSize: '11px',
+                                            fontWeight: '800',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {notif.titulo}
+                                        </span>
+                                        <span style={{ color: '#4b5563', fontSize: '11px' }}>
+                                            {formatFriendlyDate(notif.fechaCreacion)}
+                                        </span>
+                                    </div>
+                                    <div className="notif-card-body" style={{ color: '#374151', fontSize: '13px', lineHeight: '1.4', margin: '8px 0' }}>
+                                        {notif.mensaje}
+                                    </div>
+                                    <div className="notif-card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #f3f4f6' }}>
+                                        <div>
+                                            {notif.leido ? (
+                                                <span style={{
+                                                    color: '#10b981',
+                                                    backgroundColor: '#d1fae5',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '700'
+                                                }}>
+                                                    LEÍDO
+                                                </span>
+                                            ) : (
+                                                <span style={{
+                                                    color: '#3b82f6',
+                                                    backgroundColor: '#dbeafe',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '700'
+                                                }}>
+                                                    NUEVO
+                                                </span>
+                                            )}
+                                        </div>
+                                        {!notif.leido && (
+                                            <button
+                                                style={actionButtonStyle}
+                                                onClick={() => alMarcarLeida(notif.id)}
+                                            >
+                                                Marcar leído
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div style={{ padding: '30px', textAlign: 'center', color: '#9CA3AF', fontStyle: 'italic', background: '#fff', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
+                            No tenés notificaciones registradas
+                        </div>
+                    )}
                 </div>
 
                 {totalPages > 1 && (

@@ -179,13 +179,51 @@ const ModalHistorial = ({ historial, alCerrar }) => {
 
   return (
     <div className="modal-overlay" style={{ zIndex: 1000 }}>
-      <div className="modal-content" style={{ maxWidth: '850px', width: '95%', position: 'relative' }}>
+      <div className="modal-content hist-modal-box" style={{ maxWidth: '850px', width: '95%', position: 'relative' }}>
+        <style>{`
+          .hist-mobile-grid {
+            display: none;
+          }
+          @media (max-width: 768px) {
+            .hist-table-container {
+              display: none !important;
+            }
+            .hist-mobile-grid {
+              display: flex !important;
+              flex-direction: column;
+              gap: 12px;
+              max-height: 380px;
+              overflow-y: auto;
+              padding-bottom: 10px;
+            }
+            .hist-modal-box {
+              padding: 20px 16px !important;
+              border-radius: 16px !important;
+            }
+            .hist-mobile-card {
+              background: #ffffff;
+              border: 1px solid #E5E7EB;
+              border-radius: 12px;
+              padding: 12px;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+              display: flex;
+              flex-direction: column;
+            }
+            .hist-card-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 6px;
+            }
+          }
+        `}</style>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0 }}>Historial de operaciones</h2>
           <button onClick={alCerrar} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#6B7280' }}>✕</button>
         </div>
 
-        <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
+        <div className="hist-table-container" style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead style={{ backgroundColor: '#10B981', position: 'sticky', top: 0, zIndex: 1 }}>
               <tr>
@@ -233,6 +271,47 @@ const ModalHistorial = ({ historial, alCerrar }) => {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="hist-mobile-grid">
+          {historial && historial.length > 0 ? (
+            historial.slice().reverse().map((item, index) => {
+              const colors = getBadgeColor(item.tipo);
+              const esCancelacion = item.tipo === 'CANCELACION';
+
+              return (
+                <div key={index} className="hist-mobile-card" style={{ borderLeft: `4px solid ${colors.text}` }}>
+                  <div className="hist-card-header">
+                    <span style={{ 
+                      padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700',
+                      backgroundColor: colors.bg, color: colors.text, display: 'inline-block'
+                    }}>{item.tipo?.replace(/_/g, ' ')}</span>
+                    <span style={{ fontSize: '12px', color: '#6B7280' }}>
+                      {item.fecha} {item.hora}
+                    </span>
+                  </div>
+                  <div className="hist-card-body" style={{ margin: '8px 0', fontSize: '13px', color: '#374151' }}>
+                    <strong>Detalle:</strong>{' '}
+                    {esCancelacion ? (
+                      <button 
+                        onClick={() => setMotivoSeleccionado(item.detalle)}
+                        style={{ background: 'none', border: 'none', color: '#2563EB', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: '13px', fontWeight: '600' }}
+                      >Ver motivo</button>
+                    ) : (
+                      formatDetalle(item.detalle, item.tipo)
+                    )}
+                  </div>
+                  <div className="hist-card-footer" style={{ fontSize: '12px', color: '#6B7280', borderTop: '1px solid #F3F4F6', paddingTop: '6px', marginTop: '6px', textAlign: 'right' }}>
+                    Responsable: <strong>{item.usuario || 'Sistema'}</strong>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#9CA3AF', fontStyle: 'italic', background: '#fff', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+              No hay registros en el historial
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>

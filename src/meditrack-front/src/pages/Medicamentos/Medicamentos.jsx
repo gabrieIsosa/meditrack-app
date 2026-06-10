@@ -68,6 +68,10 @@ function Medicamentos() {
                     -webkit-overflow-scrolling: touch;
                 }
 
+                .medicamentos-mobile-grid {
+                    display: none;
+                }
+
                 .search-container {
                     position: relative;
                     flex: 1;
@@ -127,8 +131,56 @@ function Medicamentos() {
                 }
 
                 @media (max-width: 768px) {
-                    .mobile-hidden { 
-                        display: none !important; 
+                    .medicamentos-table-container {
+                        display: none !important;
+                    }
+                    .medicamentos-mobile-grid {
+                        display: flex !important;
+                        flex-direction: column;
+                        gap: 16px;
+                    }
+                    .med-card {
+                        background: #ffffff;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 12px;
+                        padding: 16px;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                        transition: transform 0.2s, border-color 0.2s;
+                    }
+                    .med-card:hover {
+                        transform: translateY(-2px);
+                        border-color: #10B981;
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+                    }
+                    .med-card-header {
+                        display: flex;
+                        gap: 12px;
+                        align-items: center;
+                        border-bottom: 1px solid #f3f4f6;
+                        padding-bottom: 10px;
+                    }
+                    .med-card-details {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                    .med-card-detail-item {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 13px;
+                        color: #4b5563;
+                    }
+                    .med-card-footer {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: 4px;
+                        padding-top: 8px;
+                        border-top: 1px solid #f3f4f6;
                     }
                     .table-header-actions {
                         display: flex !important;
@@ -145,7 +197,7 @@ function Medicamentos() {
             `}</style>
             
             <div className="page-header-row">
-                <button className="btn btn-secondary" onClick={() => navigate('/menu')}>VOLVER</button>
+                <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
                 <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Gestión de medicamentos</h1>
             </div>
 
@@ -168,7 +220,7 @@ function Medicamentos() {
                     </button>
                 </div>
 
-                <div className="table-responsive-container">
+                <div className="table-responsive-container medicamentos-table-container">
                     <table>
                         <thead>
                             <tr>
@@ -294,6 +346,113 @@ function Medicamentos() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="medicamentos-mobile-grid">
+                    {loading ? (
+                        [...Array(3)].map((_, i) => (
+                            <div key={i} className="med-card">
+                                <div className="med-card-header">
+                                    <Skeleton width="42px" height="42px" borderRadius="10px" />
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <Skeleton width="120px" height="16px" />
+                                        <Skeleton width="80px" height="12px" />
+                                    </div>
+                                </div>
+                                <div className="med-card-details">
+                                    <div className="med-card-detail-item">
+                                        <Skeleton width="120px" height="14px" />
+                                    </div>
+                                    <div className="med-card-detail-item">
+                                        <Skeleton width="150px" height="14px" />
+                                    </div>
+                                    <div className="med-card-detail-item">
+                                        <Skeleton width="90px" height="14px" />
+                                    </div>
+                                </div>
+                                <div className="med-card-footer">
+                                    <Skeleton width="120px" height="24px" />
+                                    <Skeleton width="30px" height="30px" borderRadius="50%" />
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <>
+                            {medicamentosPagina.map(m => (
+                                <div key={m.id} className="med-card">
+                                    <div className="med-card-header">
+                                        <img
+                                            src={
+                                                m.imagenUrl
+                                                    ? (m.imagenUrl.startsWith('http') 
+                                                        ? m.imagenUrl 
+                                                        : `http://localhost:8080${m.imagenUrl}`)
+                                                    : '/placeholder-medicamento.png'
+                                            }
+                                            alt={m.nombre}
+                                            style={{
+                                                width: '42px',
+                                                height: '42px',
+                                                borderRadius: '10px',
+                                                objectFit: 'cover',
+                                                border: '1px solid #E5E7EB',
+                                                background: '#F9FAFB'
+                                            }}
+                                        />
+                                        <div>
+                                            <div style={{ fontWeight: '700', color: '#111827' }}>
+                                                {m.nombre}
+                                            </div>
+                                            <div style={{ fontSize: '13px', color: '#6B7280' }}>
+                                                {m.monodroga}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="med-card-details">
+                                        <div className="med-card-detail-item">
+                                            <strong>Laboratorio:</strong> {m.laboratorio}
+                                        </div>
+                                        <div className="med-card-detail-item">
+                                            <strong>Presentación:</strong> {m.presentacion}
+                                        </div>
+                                        <div className="med-card-detail-item">
+                                            <strong>Cantidad:</strong> {m.cantidad} {m.unidadMedida}
+                                        </div>
+                                    </div>
+                                    <div className="med-card-footer">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <label className="switch">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={m.estadoActivo}
+                                                    onChange={() => handleInactivar(m.id)}
+                                                />
+                                                <span className="slider"></span>
+                                            </label>
+                                            <span className={`user-status-label ${m.estadoActivo ? 'status-active' : 'status-inactive'}`}>
+                                                {m.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
+                                            </span>
+                                        </div>
+                                        <button
+                                            className="action-icon-btn"
+                                            title="Editar medicamento"
+                                            onClick={() => navigate(`/medicamentos/editar/${m.id}`)}
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {filtrados.length === 0 && (
+                                <div style={{ textAlign: 'center', color: '#6B7280', padding: '30px' }}>
+                                    No se encontraron medicamentos.
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
 
                 {!loading && filtrados.length > 0 && (

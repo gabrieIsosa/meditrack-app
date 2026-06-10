@@ -49,6 +49,7 @@ class RutaEnvioRepositoryTest {
         ruta.setId(rutaId);
         ruta.setFecha("2025-05-01");
         ruta.setRepartidorId(repartidorId);
+        ruta.setTransporteId(1L);
         ruta.setEstado(EstadoRuta.PENDIENTE);
         return rutaRepository.save(ruta);
     }
