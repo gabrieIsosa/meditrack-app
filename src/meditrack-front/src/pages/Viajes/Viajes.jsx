@@ -479,7 +479,7 @@ function Viajes() {
             <div className="viajes-content-container">
                 
                 {/* Cabecera Principal */}
-                <div className="viajes-header animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <div className="viajes-header animate-fade-in">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <button 
                             onClick={() => navigate('/inicio-repartidor')} 

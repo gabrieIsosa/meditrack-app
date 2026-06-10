@@ -106,7 +106,7 @@
 /* === Cuerpo === */
 
 .val-modal-body {
-    padding: 20px 24px 24px;
+    padding: 20px 24px 12px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -385,4 +385,79 @@
     gap: 10px;
     box-shadow: 0 6px 20px -4px rgba(220, 38, 38, 0.3);
     margin-top: 8px;
+}
+
+/* === Responsive Styles === */
+@media (max-width: 480px) {
+    .val-modal {
+        max-width: 95% !important;
+        max-height: 95vh !important;
+        border-radius: 18px !important;
+        overflow-y: auto !important;
+    }
+    
+    .val-modal-top {
+        padding: 20px 16px 12px !important;
+    }
+    
+    .val-icon-wrapper {
+        width: 56px !important;
+        height: 56px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .val-icon-wrapper svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    
+    .val-title {
+        font-size: 18px !important;
+    }
+    
+    .val-modal-body {
+        padding: 16px 16px 6px !important;
+        gap: 12px !important;
+    }
+    
+    .val-description {
+        font-size: 13px !important;
+        min-height: 80px !important;
+    }
+    
+    .val-mic-btn {
+        padding: 14px 16px !important;
+        font-size: 14px !important;
+    }
+    
+    .val-sim-row {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+    }
+    
+    .val-sim-row button {
+        flex: 1 1 45% !important;
+        font-size: 10px !important;
+        padding: 8px !important;
+        text-align: center;
+        margin: 0 !important;
+    }
+    
+    .val-sim-row button:last-child {
+        flex: 1 1 100% !important;
+    }
+
+    .val-modal-footer {
+        padding: 0 24px 8px !important;
+    }
+
+    .val-modal-footer.val-invisible {
+        display: none !important;
+    }
+
+    .val-cancel-btn {
+        padding: 8px 20px !important;
+        font-size: 13px !important;
+    }
 }

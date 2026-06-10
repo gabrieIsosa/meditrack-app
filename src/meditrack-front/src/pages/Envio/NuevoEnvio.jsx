@@ -463,7 +463,7 @@ function NuevoEnvio() {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+            <div className="add-medicine-row" style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '4px', display: 'block' }}>Lote *</label>
                 <input type="text" value={loteMed} onChange={e => setLoteMed(e.target.value)} placeholder="Ej: LOTE-123" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', boxSizing: 'border-box', minHeight: '42px' }} />
@@ -472,7 +472,7 @@ function NuevoEnvio() {
                 <label style={{ fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '4px', display: 'block' }}>Fecha de vencimiento *</label>
                 <input type="date" value={vencimientoMed} onChange={e => setVencimientoMed(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', boxSizing: 'border-box', minHeight: '42px' }} />
               </div>
-              <div style={{ width: '100px' }}>
+              <div className="qty-wrapper" style={{ width: '100px' }}>
                 <label style={{ fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '4px', display: 'block' }}>Cantidad</label>
                 <input type="number" min="1" value={cantidadMed} onChange={e => setCantidadMed(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', boxSizing: 'border-box', minHeight: '42px' }} />
               </div>
@@ -483,8 +483,8 @@ function NuevoEnvio() {
           </div>
 
           {itemsCarga.length > 0 ? (
-            <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+            <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', overflowX: 'auto', background: '#fff' }}>
+              <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead style={{ backgroundColor: '#F3F4F6' }}>
                   <tr>
                     <th style={{ padding: '10px', textAlign: 'left' }}>Detalle</th>
@@ -523,7 +523,7 @@ function NuevoEnvio() {
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+        <div className="form-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
           <button className="btn btn-secondary" onClick={() => navigate('/envios')}>CANCELAR</button>
           <button className="btn btn-primary" onClick={handleGuardar} disabled={loading}>
             {loading ? 'CREANDO...' : 'CREAR ENVÍO'}

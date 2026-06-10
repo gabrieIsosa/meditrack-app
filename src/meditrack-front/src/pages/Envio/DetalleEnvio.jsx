@@ -473,6 +473,68 @@ function DetalleEnvio() {
             gap: 20px;
             margin-bottom: 25px;
           }
+          .detail-actions-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 30px;
+            border-top: 1px solid #E5E7EB;
+            padding-top: 20px;
+          }
+          .detail-actions-left, .detail-actions-right {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .receiver-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 10px;
+            padding: 16px;
+            border: 1px solid #D1FAE5;
+            border-radius: 8px;
+            background: #F0FDF4;
+          }
+          .modal-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+          .modal-overlay {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          @media (max-width: 768px) {
+            .info-row-grid {
+              grid-template-columns: 1fr;
+              gap: 15px;
+              margin-bottom: 15px;
+            }
+            .receiver-info-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+          @media (max-width: 640px) {
+            .detail-actions-row {
+              flex-direction: column;
+              align-items: stretch;
+            }
+            .detail-actions-left, .detail-actions-right {
+              flex-direction: column;
+              width: 100%;
+            }
+            .detail-actions-left button, .detail-actions-right button {
+              width: 100%;
+            }
+            .modal-form-row {
+              grid-template-columns: 1fr;
+              gap: 0;
+            }
+          }
         `}
       </style>
 
@@ -485,7 +547,7 @@ function DetalleEnvio() {
 
       <StatusLine estadoActual={envio.estado} historial={envio.historial || []} />
 
-      <div className="card detail-main-card" style={{ position: 'relative', paddingBottom: '80px', paddingTop: '30px' }}>
+      <div className="card detail-main-card" style={{ paddingTop: '30px' }}>
         <div className="info-row-grid">
           <div className="detail-field">
             <label>TRACKING ID</label>
@@ -621,7 +683,7 @@ function DetalleEnvio() {
                 </svg>
                 INFORMACIÓN DE RECEPCIÓN
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '10px', padding: '16px', border: '1px solid #D1FAE5', borderRadius: '8px', background: '#F0FDF4' }}>
+              <div className="receiver-info-grid">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#065F46', textTransform: 'uppercase' }}>Recibido Por</span>
                   <span style={{ fontWeight: '600', color: '#0f172a', fontSize: '15px' }}>{envio.receptorNombre || 'No registrado'}</span>
@@ -682,33 +744,35 @@ function DetalleEnvio() {
           </div>
         </div>
 
-        <div style={{ position: 'absolute', bottom: '20px', left: '25px', display: 'flex', gap: '6px' }}>
-          {user?.role === 'SUPERVISOR' && (
-            <>
-              <button
-                className="btn btn-primary"
-                onClick={() => navigate(`/envios/editar/${id}`)}
-              >
-                EDITAR
-              </button>
-              {(envio.estado === 'INCIDENTE_REPORTADO' || envio.estado === 'PENDIENTE') && (
+        <div className="detail-actions-row">
+          <div className="detail-actions-left">
+            {user?.role === 'SUPERVISOR' && (
+              <>
                 <button
-                  className="btn btn-danger"
-                  onClick={() => setCancelacionAbierta(true)}
+                  className="btn btn-primary"
+                  onClick={() => navigate(`/envios/editar/${id}`)}
                 >
-                  CANCELAR ENVÍO
+                  EDITAR
                 </button>
-              )}
-            </>
-          )}
-        </div>
-        <div style={{ position: 'absolute', bottom: '20px', right: '25px', display: 'flex', gap: '6px' }}>
-          <button className="btn btn-secondary" onClick={() => descargarEtiqueta(envio.id).catch(console.error)}>
-            GENERAR ETIQUETA
-          </button>
-          <button className="btn btn-secondary" onClick={() => setHistorialAbierto(true)}>
-            VER HISTORIAL
-          </button>
+                {(envio.estado === 'INCIDENTE_REPORTADO' || envio.estado === 'PENDIENTE') && (
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => setCancelacionAbierta(true)}
+                  >
+                    CANCELAR ENVÍO
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+          <div className="detail-actions-right">
+            <button className="btn btn-secondary" onClick={() => descargarEtiqueta(envio.id).catch(console.error)}>
+              GENERAR ETIQUETA
+            </button>
+            <button className="btn btn-secondary" onClick={() => setHistorialAbierto(true)}>
+              VER HISTORIAL
+            </button>
+          </div>
         </div>
       </div>
 
@@ -791,8 +855,10 @@ function DetalleEnvio() {
               </>
             )}
 
-            <div className="form-group"><label>Fecha</label><input type="date" value={modalForm.fecha} onChange={e => setModalForm({...modalForm, fecha: e.target.value})} /></div>
-            <div className="form-group"><label>Hora</label><input type="time" value={modalForm.hora} onChange={e => setModalForm({...modalForm, hora: e.target.value})} /></div>
+            <div className="modal-form-row">
+              <div className="form-group"><label>Fecha</label><input type="date" value={modalForm.fecha} onChange={e => setModalForm({...modalForm, fecha: e.target.value})} /></div>
+              <div className="form-group"><label>Hora</label><input type="time" value={modalForm.hora} onChange={e => setModalForm({...modalForm, hora: e.target.value})} /></div>
+            </div>
             <div className="form-group"><label>Usuario</label><input value={modalForm.usuario} disabled className="input-locked" /></div>
             
             {modalError && <p className="error-msg" style={{ color: '#ef4444', fontWeight: 'bold' }}>{modalError}</p>}

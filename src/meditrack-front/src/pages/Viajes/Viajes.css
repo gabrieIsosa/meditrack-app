@@ -186,6 +186,8 @@
 .viajes-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
     margin-bottom: 24px;
     gap: 16px;
 }
@@ -982,4 +984,51 @@
     font-size: 14px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+/* === Responsive Styles === */
+@media (max-width: 768px) {
+    .viajes-page {
+        padding: 16px 10px;
+        padding-bottom: 154px; /* Extra space to prevent content clipping behind floating footer and bottom navigation */
+    }
+
+    .viajes-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+
+    .viajes-header > div {
+        width: 100%;
+    }
+
+    .viajes-header button:last-child {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 12px 18px !important;
+        font-size: 14px !important;
+    }
+
+    .viajes-footer {
+        bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+        padding: 12px 10px !important;
+        background-color: rgba(255, 255, 255, 0.95);
+    }
+
+    .viajes-footer-btn {
+        padding: 14px !important;
+        font-size: 15px !important;
+        border-radius: 12px !important;
+    }
+
+    .viajes-progress-card,
+    .viajes-itinerary-card {
+        padding: 16px !important;
+    }
+
+    .viajes-parada-header {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
 }

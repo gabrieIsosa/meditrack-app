@@ -75,7 +75,10 @@ function EditarCliente() {
     if (!form) {
         return (
             <div className="container">
-                Cargando...
+                <div className="loading-container">
+                    <div className="premium-spinner"></div>
+                    <span>Cargando datos del cliente...</span>
+                </div>
             </div>
         );
     }

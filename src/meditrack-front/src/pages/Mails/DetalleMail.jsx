@@ -1,303 +1,229 @@
-const DetalleMail = ({ mail, onClose }) => {
+import React from 'react';
 
+const DetalleMail = ({ mail, onClose }) => {
     if (!mail) return null;
 
     const isMobile = window.innerWidth < 768;
 
     const obtenerColorEstado = (estado) => {
-
         switch (estado) {
-
             case 'Enviado':
-                return {
-                    bg: '#dcfce7',
-                    text: '#166534'
-                };
-
+                return { bg: '#dcfce7', text: '#166534' };
             case 'Pendiente':
-                return {
-                    bg: '#fef3c7',
-                    text: '#92400e'
-                };
-
+                return { bg: '#fef3c7', text: '#92400e' };
             case 'Error':
-                return {
-                    bg: '#fee2e2',
-                    text: '#991b1b'
-                };
-
+                return { bg: '#fee2e2', text: '#991b1b' };
             default:
-                return {
-                    bg: '#dbeafe',
-                    text: '#1d4ed8'
-                };
+                return { bg: '#dbeafe', text: '#1d4ed8' };
         }
     };
 
     const colores = obtenerColorEstado(mail.estado);
 
     return (
-        <div
-            onClick={onClose}
-            style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(15,23,42,0.55)',
-                backdropFilter: 'blur(4px)',
-                display: 'flex',
-                alignItems: isMobile ? 'flex-end' : 'center',
-                justifyContent: 'center',
-                zIndex: 9999,
-                padding: isMobile ? '0px' : '20px'
-            }}
-        >
-            <div
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                    width: isMobile ? '100%' : '850px',
-                    maxWidth: '100%',
-                    maxHeight: isMobile ? '95vh' : '90vh',
-                    overflowY: 'auto',
-                    background: 'white',
-                    borderRadius:
-                        isMobile
-                            ? '28px 28px 0 0'
-                            : '28px',
-                    boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
-                }}
-            >
-                <div style={{
-                    padding: isMobile ? '22px' : '30px',
-                    borderBottom: '1px solid #e5e7eb',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    gap: '20px'
-                }}>
-                    <div style={{ flex: 1 }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            marginBottom: '15px',
-                            flexWrap: 'wrap'
-                        }}>
-                            <h2 style={{
-                                margin: 0,
-                                fontSize:
-                                    isMobile
-                                        ? '24px'
-                                        : '30px',
-                                fontWeight: '800',
-                                color: '#111827',
-                                wordBreak: 'break-word'
-                            }}>
-                                {mail.asunto}
-                            </h2>
-
-                            <span style={{
-                                padding: '7px 14px',
-                                borderRadius: '999px',
-                                fontSize: '12px',
-                                fontWeight: '800',
-                                background: colores.bg,
-                                color: colores.text
-                            }}>
-                                {mail.estado}
-                            </span>
+        <div className="dm-overlay" onClick={onClose}>
+            <style>{`
+                .dm-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(15, 23, 42, 0.6);
+                    backdrop-filter: blur(6px);
+                    display: flex;
+                    align-items: ${isMobile ? 'flex-end' : 'center'};
+                    justify-content: center;
+                    z-index: 9999;
+                    padding: ${isMobile ? '0' : '20px'};
+                    animation: dmFadeIn 0.2s ease-out;
+                }
+                .dm-modal {
+                    width: ${isMobile ? '100%' : '650px'};
+                    max-width: 100%;
+                    height: ${isMobile ? '85vh' : 'auto'};
+                    max-height: 85vh;
+                    background: #ffffff;
+                    border-radius: ${isMobile ? '24px 24px 0 0' : '20px'};
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                    animation: dmSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+                .dm-header {
+                    padding: 20px 24px;
+                    border-bottom: 1px solid #f1f5f9;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 16px;
+                    background-color: #ffffff;
+                    z-index: 10;
+                }
+                .dm-title-container {
+                    flex: 1;
+                    min-width: 0;
+                }
+                .dm-title-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 4px;
+                    flex-wrap: wrap;
+                }
+                .dm-title {
+                    margin: 0;
+                    font-size: 18px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    word-break: break-word;
+                    line-height: 1.3;
+                }
+                .dm-status-badge {
+                    padding: 4px 10px;
+                    border-radius: 999px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    background-color: ${colores.bg};
+                    color: ${colores.text};
+                    text-transform: uppercase;
+                    letter-spacing: 0.02em;
+                    display: inline-block;
+                }
+                .dm-subtitle {
+                    margin: 0;
+                    color: #64748b;
+                    font-size: 12.5px;
+                }
+                .dm-close-btn {
+                    border: none;
+                    background: #f1f5f9;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 15px;
+                    font-weight: 800;
+                    color: #475569;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.15s ease;
+                }
+                .dm-close-btn:hover {
+                    background: #e2e8f0;
+                    color: #0f172a;
+                }
+                .dm-body {
+                    padding: 24px;
+                    overflow-y: auto;
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+                .dm-meta-grid {
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    padding: 16px 20px;
+                    display: grid;
+                    grid-template-columns: ${isMobile ? '1fr' : '1fr 1fr'};
+                    gap: 14px 20px;
+                }
+                .dm-content-section {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                .dm-content-label {
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .dm-content-box {
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    padding: 20px;
+                    line-height: 1.7;
+                    font-size: 14px;
+                    color: #334155;
+                    white-space: pre-wrap;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+                }
+                .dm-attachment-box {
+                    background: #eff6ff;
+                    border: 1px solid #bfdbfe;
+                    color: #1d4ed8;
+                    border-radius: 12px;
+                    padding: 12px 16px;
+                    font-weight: 700;
+                    font-size: 13.5px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    word-break: break-all;
+                }
+                @keyframes dmFadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes dmSlideUp {
+                    from { transform: translateY(${isMobile ? '100%' : '20px'}); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                @media (max-width: 768px) {
+                    .dm-body {
+                        padding-bottom: 50px;
+                    }
+                }
+            `}</style>
+            <div className="dm-modal" onClick={(e) => e.stopPropagation()}>
+                {/* Cabecera Estática */}
+                <div className="dm-header">
+                    <div className="dm-title-container">
+                        <div className="dm-title-row">
+                            <h2 className="dm-title">{mail.asunto}</h2>
+                            <span className="dm-status-badge">{mail.estado}</span>
                         </div>
-
-                        <p style={{
-                            margin: 0,
-                            color: '#6b7280',
-                            fontSize: '14px'
-                        }}>
-                            Visualización del detalle del mail interno
-                        </p>
+                        <p className="dm-subtitle">Visualización del detalle del correo interno</p>
                     </div>
-
-                    <button
-                        onClick={onClose}
-                        style={{
-                            border: 'none',
-                            background: '#f3f4f6',
-                            width: '46px',
-                            minWidth: '46px',
-                            height: '46px',
-                            borderRadius: '14px',
-                            cursor: 'pointer',
-                            fontSize: '18px',
-                            fontWeight: '800',
-                            color: '#374151'
-                        }}
-                    >
-                        ✕
-                    </button>
+                    <button className="dm-close-btn" onClick={onClose}>✕</button>
                 </div>
 
-                <div style={{
-                    padding: isMobile ? '22px' : '30px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '25px'
-                }}>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                            isMobile
-                                ? '1fr'
-                                : '1fr 1fr',
-                        gap: '20px'
-                    }}>
-                        <CampoDetalle
-                            titulo="ID"
-                            valor={mail.id}
-                        />
-
-                        <CampoDetalle
-                            titulo="Estado"
-                            valor={mail.estado}
-                        />
+                {/* Cuerpo Desplazable */}
+                <div className="dm-body">
+                    {/* Panel de Metadatos Unificado */}
+                    <div className="dm-meta-grid">
+                        <CampoDetalle titulo="ID de Correo" valor={mail.id} />
+                        <CampoDetalle titulo="Estado de Envío" valor={mail.estado} />
+                        <CampoDetalle titulo="Remitente" valor={mail.remitente} />
+                        <CampoDetalle titulo="Destinatario" valor={mail.destinatario} />
+                        <CampoDetalle titulo="Fecha de Envío" valor={mail.fechaEnvio} />
+                        <CampoDetalle titulo="Usuario Creador" valor={mail.usuarioCreacion} />
+                        <CampoDetalle titulo="Fecha Creación" valor={mail.fechaCreacion} />
+                        <CampoDetalle titulo="Hora Creación" valor={mail.horaCreacion} />
                     </div>
 
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                            isMobile
-                                ? '1fr'
-                                : '1fr 1fr',
-                        gap: '20px'
-                    }}>
-                        <CampoDetalle
-                            titulo="Remitente"
-                            valor={mail.remitente}
-                        />
-
-                        <CampoDetalle
-                            titulo="Destinatario"
-                            valor={mail.destinatario}
-                        />
-                    </div>
-
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                            isMobile
-                                ? '1fr'
-                                : '1fr 1fr',
-                        gap: '20px'
-                    }}>
-                        <CampoDetalle
-                            titulo="Fecha Envío"
-                            valor={mail.fechaEnvio}
-                        />
-
-                        <CampoDetalle
-                            titulo="Usuario Creación"
-                            valor={mail.usuarioCreacion}
-                        />
-                    </div>
-
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                            isMobile
-                                ? '1fr'
-                                : '1fr 1fr',
-                        gap: '20px'
-                    }}>
-                        <CampoDetalle
-                            titulo="Fecha Creación"
-                            valor={mail.fechaCreacion}
-                        />
-
-                        <CampoDetalle
-                            titulo="Hora Creación"
-                            valor={mail.horaCreacion}
-                        />
-                    </div>
-
-                    <div>
-                        <div style={{
-                            fontSize: '13px',
-                            fontWeight: '800',
-                            color: '#6b7280',
-                            marginBottom: '10px',
-                            textTransform: 'uppercase'
-                        }}>
-                            Contenido del Mail
-                        </div>
-
-                        <div style={{
-                            background: '#f9fafb',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '18px',
-                            padding: isMobile ? '18px' : '24px',
-                            lineHeight: '1.8',
-                            fontSize: isMobile ? '14px' : '15px',
-                            color: '#374151',
-                            whiteSpace: 'pre-wrap'
-                        }}>
+                    {/* Contenido del Mail */}
+                    <div className="dm-content-section">
+                        <div className="dm-content-label">Contenido del Correo</div>
+                        <div className="dm-content-box">
                             {mail.contenido}
                         </div>
                     </div>
 
-                    {
-                        mail.adjunto && (
-                            <div>
-                                <div style={{
-                                    fontSize: '13px',
-                                    fontWeight: '800',
-                                    color: '#6b7280',
-                                    marginBottom: '10px',
-                                    textTransform: 'uppercase'
-                                }}>
-                                    Adjunto
-                                </div>
-
-                                <div style={{
-                                    background: '#eff6ff',
-                                    border: '1px solid #bfdbfe',
-                                    color: '#1d4ed8',
-                                    borderRadius: '14px',
-                                    padding: '16px',
-                                    fontWeight: '700',
-                                    wordBreak: 'break-word'
-                                }}>
-                                    📎 {mail.nombreAdjunto}
-                                </div>
+                    {/* Adjunto si existe */}
+                    {mail.adjunto && (
+                        <div className="dm-content-section">
+                            <div className="dm-content-label">Adjunto</div>
+                            <div className="dm-attachment-box">
+                                <span>📎</span>
+                                <span>{mail.nombreAdjunto}</span>
                             </div>
-                        )
-                    }
-
-                    <div style={{
-                        display: 'flex',
-                        justifyContent:
-                            isMobile
-                                ? 'stretch'
-                                : 'flex-end',
-                        gap: '12px'
-                    }}>
-                        <button
-                            onClick={onClose}
-                            style={{
-                                border: 'none',
-                                background: '#111827',
-                                color: 'white',
-                                width:
-                                    isMobile
-                                        ? '100%'
-                                        : 'auto',
-                                padding: '14px 22px',
-                                borderRadius: '14px',
-                                cursor: 'pointer',
-                                fontWeight: '700',
-                                fontSize: '14px'
-                            }}
-                        >
-                            Cerrar
-                        </button>
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -305,29 +231,24 @@ const DetalleMail = ({ mail, onClose }) => {
 };
 
 const CampoDetalle = ({ titulo, valor }) => (
-    <div>
-        <div style={{
-            fontSize: '13px',
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        <span style={{
+            fontSize: '10px',
             fontWeight: '800',
-            color: '#6b7280',
-            marginBottom: '8px',
-            textTransform: 'uppercase'
+            color: '#64748b',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em'
         }}>
             {titulo}
-        </div>
-
-        <div style={{
-            background: '#f9fafb',
-            border: '1px solid #e5e7eb',
-            borderRadius: '14px',
-            padding: '14px',
-            fontSize: '14px',
-            color: '#111827',
+        </span>
+        <span style={{
+            fontSize: '13px',
+            color: '#1e293b',
             fontWeight: '600',
-            wordBreak: 'break-word'
+            wordBreak: 'break-all'
         }}>
             {valor || '-'}
-        </div>
+        </span>
     </div>
 );
 
