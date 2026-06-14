@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getRutas, getClientes, getEnvioById } from '../../services/api';
+import { getRutas, getClientes, getEnvioById, bloquearUsuario, getUsuarioById } from '../../services/api';
 import MapaRuta from '../../components/MapaRuta';
 import OfflineBanner from '../../components/OfflineBanner';
 import { iconos, DefaultIcon } from '../../util/Util';
@@ -292,7 +292,7 @@ function ModalResumenViaje({ ruta, onClose, clientes }) {
 }
 
 function Viajes() {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     
     const [rutas, setRutas] = useState([]);
@@ -300,8 +300,37 @@ function Viajes() {
     const [loading, setLoading] = useState(true);
     const [viajePreparar, setViajePreparar] = useState(null);
     const [mostrarValidacionAptitud, setMostrarValidacionAptitud] = useState(false);
-    const [viajeBlockeado, setViajeBlockeado] = useState(false);
+    
+    const isBlocked = useCallback(() => {
+        if (!user) return false;
+        if (!user.estaBloqueado) return false;
+        if (!user.fechaBloqueo) return true;
+        const blockTime = new Date(user.fechaBloqueo);
+        const now = new Date();
+        const diffMs = now - blockTime;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        return diffHours < 6;
+    }, [user]);
+
+    const [viajeBlockeado, setViajeBlockeado] = useState(isBlocked());
     const [modoTestMic, setModoTestMic] = useState(false);
+
+    useEffect(() => {
+        setViajeBlockeado(isBlocked());
+    }, [user, isBlocked]);
+
+    useEffect(() => {
+        if (user && user.id) {
+            getUsuarioById(user.id)
+                .then(latestUser => {
+                    updateUser({
+                        estaBloqueado: latestUser.estaBloqueado,
+                        fechaBloqueo: latestUser.fechaBloqueo
+                    });
+                })
+                .catch(err => console.error("Error fetching latest user status on mount:", err));
+        }
+    }, []);
 
     const fetchRutas = async (silent = false) => {
         if (!silent) setLoading(true);
@@ -811,13 +840,23 @@ function Viajes() {
                             navigate('/viajes/detalle');
                         }
                     }}
-                    onBloqueado={() => {
+                    onBloqueado={async () => {
                         setMostrarValidacionAptitud(false);
                         if (modoTestMic) {
                             alert('Prueba finalizada: Validación de aptitud falló.');
                             setModoTestMic(false);
                         } else {
-                            setViajeBlockeado(true);
+                            try {
+                                const updatedUser = await bloquearUsuario(user.id);
+                                updateUser({
+                                    estaBloqueado: updatedUser.estaBloqueado,
+                                    fechaBloqueo: updatedUser.fechaBloqueo
+                                });
+                                setViajeBlockeado(true);
+                            } catch (err) {
+                                console.error("Error al bloquear usuario en backend:", err);
+                                setViajeBlockeado(true);
+                            }
                         }
                     }}
                     onCancelar={() => {

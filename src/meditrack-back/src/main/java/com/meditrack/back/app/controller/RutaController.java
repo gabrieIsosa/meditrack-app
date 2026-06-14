@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.meditrack.back.app.model.Role;
 import com.meditrack.back.app.model.Sesion;
+import com.meditrack.back.app.model.Usuario;
 import com.meditrack.back.app.service.AuthService;
 import com.meditrack.back.app.service.RutaService;
+import com.meditrack.back.app.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/rutas")
@@ -26,10 +28,12 @@ public class RutaController {
 
     private final RutaService rutaService;
     private final AuthService authService;
+    private final UsuarioService usuarioService;
 
-    public RutaController(RutaService rutaService, AuthService authService) {
+    public RutaController(RutaService rutaService, AuthService authService, UsuarioService usuarioService) {
         this.rutaService = rutaService;
         this.authService = authService;
+        this.usuarioService = usuarioService;
     }
 
     private Sesion autenticar(String authHeader) {
@@ -85,6 +89,11 @@ public class RutaController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             Sesion sesion = autenticar(authHeader);
+            Usuario usuarioReq = usuarioService.buscarPorEmail(sesion.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            if (usuarioReq.isBloqueoActivo()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Usuario bloqueado por fatiga. No puede realizar acciones por 6 horas."));
+            }
             if (sesion.getRole() != Role.SUPERVISOR && sesion.getRole() != Role.ADMINISTRADOR && sesion.getRole() != Role.REPARTIDOR) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Sin permisos para finalizar rutas"));
             }

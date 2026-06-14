@@ -1,8 +1,55 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { getUsuarios } from '../../services/api';
+import { getUsuarios, desbloquearUsuario } from '../../services/api';
 import ModalHistorialUsuario from '../../components/ModalHistorialUsuario';
+
+function CuentaRegresivaBloqueo({ fechaBloqueo, onExpirado }) {
+    const calcularTiempoRestante = useCallback(() => {
+        if (!fechaBloqueo) return null;
+        const blockTime = new Date(fechaBloqueo);
+        const endTime = new Date(blockTime.getTime() + 6 * 60 * 60 * 1000); // 6 horas después
+        const now = new Date();
+        const diffMs = endTime - now;
+        
+        if (diffMs <= 0) return null;
+        
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+        
+        return { hours, minutes, seconds };
+    }, [fechaBloqueo]);
+
+    const [tiempo, setTiempo] = useState(calcularTiempoRestante());
+
+    useEffect(() => {
+        setTiempo(calcularTiempoRestante());
+        
+        const interval = setInterval(() => {
+            const rest = calcularTiempoRestante();
+            setTiempo(rest);
+            if (!rest) {
+                clearInterval(interval);
+                if (onExpirado) onExpirado();
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [fechaBloqueo, calcularTiempoRestante, onExpirado]);
+
+    if (!tiempo) {
+        return <span style={{ color: '#10B981', fontWeight: 'bold' }}>Desbloqueo inminente</span>;
+    }
+
+    const pad = (num) => String(num).padStart(2, '0');
+
+    return (
+        <div style={{ color: '#EF4444', fontSize: '13px', marginTop: '6px' }}>
+            <strong>Tiempo restante:</strong> {pad(tiempo.hours)}:{pad(tiempo.minutes)}:{pad(tiempo.seconds)}
+        </div>
+    );
+}
 
 function Repartidores() {
     const [usuarios, setUsuarios] = useState([]);
@@ -12,6 +59,18 @@ function Repartidores() {
     const [usuarioParaHistorial, setUsuarioParaHistorial] = useState(null);
 
     const navigate = useNavigate();
+
+    const handleDesbloquear = async (id) => {
+        if (window.confirm("¿Estás seguro de que deseas desbloquear a este repartidor manualmente?")) {
+            try {
+                await desbloquearUsuario(id);
+                const data = await getUsuarios();
+                setUsuarios(data.filter(u => u.role === 'REPARTIDOR'));
+            } catch (error) {
+                alert(error.message || "Error al desbloquear repartidor");
+            }
+        }
+    };
 
     useEffect(() => {
         getUsuarios()
@@ -35,14 +94,22 @@ function Repartidores() {
             filtroEstado === 'TODOS'
                 ? true
                 : filtroEstado === 'ACTIVO'
-                    ? u.estadoActivo
-                    : !u.estadoActivo;
+                    ? u.estadoActivo && !u.bloqueoActivo
+                    : filtroEstado === 'BLOQUEADO'
+                        ? u.bloqueoActivo
+                        : !u.estadoActivo && !u.bloqueoActivo;
 
         return cumpleBusqueda && cumpleEstado;
     });
 
     return (
         <div className="container">
+            <style>{`
+                @media (max-width: 768px) {
+                    .hidden-mobile { display: none !important; }
+                    .show-mobile { display: block !important; }
+                }
+            `}</style>
 
             <div
                 style={{
@@ -146,130 +213,149 @@ function Repartidores() {
                         <option value="TODOS">Todos</option>
                         <option value="ACTIVO">Activos</option>
                         <option value="INACTIVO">Inactivos</option>
+                        <option value="BLOQUEADO">Bloqueados</option>
                     </select>
                 </div>
             </div>
 
             <div
+                className="card"
                 style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                    gap: '20px'
+                    padding: '20px',
+                    marginTop: '20px'
                 }}
             >
-                {repartidoresFiltrados.map(u => (
-                    <div
-                        key={u.id}
-                        style={{
-                            background: '#fff',
-                            borderRadius: '20px',
-                            padding: '20px',
-                            border: '1px solid #e5e7eb',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                            transition: '0.2s'
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '15px',
-                                marginBottom: '20px'
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: '60px',
-                                    height: '60px',
-                                    borderRadius: '50%',
-                                    background: '#10b981',
-                                    color: 'white',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: 'bold',
-                                    fontSize: '24px'
-                                }}
-                            >
-                                {u.nombre?.charAt(0)?.toUpperCase()}
-                            </div>
-
-                            <div>
-                                <div
-                                    style={{
-                                        fontWeight: '700',
-                                        fontSize: '18px',
-                                        color: '#111827'
-                                    }}
-                                >
-                                    {u.nombre}
-                                </div>
-
-                                <div
-                                    style={{
-                                        color: '#6b7280',
-                                        fontSize: '14px'
-                                    }}
-                                >
-                                    {u.email}
-                                </div>
-                            </div>
-                        </div>
-
-                        {u.dni && (
-                            <div
-                                style={{
-                                    marginBottom: '15px',
-                                    color: '#4b5563'
-                                }}
-                            >
-                                <strong>DNI:</strong> {u.dni}
-                            </div>
-                        )}
-
-                        <div
-                            style={{
-                                marginBottom: '20px'
-                            }}
-                        >
-                            <span
-                                style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '999px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    backgroundColor: u.estadoActivo
-                                        ? '#DCFCE7'
-                                        : '#FEE2E2',
-                                    color: u.estadoActivo
-                                        ? '#166534'
-                                        : '#991B1B'
-                                }}
-                            >
-                                {u.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
-                            </span>
-                        </div>
-
-                        <button
-                            style={{
-                                width: '100%',
-                                border: 'none',
-                                background: '#2563eb',
-                                color: 'white',
-                                padding: '12px',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                fontWeight: '600'
-                            }}
-                            onClick={() => {
-                                setUsuarioParaHistorial(u);
-                                setHistorialAbierto(true);
-                            }}
-                        >
-                            Ver historial
-                        </button>
-                    </div>
-                ))}
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+                                <th style={{ textAlign: 'left', paddingBottom: '12px', color: 'white', fontWeight: '700' }}>Nombre completo</th>
+                                <th className="hidden-mobile" style={{ textAlign: 'left', paddingBottom: '12px', color: 'white', fontWeight: '700' }}>Email</th>
+                                <th style={{ textAlign: 'left', paddingBottom: '12px', color: 'white', fontWeight: '700' }}>DNI</th>
+                                <th className="hidden-mobile" style={{ textAlign: 'left', paddingBottom: '12px', color: 'white', fontWeight: '700' }}>Estado</th>
+                                <th style={{ textAlign: 'center', paddingBottom: '12px', color: 'white', fontWeight: '700' }}>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {repartidoresFiltrados.map(u => (
+                                <tr key={u.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                    <td style={{ padding: '16px 0', verticalAlign: 'middle' }}>
+                                        <div>
+                                            <div style={{ fontWeight: 'bold', color: '#111827', fontSize: '15px' }}>{u.nombre}</div>
+                                            <div className="show-mobile" style={{ display: 'none', fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                                                {u.email}
+                                            </div>
+                                            {u.bloqueoActivo && (
+                                                <div className="show-mobile" style={{ display: 'none', marginTop: '4px' }}>
+                                                    <span style={{ fontSize: '10px', fontWeight: '800', color: '#991B1B', backgroundColor: '#FEE2E2', padding: '2px 6px', borderRadius: '4px', marginRight: '6px' }}>BLOQUEADO</span>
+                                                    <CuentaRegresivaBloqueo 
+                                                        fechaBloqueo={u.fechaBloqueo}
+                                                        onExpirado={async () => {
+                                                            const data = await getUsuarios();
+                                                            setUsuarios(data.filter(usr => usr.role === 'REPARTIDOR'));
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="hidden-mobile" style={{ padding: '16px 0', color: '#4b5563', verticalAlign: 'middle' }}>{u.email}</td>
+                                    <td style={{ padding: '16px 0', color: '#4b5563', verticalAlign: 'middle' }}>{u.dni || '-'}</td>
+                                    <td className="hidden-mobile" style={{ padding: '16px 0', verticalAlign: 'middle' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    borderRadius: '999px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '700',
+                                                    backgroundColor: u.bloqueoActivo
+                                                        ? '#FEE2E2'
+                                                        : u.estadoActivo
+                                                            ? '#DCFCE7'
+                                                            : '#E5E7EB',
+                                                    color: u.bloqueoActivo
+                                                        ? '#991B1B'
+                                                        : u.estadoActivo
+                                                            ? '#166534'
+                                                            : '#374151',
+                                                    display: 'inline-block',
+                                                    width: 'fit-content'
+                                                }}
+                                            >
+                                                {u.bloqueoActivo ? 'BLOQUEADO' : u.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
+                                            </span>
+                                            {u.bloqueoActivo && (
+                                                <CuentaRegresivaBloqueo 
+                                                    fechaBloqueo={u.fechaBloqueo}
+                                                    onExpirado={async () => {
+                                                        const data = await getUsuarios();
+                                                        setUsuarios(data.filter(usr => usr.role === 'REPARTIDOR'));
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '16px 0', textAlign: 'center', verticalAlign: 'middle' }}>
+                                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', alignItems: 'center' }}>
+                                            {u.bloqueoActivo && (
+                                                <button
+                                                    className="action-icon-btn"
+                                                    title="Desbloquear Repartidor"
+                                                    onClick={() => handleDesbloquear(u.id)}
+                                                    style={{ 
+                                                        color: '#10b981',
+                                                        border: 'none',
+                                                        background: 'none',
+                                                        cursor: 'pointer',
+                                                        padding: '6px',
+                                                        borderRadius: '6px',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        transition: 'background-color 0.2s'
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0fdf4'}
+                                                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                >
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                        <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                            <button
+                                                className="action-icon-btn"
+                                                title="Ver historial"
+                                                onClick={() => {
+                                                    setUsuarioParaHistorial(u);
+                                                    setHistorialAbierto(true);
+                                                }}
+                                                style={{ 
+                                                    color: '#2563eb',
+                                                    border: 'none',
+                                                    background: 'none',
+                                                    cursor: 'pointer',
+                                                    padding: '6px',
+                                                    borderRadius: '6px',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    transition: 'background-color 0.2s'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#eff6ff'}
+                                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {repartidoresFiltrados.length === 0 && (

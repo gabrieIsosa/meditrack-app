@@ -587,6 +587,32 @@ export async function toggleEstadoUsuario(id) {
   }
 }
 
+export async function bloquearUsuario(id) {
+  const res = await fetch(`${BASE_URL}/api/usuarios/${id}/bloquear`, {
+    method: 'PATCH',
+    headers: { ...getAuthHeaders() },
+  });
+  await handleResponse(res);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al bloquear usuario');
+  }
+  return res.json();
+}
+
+export async function desbloquearUsuario(id) {
+  const res = await fetch(`${BASE_URL}/api/usuarios/${id}/desbloquear`, {
+    method: 'PATCH',
+    headers: { ...getAuthHeaders() },
+  });
+  await handleResponse(res);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al desbloquear usuario');
+  }
+  return res.json();
+}
+
 
 export async function getRutas() {
   if (!isOnline()) {

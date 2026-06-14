@@ -96,4 +96,28 @@ public class UsuarioController {
         }
     }
 
+    @PatchMapping("/{id}/bloquear")
+    public ResponseEntity<?> bloquear(@PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            Sesion sesion = autenticar(authHeader);
+            Usuario autorCompleto = obtenerAutorDesdeSesion(sesion);
+            Usuario actualizado = usuarioService.bloquearUsuario(id, autorCompleto);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/desbloquear")
+    public ResponseEntity<?> desbloquear(@PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            Sesion sesion = autenticar(authHeader);
+            Usuario autorCompleto = obtenerAutorDesdeSesion(sesion);
+            Usuario actualizado = usuarioService.desbloquearUsuario(id, autorCompleto);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }

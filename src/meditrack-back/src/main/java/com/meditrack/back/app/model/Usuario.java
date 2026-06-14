@@ -1,5 +1,6 @@
 package com.meditrack.back.app.model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,9 @@ public class Usuario {
 
     @Column(name = "esta_bloqueado", nullable = false)
     private boolean estaBloqueado = false;
+
+    @Column(name = "fecha_bloqueo")
+    private LocalDateTime fechaBloqueo;
 
     @Column(name = "haciendo_entrega", nullable = false)
     private boolean haciendoEntrega = false;
@@ -137,6 +141,24 @@ public class Usuario {
 
     public void addHistorial(HistorialUsuario historial) {
         this.historial.add(historial);
+    }
+
+    public LocalDateTime getFechaBloqueo() {
+        return fechaBloqueo;
+    }
+
+    public void setFechaBloqueo(LocalDateTime fechaBloqueo) {
+        this.fechaBloqueo = fechaBloqueo;
+    }
+
+    public boolean isBloqueoActivo() {
+        if (!estaBloqueado) {
+            return false;
+        }
+        if (fechaBloqueo == null) {
+            return true;
+        }
+        return LocalDateTime.now().isBefore(fechaBloqueo.plusHours(6));
     }
 
 }
