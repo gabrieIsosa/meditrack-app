@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEnvios, getRutas, getUsuarios, createRuta, getTransportes } from '../../services/api';
 import MapaRuta from '../../components/MapaRuta';
@@ -100,6 +100,77 @@ function NuevaRuta() {
 
   const [paradas, setParadas] = useState([]);
 
+  const resCarga = useMemo(() => {
+    const tSel = transportes.find(t => String(t.id) === String(transporteId)) || {};
+    const capacidadKg = tSel.capacidadKg ?? 0;
+    const capacidadM3 = tSel.capacidadM3 ?? 0;
+
+    let totalPesoGramos = 0;
+    let totalVolumenFrio = 0;
+    let totalVolumenNormal = 0;
+    const CAPACIDAD_CAJA = 100000; // 100,000 cm3 = 0.1 m3
+
+    const listaCajas = [];
+
+    // Pack cold chain items per shipment into coolers (blue boxes)
+    seleccionados.forEach(envio => {
+      let volumenFrioEnvio = 0;
+
+      if (envio.detalles) {
+        envio.detalles.forEach(d => {
+          const cantidad = d.cantidad || 0;
+          const med = d.medicamento || {};
+          totalPesoGramos += (med.pesoGramos || 0) * cantidad;
+          if (med.cadenaFrio) {
+            volumenFrioEnvio += (med.volumenCm3 || 0) * cantidad;
+          } else {
+            totalVolumenNormal += (med.volumenCm3 || 0) * cantidad;
+          }
+        });
+      }
+
+      if (volumenFrioEnvio > 0) {
+        totalVolumenFrio += volumenFrioEnvio;
+        let volRestante = volumenFrioEnvio;
+        while (volRestante > 0) {
+          const capCaja = Math.min(volRestante, CAPACIDAD_CAJA);
+          listaCajas.push({
+            tipo: 'frio',
+            fillPct: capCaja / CAPACIDAD_CAJA
+          });
+          volRestante -= capCaja;
+        }
+      }
+    });
+
+    const cajasAzules = listaCajas.length;
+    const cajasNaranjas = 0;
+    const totalCajas = cajasAzules;
+    const maxCajas = Math.floor((capacidadM3 * 1000000) / CAPACIDAD_CAJA);
+
+    const totalVolumenOcupado = (cajasAzules * CAPACIDAD_CAJA) + totalVolumenNormal;
+    const totalPesoKg = Number((totalPesoGramos / 1000).toFixed(2));
+    const pesoExcedido = totalPesoKg > capacidadKg;
+    const volumenExcedido = totalVolumenOcupado > (capacidadM3 * 1000000);
+
+    return {
+      tSel,
+      capacidadKg,
+      capacidadM3,
+      totalPesoKg,
+      totalVolumenFrio,
+      totalVolumenNormal,
+      totalVolumenOcupado,
+      cajasAzules,
+      cajasNaranjas,
+      totalCajas,
+      maxCajas,
+      pesoExcedido,
+      volumenExcedido,
+      listaCajas
+    };
+  }, [seleccionados, transportes, transporteId]);
+
   useEffect(() => {
     Promise.all([getUsuarios(), getRutas(), getTransportes('', 'ACTIVO')])
       .then(([usuarios, rutas, transportesData]) => {
@@ -162,6 +233,14 @@ function NuevaRuta() {
 
   const avanzarPaso2 = () => {
     if (seleccionados.length === 0) { setError('Seleccioná al menos un envío'); return; }
+    if (resCarga.pesoExcedido) {
+      setError(`Se ha excedido la capacidad de peso del transporte (${resCarga.totalPesoKg} kg / ${resCarga.capacidadKg} kg)`);
+      return;
+    }
+    if (resCarga.volumenExcedido) {
+      setError(`Se ha excedido la capacidad de volumen del transporte (${(resCarga.totalVolumenOcupado / 1000000).toFixed(3)} m³ / ${resCarga.capacidadM3} m³)`);
+      return;
+    }
     setError('');
     setParadas(planificarParadas(seleccionados));
     setPaso(3);
@@ -378,75 +457,336 @@ function NuevaRuta() {
       )}
 
       {paso === 2 && (
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>
-              Seleccionar envíos ({seleccionados.length} seleccionados)
-            </h2>
-            <input
-              className="search-input"
-              style={{ margin: 0, width: '280px' }}
-              placeholder="Buscar por ID, destinatario, dirección..."
-              value={busquedaEnvio}
-              onChange={e => setBusquedaEnvio(e.target.value)}
-            />
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          
+          {/* Columna izquierda: Listado de envíos */}
+          <div className="card" style={{ flex: '2 1 600px', margin: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>
+                Seleccionar envíos ({seleccionados.length} seleccionados)
+              </h2>
+              <input
+                className="search-input"
+                style={{ margin: 0, width: '280px' }}
+                placeholder="Buscar por ID, destinatario, dirección..."
+                value={busquedaEnvio}
+                onChange={e => setBusquedaEnvio(e.target.value)}
+              />
+            </div>
+
+            {loadingEnvios ? (
+              <p style={{ padding: '20px', color: '#6b7280' }}>Cargando envíos disponibles...</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ width: '40px' }}></th>
+                    <th>Tracking ID</th>
+                    <th>Destinatario</th>
+                    <th>Dirección entrega</th>
+                    <th>Prioridad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enviosFiltrados.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                        No hay envíos disponibles para enrutar
+                      </td>
+                    </tr>
+                  ) : (
+                    enviosFiltrados.map(e => {
+                      const marcado = seleccionados.some(s => s.id === e.id);
+                      return (
+                        <tr
+                          key={e.id}
+                          onClick={() => toggleSeleccion(e)}
+                          style={{ cursor: 'pointer', backgroundColor: marcado ? '#EFF6FF' : 'transparent' }}
+                        >
+                          <td style={{ textAlign: 'center' }}>
+                            <input type="checkbox" checked={marcado} onChange={() => toggleSeleccion(e)} onClick={ev => ev.stopPropagation()} />
+                          </td>
+                          <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
+                          <td>{e.destinatario}</td>
+                          <td style={{ fontSize: '13px', color: '#6b7280' }}>{e.destino}</td>
+                          <td>
+                            {e.prioridad && (
+                              <span className="status-tag" style={{ backgroundColor: '#FEF3C720', color: '#D97706' }}>
+                                {e.prioridad}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            )}
+
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
+              <button className="btn btn-secondary" onClick={() => setPaso(1)}>ANTERIOR</button>
+              <button 
+                className="btn-new-shipment" 
+                onClick={avanzarPaso2}
+                disabled={resCarga.pesoExcedido || resCarga.volumenExcedido}
+                style={{
+                  opacity: (resCarga.pesoExcedido || resCarga.volumenExcedido) ? 0.5 : 1,
+                  cursor: (resCarga.pesoExcedido || resCarga.volumenExcedido) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                SUGERIR ORDEN Y CONTINUAR
+              </button>
+            </div>
           </div>
 
-          {loadingEnvios ? (
-            <p style={{ padding: '20px', color: '#6b7280' }}>Cargando envíos disponibles...</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ width: '40px' }}></th>
-                  <th>Tracking ID</th>
-                  <th>Destinatario</th>
-                  <th>Dirección entrega</th>
-                  <th>Prioridad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {enviosFiltrados.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-                      No hay envíos disponibles para enrutar
-                    </td>
-                  </tr>
-                ) : (
-                  enviosFiltrados.map(e => {
-                    const marcado = seleccionados.some(s => s.id === e.id);
-                    return (
-                      <tr
-                        key={e.id}
-                        onClick={() => toggleSeleccion(e)}
-                        style={{ cursor: 'pointer', backgroundColor: marcado ? '#EFF6FF' : 'transparent' }}
-                      >
-                        <td style={{ textAlign: 'center' }}>
-                          <input type="checkbox" checked={marcado} onChange={() => toggleSeleccion(e)} onClick={ev => ev.stopPropagation()} />
-                        </td>
-                        <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
-                        <td>{e.destinatario}</td>
-                        <td style={{ fontSize: '13px', color: '#6b7280' }}>{e.destino}</td>
-                        <td>
-                          {e.prioridad && (
-                            <span className="status-tag" style={{ backgroundColor: '#FEF3C720', color: '#D97706' }}>
-                              {e.prioridad}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
+          {/* Columna derecha: Indicadores de capacidad y Camión interactivo */}
+          <div className="card" style={{ flex: '1 1 320px', minWidth: '320px', margin: 0, padding: '24px', backgroundColor: '#F9FAFB' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#374151', marginBottom: '16px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>
+              Capacidad y Carga del Transporte
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              {/* Indicador de Peso */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', color: '#4B5563', marginBottom: '4px' }}>
+                  <span>Peso Total</span>
+                  <span style={{ color: resCarga.pesoExcedido ? '#EF4444' : '#10B981' }}>
+                    {resCarga.totalPesoKg} kg / {resCarga.capacidadKg} kg
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: '8px', backgroundColor: '#E5E7EB', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${Math.min((resCarga.totalPesoKg / (resCarga.capacidadKg || 1)) * 100, 100)}%`, 
+                    height: '100%', 
+                    backgroundColor: resCarga.pesoExcedido ? '#EF4444' : '#10B981',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                {resCarga.pesoExcedido && (
+                  <p style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', fontWeight: '600' }}>
+                    ⚠️ Capacidad de peso excedida
+                  </p>
                 )}
-              </tbody>
-            </table>
-          )}
+              </div>
 
-          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
-            <button className="btn btn-secondary" onClick={() => setPaso(1)}>ANTERIOR</button>
-            <button className="btn-new-shipment" onClick={avanzarPaso2}>
-              SUGERIR ORDEN Y CONTINUAR
-            </button>
+              {/* Indicador de Volumen/Cajas */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', color: '#4B5563', marginBottom: '4px' }}>
+                  <span>Volumen Total (m³)</span>
+                  <span style={{ color: resCarga.volumenExcedido ? '#EF4444' : '#10B981' }}>
+                    {resCarga.cajasAzules} / {resCarga.maxCajas} coolers ({ (resCarga.totalVolumenOcupado / 1000000).toFixed(3) } m³ / { resCarga.capacidadM3 } m³)
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: '8px', backgroundColor: '#E5E7EB', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${Math.min((resCarga.totalVolumenOcupado / (resCarga.capacidadM3 * 1000000 || 1)) * 100, 100)}%`, 
+                    height: '100%', 
+                    backgroundColor: resCarga.volumenExcedido ? '#EF4444' : '#10B981',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                {resCarga.volumenExcedido && (
+                  <p style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', fontWeight: '600' }}>
+                    ⚠️ Capacidad de volumen excedida
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Render del camión en 2D SVG */}
+            <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', padding: '16px', background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Vista de Carga (Distribución)
+              </div>
+              
+              {/* Contenedor del camión SVG */}
+              {(() => {
+                const maxC = resCarga.maxCajas || 1;
+                // Grid layout
+                let rows = 3;
+                let cols = 4;
+                if (maxC <= 4) { rows = 1; cols = maxC; }
+                else if (maxC <= 8) { rows = 2; cols = 4; }
+                else if (maxC <= 12) { rows = 3; cols = 4; }
+                else if (maxC <= 16) { rows = 4; cols = 4; }
+                else { rows = 4; cols = Math.min(Math.ceil(maxC / 4), 6); }
+
+                const visualMax = rows * cols;
+
+                const padding = 6;
+                const usableW = 188;
+                const usableH = 78;
+                const boxW = Math.min(Math.floor(usableW / cols) - 4, 40);
+                const boxH = Math.min(Math.floor(usableH / rows) - 4, 24);
+
+                const gridW = cols * (boxW + 4) - 4;
+                const gridH = rows * (boxH + 4) - 4;
+                const offsetX = 20 + padding + (usableW - gridW) / 2;
+                const offsetY = 40 + padding + (usableH - gridH) / 2;
+
+                const slots = [];
+                const cajasARenderizar = Math.min(resCarga.totalCajas, visualMax);
+                for (let i = 0; i < cajasARenderizar; i++) {
+                  const r = Math.floor(i / cols);
+                  const c = i % cols;
+                  const bx = offsetX + c * (boxW + 4);
+                  // Stack from bottom up
+                  const by = offsetY + (rows - 1 - r) * (boxH + 4);
+                  
+                  const boxInfo = resCarga.listaCajas[i];
+                  const fillPct = boxInfo.fillPct; // 0 to 1
+                  
+                  const colorFill = boxInfo.tipo === 'frio' ? '#3B82F6' : '#F59E0B';
+                  const colorStroke = boxInfo.tipo === 'frio' ? '#1D4ED8' : '#D97706';
+
+                  slots.push(
+                    <g key={`box-${i}`}>
+                      {/* Container box with a thin outline */}
+                      <rect 
+                        x={bx} 
+                        y={by} 
+                        width={boxW} 
+                        height={boxH} 
+                        rx="2" 
+                        fill="#FFFFFF" 
+                        stroke="#D1D5DB" 
+                        strokeWidth="1.5" 
+                      />
+                      {/* Inner content filled from bottom up based on fillPct */}
+                      <rect 
+                        x={bx + 1} 
+                        y={by + boxH - (boxH * fillPct) + 1} 
+                        width={boxW - 2} 
+                        height={Math.max((boxH * fillPct) - 2, 0)} 
+                        rx="1" 
+                        fill={colorFill} 
+                        stroke={colorStroke} 
+                        strokeWidth="1" 
+                        style={{ transition: 'all 0.3s ease' }}
+                      />
+                    </g>
+                  );
+                }
+
+                // Calcular cajas excedidas (fuera de capacidad)
+                const totalC = resCarga.totalCajas;
+                const sobrantes = totalC - maxC;
+                const overflowBoxes = [];
+                if (sobrantes > 0) {
+                  // Renderizar cajas excedidas encima de la caja del camión
+                  for (let i = 0; i < sobrantes; i++) {
+                    const bx = 20 + padding + i * (boxW + 4);
+                    const by = 12;
+                    
+                    const boxInfo = resCarga.listaCajas[maxC + i];
+                    const fillPct = boxInfo.fillPct;
+                    const colorFill = boxInfo.tipo === 'frio' ? '#3B82F6' : '#F59E0B';
+                    
+                    overflowBoxes.push(
+                      <g key={`overflow-${i}`}>
+                        {/* Container box */}
+                        <rect 
+                          x={bx} 
+                          y={by} 
+                          width={boxW} 
+                          height={boxH} 
+                          rx="2" 
+                          fill="#FFFFFF" 
+                          stroke="#EF4444" 
+                          strokeWidth="2"
+                        />
+                        {/* Inner fill */}
+                        <rect 
+                          x={bx + 1} 
+                          y={by + boxH - (boxH * fillPct) + 1} 
+                          width={boxW - 2} 
+                          height={Math.max((boxH * fillPct) - 2, 0)} 
+                          rx="1" 
+                          fill={colorFill} 
+                          stroke="#EF4444" 
+                          strokeWidth="1" 
+                        />
+                        <line x1={bx} y1={by} x2={bx+boxW} y2={by+boxH} stroke="#EF4444" strokeWidth="1.5" />
+                        <line x1={bx+boxW} y1={by} x2={bx} y2={by+boxH} stroke="#EF4444" strokeWidth="1.5" />
+                      </g>
+                    );
+                  }
+                }
+
+                return (
+                  <svg viewBox="0 0 320 180" width="100%" height="auto" style={{ display: 'block' }}>
+                    <defs>
+                      <clipPath id="cargo-hold-clip">
+                        <rect x="20" y="40" width="200" height="100" rx="6" />
+                      </clipPath>
+                    </defs>
+                    <line x1="20" y1="140" x2="290" y2="140" stroke="#111827" strokeWidth="4" />
+                    
+                    <path d="M230,70 L260,70 L280,92 L290,105 L290,140 L230,140 Z" fill="#E5E7EB" stroke="#111827" strokeWidth="3" strokeLinejoin="round" />
+                    <path d="M240,80 L258,80 L271,95 L271,115 L240,115 Z" fill="#FFFFFF" stroke="#111827" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="282" y="115" width="8" height="15" rx="1" fill="#9CA3AF" />
+                    
+                    <g>
+                      <circle cx="60" cy="148" r="14" fill="#111827" />
+                      <circle cx="60" cy="148" r="5" fill="#FFFFFF" />
+                      <circle cx="95" cy="148" r="14" fill="#111827" />
+                      <circle cx="95" cy="148" r="5" fill="#FFFFFF" />
+                      <circle cx="255" cy="148" r="14" fill="#111827" />
+                      <circle cx="255" cy="148" r="5" fill="#FFFFFF" />
+                    </g>
+                    
+                    {/* Cargo Hold background outline */}
+                    <rect 
+                      x="20" 
+                      y="40" 
+                      width="200" 
+                      height="100" 
+                      rx="6" 
+                      fill="#FFFFFF" 
+                      stroke={resCarga.volumenExcedido ? '#EF4444' : '#111827'} 
+                      strokeWidth={resCarga.volumenExcedido ? '4' : '3'}
+                      style={{ transition: 'stroke 0.3s ease, stroke-width 0.3s ease' }}
+                    />
+                    
+                    {/* Normal medicines volume background fill */}
+                    {resCarga.totalVolumenNormal > 0 && (
+                      <rect 
+                        x="20" 
+                        y={40 + 100 - (100 * Math.min(resCarga.totalVolumenNormal / (resCarga.capacidadM3 * 1000000 || 1), 1))} 
+                        width="200" 
+                        height={100 * Math.min(resCarga.totalVolumenNormal / (resCarga.capacidadM3 * 1000000 || 1), 1)} 
+                        fill="#F59E0B" 
+                        fillOpacity="0.25"
+                        clipPath="url(#cargo-hold-clip)"
+                        style={{ transition: 'all 0.3s ease' }}
+                      />
+                    )}
+                    
+                    {slots}
+                    {overflowBoxes}
+                  </svg>
+                );
+              })()}
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px', fontSize: '11px', fontWeight: '600', color: '#4B5563' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '12px', height: '12px', backgroundColor: '#3B82F6', borderRadius: '3px', border: '1px solid #1D4ED8' }} />
+                  <span>Cooler (Cadena de Frío)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '12px', height: '12px', backgroundColor: '#F59E0B', fillOpacity: 0.25, opacity: 0.5, borderRadius: '3px', border: '1px solid #D97706' }} />
+                  <span>Carga Común (Normal)</span>
+                </div>
+              </div>
+
+              {resCarga.volumenExcedido && (
+                <div style={{ marginTop: '12px', color: '#EF4444', fontSize: '12px', fontWeight: '700', textAlign: 'center' }}>
+                  ⚠️ ¡Capacidad de volumen del transporte superada!
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       )}

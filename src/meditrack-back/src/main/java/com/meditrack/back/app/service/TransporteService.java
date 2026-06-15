@@ -60,6 +60,10 @@ public class TransporteService {
             throw new IllegalArgumentException("La capacidad de volumen debe ser mayor a 0");
         }
 
+        if(t.getCapacidadM3() == null || t.getCapacidadM3() <= 0) {
+            throw new IllegalArgumentException("La capacidad del contenedor (m3) es obligatoria y debe ser mayor a 0");
+        }
+
         return transporteRepository.save(t);
     }
 
@@ -99,6 +103,13 @@ public class TransporteService {
                 throw new IllegalArgumentException("La capacidad de volumen debe ser mayor a 0");
             }
             t.setCapacidadLitros(cambios.getCapacidadLitros());
+        }
+
+        if (cambios.getCapacidadM3() != null) {
+            if (cambios.getCapacidadM3() <= 0) {
+                throw new IllegalArgumentException("La capacidad del contenedor (m3) debe ser mayor a 0");
+            }
+            t.setCapacidadM3(cambios.getCapacidadM3());
         }
 
         return transporteRepository.save(t);

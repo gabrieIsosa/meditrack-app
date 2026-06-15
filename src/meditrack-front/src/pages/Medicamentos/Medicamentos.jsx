@@ -287,16 +287,41 @@ function Medicamentos() {
                                                     <div>
                                                         <div style={{
                                                             fontWeight: '700',
-                                                            color: '#111827'
+                                                            color: '#111827',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px'
                                                         }}>
                                                             {m.nombre}
+                                                            {m.cadenaFrio && (
+                                                                <span style={{
+                                                                    fontSize: '10px',
+                                                                    backgroundColor: '#eff6ff',
+                                                                    color: '#1d4ed8',
+                                                                    padding: '2px 6px',
+                                                                    borderRadius: '9999px',
+                                                                    fontWeight: '800',
+                                                                    border: '1px solid #bfdbfe',
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '2px'
+                                                                }}>
+                                                                    ❄️ Frío
+                                                                </span>
+                                                            )}
                                                         </div>
 
                                                         <div style={{
                                                             fontSize: '13px',
-                                                            color: '#6B7280'
+                                                            color: '#6B7280',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: '2px'
                                                         }}>
-                                                            {m.monodroga}
+                                                            <span>{m.monodroga}</span>
+                                                            <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
+                                                                {m.volumenCm3 ?? 0} cm³ · {m.pesoGramos ?? 0} g
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -399,25 +424,44 @@ function Medicamentos() {
                                                 background: '#F9FAFB'
                                             }}
                                         />
-                                        <div>
-                                            <div style={{ fontWeight: '700', color: '#111827' }}>
-                                                {m.nombre}
-                                            </div>
-                                            <div style={{ fontSize: '13px', color: '#6B7280' }}>
-                                                {m.monodroga}
-                                            </div>
-                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                             <div style={{ fontWeight: '700', color: '#111827', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                 {m.nombre}
+                                                 {m.cadenaFrio && (
+                                                     <span style={{
+                                                         fontSize: '10px',
+                                                         backgroundColor: '#eff6ff',
+                                                         color: '#1d4ed8',
+                                                         padding: '1px 5px',
+                                                         borderRadius: '9999px',
+                                                         fontWeight: '800',
+                                                         border: '1px solid #bfdbfe'
+                                                     }}>
+                                                         ❄️ Frío
+                                                     </span>
+                                                 )}
+                                             </div>
+                                             <div style={{ fontSize: '13px', color: '#6B7280' }}>
+                                                 {m.monodroga}
+                                             </div>
+                                         </div>
                                     </div>
                                     <div className="med-card-details">
-                                        <div className="med-card-detail-item">
-                                            <strong>Laboratorio:</strong> {m.laboratorio}
-                                        </div>
-                                        <div className="med-card-detail-item">
-                                            <strong>Presentación:</strong> {m.presentacion}
-                                        </div>
-                                        <div className="med-card-detail-item">
-                                            <strong>Cantidad:</strong> {m.cantidad} {m.unidadMedida}
-                                        </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Laboratorio:</strong> {m.laboratorio}
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Presentación:</strong> {m.presentacion}
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Cantidad:</strong> {m.cantidad} {m.unidadMedida}
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Volumen:</strong> {m.volumenCm3 ?? 0} cm³
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Peso:</strong> {m.pesoGramos ?? 0} g
+                                         </div>
                                     </div>
                                     <div className="med-card-footer">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

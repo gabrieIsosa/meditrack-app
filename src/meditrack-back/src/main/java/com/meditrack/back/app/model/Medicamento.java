@@ -47,6 +47,12 @@ public class Medicamento {
     @Column(name = "imagen_url")
     private String imagenUrl;
 
+    @Column(name = "volumen_cm3")
+    private Integer volumenCm3 = 0;
+
+    @Column(name = "peso_gramos")
+    private Integer pesoGramos = 0;
+
     public Medicamento(String nombre, String descripcion, String presentacion, int cantidad, String unidadMedida,
             String laboratorio, String monodroga, boolean cadenaFrio, String imagenUrl) {
         this.descripcion = descripcion;
@@ -158,6 +164,22 @@ public class Medicamento {
 
     public void setImagenUrl(String imagenUrl) {
         this.imagenUrl = imagenUrl;
+    }
+
+    public Integer getVolumenCm3() {
+        return volumenCm3;
+    }
+
+    public void setVolumenCm3(Integer volumenCm3) {
+        this.volumenCm3 = volumenCm3;
+    }
+
+    public Integer getPesoGramos() {
+        return pesoGramos;
+    }
+
+    public void setPesoGramos(Integer pesoGramos) {
+        this.pesoGramos = pesoGramos;
     }
 
 }

@@ -72,6 +72,8 @@ public class MedicamentoController {
             @RequestParam(required = false) String laboratorio,
             @RequestParam(required = false) String monodroga,
             @RequestParam(defaultValue = "false") boolean cadenaFrio,
+            @RequestParam(defaultValue = "0") int volumenCm3,
+            @RequestParam(defaultValue = "0") int pesoGramos,
             @RequestParam(required = false) MultipartFile imagen,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -79,7 +81,7 @@ public class MedicamentoController {
             String imageUrl = cloudinaryService.subirImagen(imagen);
             Map<String, String> body = buildMedicamentoBody(
                     nombre, descripcion, presentacion, cantidad, unidadMedida,
-                    laboratorio, monodroga, cadenaFrio, imageUrl);
+                    laboratorio, monodroga, cadenaFrio, volumenCm3, pesoGramos, imageUrl);
 
             Medicamento nuevo = medicamentoService.crear(body, sesion.getNombre());
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
@@ -101,6 +103,8 @@ public class MedicamentoController {
             @RequestParam(required = false) String laboratorio,
             @RequestParam(required = false) String monodroga,
             @RequestParam(defaultValue = "false") boolean cadenaFrio,
+            @RequestParam(defaultValue = "0") int volumenCm3,
+            @RequestParam(defaultValue = "0") int pesoGramos,
             @RequestParam(required = false) MultipartFile imagen,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -108,7 +112,7 @@ public class MedicamentoController {
             String imageUrl = cloudinaryService.subirImagen(imagen);
             Map<String, String> body = buildMedicamentoBody(
                     nombre, descripcion, presentacion, cantidad, unidadMedida,
-                    laboratorio, monodroga, cadenaFrio, imageUrl);
+                    laboratorio, monodroga, cadenaFrio, volumenCm3, pesoGramos, imageUrl);
 
             Medicamento actualizado = medicamentoService.actualizar(id, body, sesion.getNombre());
             return ResponseEntity.ok(actualizado);
@@ -138,7 +142,7 @@ public class MedicamentoController {
     private Map<String, String> buildMedicamentoBody(
             String nombre, String descripcion, String presentacion, int cantidad,
             String unidadMedida, String laboratorio, String monodroga,
-            boolean cadenaFrio, String imageUrl) {
+            boolean cadenaFrio, int volumenCm3, int pesoGramos, String imageUrl) {
 
         Map<String, String> body = new HashMap<>();
         body.put("nombre", nombre);
@@ -149,6 +153,8 @@ public class MedicamentoController {
         body.put("laboratorio", laboratorio);
         body.put("monodroga", monodroga);
         body.put("cadenaFrio", String.valueOf(cadenaFrio));
+        body.put("volumenCm3", String.valueOf(volumenCm3));
+        body.put("pesoGramos", String.valueOf(pesoGramos));
 
         if (imageUrl != null) {
             body.put("imagenUrl", imageUrl);
