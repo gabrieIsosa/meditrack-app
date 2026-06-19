@@ -22,9 +22,24 @@ public class JwtUtil {
     private final SecretKey key;
     private final long expiration;
 
-    public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration:28800000}") long expiration) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expiration = expiration;
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration:28800000}") String expirationVal) {
+        
+        String secretKey = (secret == null || secret.trim().isEmpty())
+                ? "fallback-secret-key-for-testing-only-32chars"
+                : secret;
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
+        long exp = 28800000L;
+        if (expirationVal != null && !expirationVal.trim().isEmpty()) {
+            try {
+                exp = Long.parseLong(expirationVal.trim());
+            } catch (NumberFormatException e) {
+                // Fallback to default
+            }
+        }
+        this.expiration = exp;
     }
 
     public String generarToken(String id, String email, String nombre, Role role) {
