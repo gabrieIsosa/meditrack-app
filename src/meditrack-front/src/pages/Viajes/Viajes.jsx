@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getRutas, getClientes, getEnvioById } from '../../services/api';
+import { getRutas, getClientes, getEnvioById, BASE_URL } from '../../services/api';
 import MapaRuta from '../../components/MapaRuta';
 import OfflineBanner from '../../components/OfflineBanner';
 import { iconos, DefaultIcon } from '../../util/Util';
@@ -257,7 +257,7 @@ function ModalResumenViaje({ ruta, onClose, clientes }) {
                                     <div key={idx} className="viajes-modal-carga-item">
                                         <div className="viajes-modal-carga-img-wrapper">
                                             {item.imagenUrl ? (
-                                                <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `http://localhost:8080${item.imagenUrl}`} alt={item.nombre} className="viajes-modal-carga-img" />
+                                                <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `${BASE_URL}${item.imagenUrl}`} alt={item.nombre} className="viajes-modal-carga-img" />
                                             ) : (
                                                 <span className="viajes-modal-carga-fallback">MED</span>
                                             )}
@@ -482,7 +482,7 @@ function Viajes() {
                 <div className="viajes-header animate-fade-in">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <button 
-                            onClick={() => navigate('/inicio-repartidor')} 
+                            onClick={() => navigate('/menu')} 
                             className="viajes-header-back-btn btn-action-hover"
                             style={{ margin: 0 }}
                         >

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getMedicamentoById, updateMedicamento } from '../../services/api';
+import { getMedicamentoById, updateMedicamento, BASE_URL } from '../../services/api';
 
 const PRESENTACIONES = ['Comprimidos', 'Cápsulas', 'Ampollas', 'Solución oral', 'Crema', 'Pomada', 'Parche', 'Supositorio', 'Colirio'];
 
@@ -104,7 +104,7 @@ function EditarMedicamento() {
                                 (form.imagenUrl
                                     ? (form.imagenUrl.startsWith('http')
                                         ? form.imagenUrl
-                                        : `http://localhost:8080${form.imagenUrl}`)
+                                        : `${BASE_URL}${form.imagenUrl}`)
                                     : 'https://placehold.co/200x200?text=%F0%9F%92%8A')
                             }
                             alt="Medicamento"
