@@ -62,7 +62,7 @@ const planificarParadas = (envios) => {
     ruta.push({ tipo: 'RETIRO', envio: e, lat: null, lon: null, direccion: e.origen });
     ruta.push({ tipo: 'ENTREGA', envio: e, lat: null, lon: null, direccion: e.destino });
   });
-
+//
   return ruta;
 };
 
@@ -98,6 +98,7 @@ function NuevaRuta() {
   const [busquedaEnvio, setBusquedaEnvio] = useState('');
   const [loadingEnvios, setLoadingEnvios] = useState(false);
 
+  const [polyline, setPolyline] = useState("");
   const [paradas, setParadas] = useState([]);
 
   useEffect(() => {
@@ -198,6 +199,7 @@ function NuevaRuta() {
         fecha,
         repartidorId,
         transporteId,
+        polyline,
         envios: seleccionados.map(e => ({
           envioId: e.id,
           retiroOrden: retiroOrdenPorEnvio[e.id] ?? 999,
@@ -463,7 +465,10 @@ function NuevaRuta() {
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <MapaRuta paradas={paradas} />
+            <MapaRuta 
+              paradas={paradas}
+              onPolylineCalculated={setPolyline}
+            />
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

@@ -265,7 +265,8 @@ function DetalleRuta() {
               });
             }
             return stops;
-          }).sort((a, b) => a.orden - b.orden)} />
+          }).sort((a, b) => a.orden - b.orden)}
+          polyline={ruta?.polyline} />
         )}
       </div>
 

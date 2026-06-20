@@ -630,6 +630,7 @@ export async function createRuta(data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
   });
+  
   await handleResponse(res);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
