@@ -41,7 +41,7 @@ function EditarMedicamento() {
                 formData.append("imagen", form.imagen);
             
             await updateMedicamento(id, formData);
-            navigate('/medicamentos');
+            navigate('/medicamentos', { state: { editSuccess: true } });
         } catch (err) {
             setError(err.message);
         }

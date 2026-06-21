@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEnvios, getRutas, getUsuarios, createRuta, getTransportes } from '../../services/api';
 import MapaRuta from '../../components/MapaRuta';
+import './NuevaRuta.css';
 
 
 const haversineKm = (lat1, lon1, lat2, lon2) => {
@@ -235,15 +236,8 @@ function NuevaRuta() {
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Nueva ruta</h1>
       </div>
 
-      <div className="card" style={{ marginBottom: '24px', padding: '32px 60px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          position: 'relative',
-          alignItems: 'flex-start',
-          maxWidth: '600px',
-          margin: '0 auto',
-        }}>
+      <div className="card nr-stepper-card">
+        <div className="nr-stepper-container">
           {[
             { n: 1, label: 'Fecha y repartidor' },
             { n: 2, label: 'Seleccionar envíos' },
@@ -257,54 +251,21 @@ function NuevaRuta() {
             const lineaColor = completado ? '#10B981' : '#E5E7EB';
 
             return (
-              <div key={n} style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                flex: 1,
-                position: 'relative',
-                zIndex: 3,
-              }}>
+              <div key={n} className="nr-step-item">
                 {n < 3 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '17px',
-                    left: '50%',
-                    width: '100%',
-                    height: '3px',
-                    backgroundColor: lineaColor,
-                    zIndex: 1,
-                    transition: 'background-color 0.3s',
-                  }} />
+                  <div className="nr-step-line" style={{ backgroundColor: lineaColor }} />
                 )}
                 <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
                   backgroundColor: circuloColor,
                   border: `2px solid ${bordColor}`,
                   color: completado || actual ? 'white' : '#9CA3AF',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  fontWeight: 'bold',
-                  fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-                  marginBottom: '12px',
-                  transition: 'all 0.3s',
-                  zIndex: 2,
-                  position: 'relative',
-                }}>
+                }} className="nr-step-circle">
                   {completado ? '✓' : n}
                 </div>
                 <span style={{
-                  fontSize: '10px',
-                  textAlign: 'center',
                   fontWeight: actual ? '800' : '500',
                   color: textoColor,
-                  textTransform: 'uppercase',
-                  maxWidth: '90px',
-                  fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-                }}>
+                }} className="nr-step-label">
                   {label}
                 </span>
               </div>
@@ -381,13 +342,12 @@ function NuevaRuta() {
 
       {paso === 2 && (
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>
+          <div className="nr-step2-header">
+            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827', margin: 0 }}>
               Seleccionar envíos ({seleccionados.length} seleccionados)
             </h2>
             <input
-              className="search-input"
-              style={{ margin: 0, width: '280px' }}
+              className="search-input nr-search-input"
               placeholder="Buscar por ID, destinatario, dirección..."
               value={busquedaEnvio}
               onChange={e => setBusquedaEnvio(e.target.value)}
@@ -397,7 +357,7 @@ function NuevaRuta() {
           {loadingEnvios ? (
             <p style={{ padding: '20px', color: '#6b7280' }}>Cargando envíos disponibles...</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="nr-envios-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   <th style={{ width: '40px' }}></th>
@@ -426,10 +386,10 @@ function NuevaRuta() {
                         <td style={{ textAlign: 'center' }}>
                           <input type="checkbox" checked={marcado} onChange={() => toggleSeleccion(e)} onClick={ev => ev.stopPropagation()} />
                         </td>
-                        <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
-                        <td>{e.destinatario}</td>
-                        <td style={{ fontSize: '13px', color: '#6b7280' }}>{e.destino}</td>
-                        <td>
+                        <td data-label="Tracking ID" style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
+                        <td data-label="Destinatario">{e.destinatario}</td>
+                        <td data-label="Dirección" style={{ fontSize: '13px', color: '#6b7280' }}>{e.destino}</td>
+                        <td data-label="Prioridad">
                           {e.prioridad && (
                             <span className="status-tag" style={{ backgroundColor: '#FEF3C720', color: '#D97706' }}>
                               {e.prioridad}
@@ -444,7 +404,7 @@ function NuevaRuta() {
             </table>
           )}
 
-          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
+          <div className="nr-actions-row">
             <button className="btn btn-secondary" onClick={() => setPaso(1)}>ANTERIOR</button>
             <button className="btn-new-shipment" onClick={avanzarPaso2}>
               SUGERIR ORDEN Y CONTINUAR
@@ -464,14 +424,14 @@ function NuevaRuta() {
             </p>
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
+          <div className="nr-map-container">
             <MapaRuta 
               paradas={paradas}
               onPolylineCalculated={setPolyline}
             />
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="nr-paradas-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 <th style={{ width: '60px', textAlign: 'center' }}>Parada</th>
@@ -501,9 +461,9 @@ function NuevaRuta() {
                       {p.tipo}
                     </span>
                   </td>
-                  <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{p.envio.id}</td>
-                  <td>{p.tipo === 'RETIRO' ? p.envio.remitente : p.envio.destinatario}</td>
-                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{p.direccion}</td>
+                  <td data-label="Tracking ID" style={{ fontWeight: 'bold', color: '#2563EB' }}>{p.envio.id}</td>
+                  <td data-label="Contacto">{p.tipo === 'RETIRO' ? p.envio.remitente : p.envio.destinatario}</td>
+                  <td data-label="Dirección" style={{ fontSize: '13px', color: '#6b7280' }}>{p.direccion}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                       <button
@@ -525,18 +485,18 @@ function NuevaRuta() {
             </tbody>
           </table>
 
-          <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px', fontSize: '13px', color: '#6b7280' }}>
-
-            <strong style={{ color: '#374151' }}>Resumen:</strong>{" "}
-            Ruta para el <strong style={{ color: '#111827' }}>{fecha}</strong> |{" "}
-            Repartidor: <strong style={{ color: '#111827' }}>{repartidores.find(r => r.id === repartidorId)?.nombre}</strong> |{" "}
-            Transporte: <strong style={{ color: '#111827' }}>{getNombreTransporte(transporteId)}</strong> |{" "}
-            {seleccionados.length} {seleccionados.length === 1 ? 'envío' : 'envíos' } · 
-            {paradas.length} {paradas.length === 1 ? 'parada' : 'paradas' }
-
+          <div className="nr-summary-box">
+            <strong style={{ color: '#374151', display: 'block', marginBottom: '8px' }}>Resumen de la ruta:</strong>
+            <div className="nr-summary-grid">
+              <span className="nr-summary-item">Fecha: <strong>{fecha}</strong></span>
+              <span className="nr-summary-item">Repartidor: <strong>{repartidores.find(r => r.id === repartidorId)?.nombre || 'No asignado'}</strong></span>
+              <span className="nr-summary-item">Transporte: <strong>{getNombreTransporte(transporteId)}</strong></span>
+              <span className="nr-summary-item">Envíos: <strong>{seleccionados.length}</strong></span>
+              <span className="nr-summary-item">Paradas: <strong>{paradas.length}</strong></span>
+            </div>
           </div>
 
-          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
+          <div className="nr-actions-row">
             <button className="btn btn-secondary" onClick={() => setPaso(2)}>ANTERIOR</button>
             <button className="btn-new-shipment" onClick={confirmarCreacion} disabled={guardando}>
               {guardando ? 'CREANDO...' : 'CREAR RUTA'}

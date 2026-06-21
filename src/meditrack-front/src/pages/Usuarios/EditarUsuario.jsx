@@ -40,7 +40,7 @@ function EditarUsuario() {
 
         try {
             await updateUsuario(id, form);
-            navigate('/usuarios');
+            navigate('/usuarios', { state: { editSuccess: true } });
         } catch (err) {
             setError(err.message || 'Error al actualizar usuario.');
         }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getRutas, getUsuarios, getTransportes } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Copy, Check } from 'lucide-react';
@@ -23,9 +23,22 @@ function Rutas() {
   const [loading, setLoading] = useState(true);
   const [transportes, setTransportes] = useState([]);
   const [copiadoId, setCopiadoId] = useState(null);
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const hasProcessedSuccess = useRef(false);
+
+  useEffect(() => {
+    if (location.state?.success && !hasProcessedSuccess.current) {
+      hasProcessedSuccess.current = true;
+      setShowSnackbar(true);
+      const timer = setTimeout(() => setShowSnackbar(false), 3000);
+      window.history.replaceState({}, document.title);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   const handleCopiarId = (id) => {
     navigator.clipboard.writeText(id);
@@ -67,6 +80,11 @@ function Rutas() {
 
   return (
     <div className="container rutas-container">
+      {showSnackbar && (
+        <div className="snackbar-msg">
+          ¡Ruta creada correctamente!
+        </div>
+      )}
       <div className="page-header-row">
         <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Gestión de rutas</h1>

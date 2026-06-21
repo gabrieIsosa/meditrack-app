@@ -1,0 +1,344 @@
+/* NuevaRuta.css */
+
+.nr-stepper-card {
+  margin-bottom: 24px;
+  padding: 32px 60px;
+}
+
+.nr-stepper-container {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  align-items: flex-start;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.nr-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 3;
+}
+
+.nr-step-line {
+  position: absolute;
+  top: 17px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  z-index: 1;
+  transition: background-color 0.3s;
+}
+
+.nr-step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 12px;
+  transition: all 0.3s;
+  z-index: 2;
+  position: relative;
+  border-style: solid;
+}
+
+.nr-step-label {
+  font-size: 10px;
+  text-align: center;
+  text-transform: uppercase;
+  max-width: 90px;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}
+
+.nr-step2-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.nr-search-input {
+  margin: 0;
+  width: 280px;
+}
+
+.nr-map-container {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.nr-summary-box {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #F9FAFB;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.nr-summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.nr-summary-item {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+}
+
+.nr-actions-row {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 768px) {
+  .nr-stepper-card {
+    padding: 20px 16px;
+  }
+
+  .nr-step-label {
+    font-size: 8px;
+    max-width: 70px;
+  }
+
+  .nr-step-circle {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  .nr-step-line {
+    top: 14px;
+  }
+
+  .nr-step2-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nr-search-input {
+    width: 100% !important;
+  }
+
+  .nr-actions-row {
+    flex-direction: column;
+    margin-top: 16px;
+  }
+
+  .nr-actions-row button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .nr-summary-grid {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Tabla de envíos (Paso 2) convertida a tarjetas */
+  .nr-envios-table {
+    display: block;
+  }
+
+  .nr-envios-table thead {
+    display: none;
+  }
+
+  .nr-envios-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .nr-envios-table tr {
+    display: flex;
+    flex-direction: column;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 16px;
+    background-color: white;
+    gap: 8px;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+  }
+
+  .nr-envios-table tr:hover {
+    border-color: #2563EB;
+  }
+
+  .nr-envios-table td {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border-bottom: none;
+  }
+
+  /* Checkbox arriba a la derecha */
+  .nr-envios-table td:nth-child(1) {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+  }
+
+  .nr-envios-table td:nth-child(1) input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  /* Tracking ID destacado */
+  .nr-envios-table td:nth-child(2) {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .nr-envios-table td:not(:nth-child(1)):not(:nth-child(2))::before {
+    content: attr(data-label);
+    font-weight: 800;
+    color: #6B7280;
+    margin-right: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 95px;
+    flex-shrink: 0;
+  }
+
+  /* Tabla de paradas (Paso 3) convertida a tarjetas */
+  .nr-paradas-table {
+    display: block;
+  }
+
+  .nr-paradas-table thead {
+    display: none;
+  }
+
+  .nr-paradas-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .nr-paradas-table tr {
+    display: flex;
+    flex-direction: column;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 16px;
+    background-color: white;
+    gap: 8px;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  .nr-paradas-table td {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border-bottom: none;
+    text-align: left !important;
+  }
+
+  /* Parada */
+  .nr-paradas-table td:nth-child(1) {
+    font-size: 18px;
+    font-weight: 900;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+
+  .nr-paradas-table td:nth-child(1)::before {
+    content: "Parada ";
+    font-size: 14px;
+    font-weight: 700;
+    color: #6B7280;
+    margin-right: 4px;
+  }
+
+  /* Tipo */
+  .nr-paradas-table td:nth-child(2) {
+    margin-bottom: 4px;
+  }
+
+  /* Tracking */
+  .nr-paradas-table td:nth-child(3) {
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .nr-paradas-table td:nth-child(3)::before {
+    content: "Tracking:";
+    font-weight: 800;
+    color: #6B7280;
+    margin-right: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  /* Contacto */
+  .nr-paradas-table td:nth-child(4)::before {
+    content: "Contacto:";
+    font-weight: 800;
+    color: #6B7280;
+    margin-right: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  /* Dirección */
+  .nr-paradas-table td:nth-child(5)::before {
+    content: "Dirección:";
+    font-weight: 800;
+    color: #6B7280;
+    margin-right: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  /* Botones de mover */
+  .nr-paradas-table td:nth-child(6) {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+
+  .nr-paradas-table td:nth-child(6) > div {
+    gap: 8px !important;
+  }
+
+  .nr-paradas-table td:nth-child(6) button {
+    font-size: 20px !important;
+    padding: 8px 12px !important;
+    background-color: #F3F4F6 !important;
+    border-radius: 8px !important;
+    border: 1px solid #E5E7EB !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+}

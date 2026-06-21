@@ -43,7 +43,7 @@ function NuevoCliente() {
             console.log(form);
             await createCliente(form);
 
-            navigate('/clientes');
+            navigate('/clientes', { state: { success: true } });
         } catch (err) {
             setError(err.message || 'Error al crear cliente.');
         }

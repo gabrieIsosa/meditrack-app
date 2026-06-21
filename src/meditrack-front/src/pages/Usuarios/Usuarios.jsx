@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Search, Plus } from 'lucide-react';
 import { getUsuarios, toggleEstadoUsuario } from '../../services/api';
@@ -24,13 +24,28 @@ function Usuarios() {
   const [historialAbierto, setHistorialAbierto] = useState(false);
   const [usuarioParaHistorial, setUsuarioParaHistorial] = useState(null);
   const [activeIndex, setActiveIndex] = useState(null);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const hasProcessedSuccess = useRef(false);
 
   useEffect(() => {
     getUsuarios().then(setUsuarios).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if ((location.state?.success || location.state?.editSuccess) && !hasProcessedSuccess.current) {
+      hasProcessedSuccess.current = true;
+      setIsEdit(!!location.state?.editSuccess);
+      setShowSnackbar(true);
+      const timer = setTimeout(() => setShowSnackbar(false), 3000);
+      window.history.replaceState({}, document.title);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   const handleToggleEstado = async (id) => {
     try {
@@ -91,6 +106,11 @@ function Usuarios() {
 
   return (
     <div className="container">
+      {showSnackbar && (
+        <div className={`snackbar-msg ${isEdit ? 'edit' : ''}`}>
+          {isEdit ? '¡Usuario editado correctamente!' : '¡Usuario creado correctamente!'}
+        </div>
+      )}
       <style>{`
         @media (max-width: 768px) {
           .hidden-mobile { display: none !important; }

@@ -49,7 +49,7 @@ function NuevoMedicamento() {
                 formData.append("imagen", imagen);
             
             await createMedicamento(formData);
-            navigate('/medicamentos');
+            navigate('/medicamentos', { state: { success: true } });
         } catch (err) {
             setError(err.message || 'Error al crear medicamento.');
         }

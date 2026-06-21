@@ -449,24 +449,7 @@ function DetalleEnvio() {
     <div className="container">
       <style>
         {`
-          .snackbar {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #2563EB;
-            color: white;
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 600;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            z-index: 9999;
-            animation: fadeInDown 0.4s ease-out;
-          }
-          @keyframes fadeInDown {
-            from { top: -50px; opacity: 0; }
-            to { top: 20px; opacity: 1; }
-          }
+
           .info-row-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -538,7 +521,7 @@ function DetalleEnvio() {
         `}
       </style>
 
-      {showSnackbar && <div className="snackbar">¡Envío editado correctamente!</div>}
+      {showSnackbar && <div className="snackbar-msg edit">¡Envío editado correctamente!</div>}
 
       <div className="page-header-row" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
         <button className="btn btn-secondary" onClick={() => navigate(-1)}>VOLVER</button>
