@@ -31,8 +31,7 @@ import DashboardKPI from './pages/Reportes/DashboardKPI';
 import Mails from './pages/Mails/Mails';
 import ReclamoCambioDatos from './pages/ReclamoCambioDato/ReclamoCambioDatos';
 import Repartidores from './pages/Usuarios/Repartidores';
-
-
+import AlertasFatiga from './pages/Fatiga/AlertasFatiga';
 
 function App() {
   return (
@@ -72,6 +71,7 @@ function App() {
               <Route path="/transportes" element={<ProtectedRoute roles={['ADMINISTRADOR', 'SUPERVISOR', 'REPARTIDOR']}><Transportes /></ProtectedRoute>} />
               <Route path="/mails" element={ <ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Mails /></ProtectedRoute> }/>
               <Route path="/repartidor" element={ <ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><Repartidores /></ProtectedRoute> }/>
+              <Route path="/alertas-fatiga" element={ <ProtectedRoute roles={['SUPERVISOR', 'ADMINISTRADOR']}><AlertasFatiga /></ProtectedRoute> }/>
             </Route>
             <Route path="*" element={<Navigate to="/menu" replace />} />
           </Routes>

@@ -34,5 +34,4 @@ public enum EstadoEnvio {
     public boolean permiteCancelacion(){
         return this != ENTREGADO && this != CANCELADO;
     }
-
 }

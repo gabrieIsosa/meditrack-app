@@ -1,5 +1,6 @@
 package com.meditrack.back.app.service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +42,27 @@ public class NotificacionService {
                 "leido", false
             )
         );
+
+        return notificacion;
+    }
+
+    @Transactional
+    public Notificacion crearNotificacion(Usuario usuarioDestino, String titulo, String mensaje, Map<String, Object> extraWsData) {
+        if (usuarioDestino == null) {
+            throw new IllegalArgumentException("El usuario destino de la notificación no puede ser nulo");
+        }
+        Notificacion notificacion = new Notificacion(usuarioDestino, titulo, mensaje);
+        notificacionRepository.save(notificacion);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", notificacion.getId());
+        payload.put("titulo", notificacion.getTitulo());
+        payload.put("mensaje", notificacion.getMensaje());
+        payload.put("fechaCreacion", notificacion.getFechaCreacion());
+        payload.put("leido", false);
+        if (extraWsData != null) payload.putAll(extraWsData);
+
+        messagingTemplate.convertAndSend("/topic/notificaciones/" + usuarioDestino.getId(), payload);
 
         return notificacion;
     }

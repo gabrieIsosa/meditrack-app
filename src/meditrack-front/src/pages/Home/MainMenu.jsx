@@ -13,7 +13,8 @@ import {
   History,
   CircleAlert,
   LayoutDashboard,
-  Mail
+  Mail,
+  AlertTriangle
 } from 'lucide-react';
 
 const MainMenu = () => {
@@ -58,6 +59,7 @@ const MainMenu = () => {
       rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR', 'REPARTIDOR'],
       items: [
         { label: "Repartidor", icon: <Users size={32} />, path: "/repartidor", color: "#ec7f35", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'] },
+        { label: "Alertas fatiga", icon: <AlertTriangle size={32} />, path: "/alertas-fatiga", color: "#d97706", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'] },
         { label: "Asignaciones", icon: <NotepadText size={32} />, path: "/viajes", color: "#ec7f35", rolesPermitidos: ['REPARTIDOR'] },
         { label: "Transportes", icon: <Truck size={32} />, path: "/transportes", color: "#ec7f35", rolesPermitidos: ['ADMINISTRADOR', 'SUPERVISOR'] },
       ]
