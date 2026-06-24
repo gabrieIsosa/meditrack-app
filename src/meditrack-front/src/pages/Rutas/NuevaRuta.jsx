@@ -102,6 +102,16 @@ function NuevaRuta() {
   const [polyline, setPolyline] = useState("");
   const [paradas, setParadas] = useState([]);
 
+  const [hoveredBox, setHoveredBox] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    setTooltipPos({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
   const resCarga = useMemo(() => {
     const tSel = transportes.find(t => String(t.id) === String(transporteId)) || {};
     const capacidadKg = tSel.capacidadKg ?? 0;
@@ -116,33 +126,75 @@ function NuevaRuta() {
 
     // Pack cold chain items per shipment into coolers (blue boxes)
     seleccionados.forEach(envio => {
-      let volumenFrioEnvio = 0;
-
       if (envio.detalles) {
         envio.detalles.forEach(d => {
           const cantidad = d.cantidad || 0;
           const med = d.medicamento || {};
           totalPesoGramos += (med.pesoGramos || 0) * cantidad;
-          if (med.cadenaFrio) {
-            volumenFrioEnvio += (med.volumenCm3 || 0) * cantidad;
-          } else {
+          if (!med.cadenaFrio) {
             totalVolumenNormal += (med.volumenCm3 || 0) * cantidad;
           }
         });
       }
 
-      if (volumenFrioEnvio > 0) {
-        totalVolumenFrio += volumenFrioEnvio;
-        let volRestante = volumenFrioEnvio;
+      const coldChainDetails = envio.detalles ? envio.detalles.filter(d => d.medicamento?.cadenaFrio) : [];
+      const groups = []; // each group: { details: [], tempMin: Number, tempMax: Number, volumenTotal: Number }
+
+      coldChainDetails.forEach(d => {
+        const med = d.medicamento || {};
+        const medMin = med.temperaturaMinima !== null && med.temperaturaMinima !== undefined ? parseFloat(med.temperaturaMinima) : -Infinity;
+        const medMax = med.temperaturaMaxima !== null && med.temperaturaMaxima !== undefined ? parseFloat(med.temperaturaMaxima) : Infinity;
+        const cantidad = d.cantidad || 0;
+        const vol = (med.volumenCm3 || 0) * cantidad;
+
+        // Try to place it in an existing group
+        let placed = false;
+        for (let group of groups) {
+          const newMin = Math.max(group.tempMin, medMin);
+          const newMax = Math.min(group.tempMax, medMax);
+          if (newMin <= newMax) {
+            group.details.push(d);
+            group.tempMin = newMin;
+            group.tempMax = newMax;
+            group.volumenTotal += vol;
+            placed = true;
+            break;
+          }
+        }
+
+        if (!placed) {
+          groups.push({
+            details: [d],
+            tempMin: medMin,
+            tempMax: medMax,
+            volumenTotal: vol
+          });
+        }
+      });
+
+      groups.forEach((group, idx) => {
+        totalVolumenFrio += group.volumenTotal;
+        let volRestante = group.volumenTotal;
+        let cCount = 1;
         while (volRestante > 0) {
           const capCaja = Math.min(volRestante, CAPACIDAD_CAJA);
           listaCajas.push({
             tipo: 'frio',
-            fillPct: capCaja / CAPACIDAD_CAJA
+            fillPct: capCaja / CAPACIDAD_CAJA,
+            envioId: envio.id,
+            remitente: envio.remitente,
+            destinatario: envio.destinatario || 'Desconocido',
+            tempMin: group.tempMin === -Infinity ? null : group.tempMin,
+            tempMax: group.tempMax === Infinity ? null : group.tempMax,
+            medicamentos: group.details.map(d => `${d.medicamento.nombre} (${d.cantidad} u.)`),
+            groupNum: idx + 1,
+            cajaNum: cCount,
+            coolerIndex: listaCajas.length + 1
           });
           volRestante -= capCaja;
+          cCount++;
         }
-      }
+      });
     });
 
     const cajasAzules = listaCajas.length;
@@ -602,8 +654,15 @@ function NuevaRuta() {
                   const colorFill = boxInfo.tipo === 'frio' ? '#3B82F6' : '#F59E0B';
                   const colorStroke = boxInfo.tipo === 'frio' ? '#1D4ED8' : '#D97706';
 
+                  const isFrio = boxInfo.tipo === 'frio';
                   slots.push(
-                    <g key={`box-${i}`}>
+                    <g 
+                      key={`box-${i}`}
+                      onMouseEnter={isFrio ? (e) => { setHoveredBox(boxInfo); handleMouseMove(e); } : undefined}
+                      onMouseMove={isFrio ? handleMouseMove : undefined}
+                      onMouseLeave={isFrio ? () => setHoveredBox(null) : undefined}
+                      style={isFrio ? { cursor: 'pointer' } : undefined}
+                    >
                       {/* Container box with a thin outline */}
                       <rect 
                         x={bx} 
@@ -645,8 +704,15 @@ function NuevaRuta() {
                     const fillPct = boxInfo.fillPct;
                     const colorFill = boxInfo.tipo === 'frio' ? '#3B82F6' : '#F59E0B';
                     
+                    const isFrio = boxInfo.tipo === 'frio';
                     overflowBoxes.push(
-                      <g key={`overflow-${i}`}>
+                      <g 
+                        key={`overflow-${i}`}
+                        onMouseEnter={isFrio ? (e) => { setHoveredBox(boxInfo); handleMouseMove(e); } : undefined}
+                        onMouseMove={isFrio ? handleMouseMove : undefined}
+                        onMouseLeave={isFrio ? () => setHoveredBox(null) : undefined}
+                        style={isFrio ? { cursor: 'pointer' } : undefined}
+                      >
                         {/* Container box */}
                         <rect 
                           x={bx} 
@@ -841,6 +907,62 @@ function NuevaRuta() {
             <button className="btn-new-shipment" onClick={confirmarCreacion} disabled={guardando}>
               {guardando ? 'CREANDO...' : 'CREAR RUTA'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {hoveredBox && hoveredBox.tipo === 'frio' && (
+        <div style={{
+          position: 'fixed',
+          top: tooltipPos.y + 15,
+          left: tooltipPos.x + 15,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(59, 130, 246, 0.2)',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          maxWidth: '240px',
+          fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            <div style={{ width: '8px', height: '8px', backgroundColor: '#3B82F6', borderRadius: '50%' }}></div>
+            <span style={{ fontWeight: '750', fontSize: '13px', color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Cooler {hoveredBox.coolerIndex}
+            </span>
+          </div>
+          
+          <div style={{ fontSize: '11px', color: '#4B5563', marginBottom: '8px', borderTop: '1px solid #F3F4F6', paddingTop: '6px' }}>
+            <strong style={{ display: 'block', marginBottom: '4px', color: '#374151' }}>Medicamentos:</strong>
+            <ul style={{ margin: 0, paddingLeft: '14px', listStyleType: 'disc', color: '#4B5563' }}>
+              {hoveredBox.medicamentos.map((m, idx) => (
+                <li key={idx} style={{ marginBottom: '2px' }}>{m}</li>
+              ))}
+            </ul>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: '#EFF6FF',
+            border: '1px solid #BFDBFE',
+            borderRadius: '8px',
+            padding: '8px 10px',
+            marginTop: '8px'
+          }}>
+            <span style={{ fontSize: '11px', fontWeight: '600', color: '#1E40AF' }}>Temp:</span>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#1D4ED8' }}>
+              {hoveredBox.tempMin !== null && hoveredBox.tempMax !== null
+                ? `${hoveredBox.tempMin}°C a ${hoveredBox.tempMax}°C`
+                : hoveredBox.tempMin !== null
+                  ? `≥ ${hoveredBox.tempMin}°C`
+                  : hoveredBox.tempMax !== null
+                    ? `≤ ${hoveredBox.tempMax}°C`
+                    : 'Sin rango'}
+            </span>
           </div>
         </div>
       )}

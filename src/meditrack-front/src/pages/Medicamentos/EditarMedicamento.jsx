@@ -30,11 +30,35 @@ function EditarMedicamento() {
     };
 
     const handleGuardar = async () => {
+        if (!form.nombre?.trim() || !form.monodroga?.trim()) {
+            setError('Nombre y monodroga son obligatorios.');
+            return;
+        }
+
+        if (form.cadenaFrio) {
+            const min = parseFloat(form.temperaturaMinima);
+            const max = parseFloat(form.temperaturaMaxima);
+            if (isNaN(min) || isNaN(max)) {
+                setError('Las temperaturas mínima y máxima son obligatorias para cadena de frío.');
+                return;
+            }
+            if (min > max) {
+                setError('La temperatura mínima no puede ser mayor que la temperatura máxima.');
+                return;
+            }
+        }
+
         try {
             const formData = new FormData();
+            const cleanedForm = { ...form };
+            if (!cleanedForm.cadenaFrio) {
+                cleanedForm.temperaturaMinima = '';
+                cleanedForm.temperaturaMaxima = '';
+            }
 
-            Object.keys(form).forEach(key => {
-                formData.append(key, form[key]);
+            Object.keys(cleanedForm).forEach(key => {
+                if (key !== 'imagen' && cleanedForm[key] != null) 
+                    formData.append(key, cleanedForm[key]);
             });
 
             if (form.imagen) 
@@ -43,7 +67,7 @@ function EditarMedicamento() {
             await updateMedicamento(id, formData);
             navigate('/medicamentos', { state: { editSuccess: true } });
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Error al actualizar el medicamento.');
         }
     };
 
@@ -220,6 +244,34 @@ function EditarMedicamento() {
                         </label>
                         <span style={{ fontWeight: '600', color: '#4B5563', fontSize: '14px' }}>Requiere Cadena de Frío</span>
                     </div>
+
+                    {form.cadenaFrio && (
+                        <>
+                            <div className="form-group">
+                                <label>Temperatura Mínima (°C) *</label>
+                                <input
+                                    type="number"
+                                    name="temperaturaMinima"
+                                    value={form.temperaturaMinima ?? ''}
+                                    onChange={handleChange}
+                                    step="0.1"
+                                    placeholder="Ej: 2.0"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Temperatura Máxima (°C) *</label>
+                                <input
+                                    type="number"
+                                    name="temperaturaMaxima"
+                                    value={form.temperaturaMaxima ?? ''}
+                                    onChange={handleChange}
+                                    step="0.1"
+                                    placeholder="Ej: 8.0"
+                                />
+                            </div>
+                        </>
+                    )}
+
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
