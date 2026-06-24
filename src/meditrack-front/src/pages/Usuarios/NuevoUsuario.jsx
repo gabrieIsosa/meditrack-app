@@ -39,7 +39,7 @@ function NuevoUsuario() {
 
         try {
             await createUsuario(form);
-            navigate('/usuarios');
+            navigate('/usuarios', { state: { success: true } });
         } catch (err) {
             setError(err.message || 'Error de conexión con el servidor.');
         }

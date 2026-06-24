@@ -179,6 +179,37 @@ public class UsuarioService {
         return passwordEncoder.matches(rawPassword, hashedPassword);
     }
 
+    public Usuario bloquearUsuario(String id, Usuario autorDelCambio) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // El usuario se puede bloquear a sí mismo (cuando falla el test),
+        // o un supervisor/admin con mayor jerarquía puede bloquearlo
+        if (!usuario.getId().equals(autorDelCambio.getId()) && !tienePermisoSobreRol(autorDelCambio.getRole(), usuario.getRole())) {
+            throw new RuntimeException("No tienes permisos para bloquear a este usuario.");
+        }
+
+        usuario.setEstaBloqueado(true);
+        usuario.setFechaBloqueo(LocalDateTime.now());
+        agregarHistorial(usuario, "Bloqueo por fatiga", "No bloqueado", "Bloqueado por 6hs", LocalDateTime.now().toString(), autorDelCambio);
+        return usuarioRepository.save(usuario);
+    }
+
+    public Usuario desbloquearUsuario(String id, Usuario autorDelCambio) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Solo supervisores o administradores pueden desbloquear
+        if (autorDelCambio.getRole() != Role.SUPERVISOR && autorDelCambio.getRole() != Role.ADMINISTRADOR) {
+            throw new RuntimeException("No tienes permisos para desbloquear a este usuario.");
+        }
+
+        usuario.setEstaBloqueado(false);
+        usuario.setFechaBloqueo(null);
+        agregarHistorial(usuario, "Desbloqueo manual", "Bloqueado", "Desbloqueado", LocalDateTime.now().toString(), autorDelCambio);
+        return usuarioRepository.save(usuario);
+    }
+
     private void agregarHistorial(Usuario usuario, String campo, String valorAnterior, String valorNuevo, String fecha, Usuario autorDelCambio) {
         HistorialUsuario h = new HistorialUsuario(campo, valorAnterior, valorNuevo, fecha, autorDelCambio);
         h.setUsuario(usuario);

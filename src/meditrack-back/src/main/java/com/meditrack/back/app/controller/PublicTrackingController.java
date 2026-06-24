@@ -19,6 +19,11 @@ public class PublicTrackingController {
         this.envioService = envioService;
     }
 
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pong");
+    }
+
     @GetMapping("/tracking/{id}")
     public ResponseEntity<TrackingPublicoDTO> consultarTracking(@PathVariable String id) {
         TrackingPublicoDTO dto = envioService.obtenerTrackingPublico(id);

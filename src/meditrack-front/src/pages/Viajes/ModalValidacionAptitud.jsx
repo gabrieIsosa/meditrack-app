@@ -325,9 +325,9 @@ export function PantallaBloqueo({ onContactarSupervisor }) {
                     </svg>
                 </div>
                 <span className="val-bloqueo-label">VIAJE BLOQUEADO</span>
-                <h2 className="val-bloqueo-title">No fue posible validar tu aptitud para iniciar este viaje.</h2>
+                <h2 className="val-bloqueo-title">Tu acceso fue bloqueado por un supervisor.</h2>
                 <p className="val-bloqueo-desc">
-                    Por motivos de seguridad, el recorrido permanecerá bloqueado hasta que un supervisor realice una verificación manual.
+                    Por motivos de seguridad, el recorrido permanecerá bloqueado durante 6 horas. Revisá tus notificaciones para más detalles.
                 </p>
                 <button
                     className="val-bloqueo-btn btn-action-hover"
@@ -338,6 +338,42 @@ export function PantallaBloqueo({ onContactarSupervisor }) {
                     </svg>
                     Contactar supervisor
                 </button>
+            </div>
+        </div>
+    );
+}
+
+export function PantallaEsperando() {
+
+    return (
+        <div className="val-bloqueo-screen animate-fade-in">
+            <div className="val-bloqueo-card animate-slide-up" style={{ borderTop: '4px solid #F59E0B' }}>
+                <div className="val-bloqueo-icon" style={{ color: '#F59E0B' }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </div>
+                <span className="val-bloqueo-label" style={{ color: '#F59E0B' }}>PENDIENTE DE REVISIÓN</span>
+                <h2 className="val-bloqueo-title">Tu supervisor fue notificado</h2>
+                <p className="val-bloqueo-desc">
+                    “No fue posible verificar tu aptitud. Se notificó a tu supervisor para que revise el caso. Esta pantalla se actualizará automáticamente cuando haya una resolución.”
+                </p>
+                <div style={{
+                    marginTop: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: '#6B7280',
+                    fontSize: '13px'
+                }}>
+                    <div style={{
+                        width: '8px', height: '8px', borderRadius: '50%',
+                        backgroundColor: '#F59E0B',
+                        animation: 'pulse 1.5s infinite'
+                    }} />
+                    Esperando resolución del supervisor...
+                </div>
             </div>
         </div>
     );

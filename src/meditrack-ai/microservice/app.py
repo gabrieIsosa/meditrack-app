@@ -47,6 +47,10 @@ def read_root():
         "api_version": "1.0"
     }
 
+@app.head("/")
+def read_root_head():
+    return ""
+
 @app.post("/predict")
 async def predecir_fatiga(file: UploadFile = File(...)):
     if model is None or feature_extractor is None:

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getRutas, updateEstadoEnvio, finalizarRuta, getEnvioById, getMedicamentos, getClientes } from '../../services/api';
+import { getRutas, updateEstadoEnvio, finalizarRuta, getEnvioById, getMedicamentos, getClientes, BASE_URL } from '../../services/api';
 import { getTipoStyles, iconos, DefaultIcon } from '../../util/Util';
 import OfflineBanner from '../../components/OfflineBanner';
 import './DetalleViaje.css';
@@ -343,7 +343,7 @@ function DetalleViaje() {
         try {
             await finalizarRuta(rutaActiva.id);
             alert("¡Ruta completada con éxito!");
-            navigate('/inicio-repartidor');
+            navigate('/menu');
         } catch (error) {
             console.error("Error al finalizar ruta:", error);
             alert("Error al finalizar la ruta");
@@ -733,7 +733,7 @@ function DetalleViaje() {
                                         <div key={item.id} className="detalle-carga-item card-hover">
                                             <div className="detalle-carga-img-wrapper">
                                                 {item.imagenUrl ? (
-                                                    <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `http://localhost:8080${item.imagenUrl}`} alt={item.nombre} className="detalle-carga-img" />
+                                                    <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `${BASE_URL}${item.imagenUrl}`} alt={item.nombre} className="detalle-carga-img" />
                                                 ) : (
                                                     <span className="detalle-carga-img-fallback-text">
                                                         {item.esManual ? 'MAN' : 'MED'}

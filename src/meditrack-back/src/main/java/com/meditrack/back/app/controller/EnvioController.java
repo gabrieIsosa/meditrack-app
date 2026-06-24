@@ -23,9 +23,11 @@ import com.meditrack.back.app.model.Envio;
 import com.meditrack.back.app.model.EstadoEnvio;
 import com.meditrack.back.app.model.Role;
 import com.meditrack.back.app.model.Sesion;
+import com.meditrack.back.app.model.Usuario;
 import com.meditrack.back.app.service.AuthService;
 import com.meditrack.back.app.service.EnvioService;
 import com.meditrack.back.app.service.EtiquetaService;
+import com.meditrack.back.app.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/envios")
@@ -35,11 +37,13 @@ public class EnvioController {
     private final EnvioService envioService;
     private final AuthService authService;
     private final EtiquetaService etiquetaService;
+    private final UsuarioService usuarioService;
 
-    public EnvioController(EnvioService envioService, AuthService authService, EtiquetaService etiquetaService) {
+    public EnvioController(EnvioService envioService, AuthService authService, EtiquetaService etiquetaService, UsuarioService usuarioService) {
         this.envioService = envioService;
         this.authService = authService;
         this.etiquetaService = etiquetaService;
+        this.usuarioService = usuarioService;
     }
 
     private Sesion autenticar(String authHeader) {
@@ -105,6 +109,11 @@ public class EnvioController {
     public ResponseEntity<?> cambiarEstado(@PathVariable String id, @RequestBody Map<String, String> body, @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             Sesion sesion = autenticar(authHeader);
+            Usuario usuarioReq = usuarioService.buscarPorEmail(sesion.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            if (usuarioReq.isBloqueoActivo()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Usuario bloqueado por fatiga. No puede realizar acciones por 6 horas."));
+            }
             if (sesion.getRole() == Role.OPERADOR) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Sin permisos para actualizar estados"));
             }

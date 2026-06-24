@@ -58,14 +58,14 @@ public class DataSeed implements CommandLineRunner {
                     "Ibuprofeno 400mg", "Antiinflamatorio no esteroideo",
                     "Comprimidos", 500,
                     "mg", "Bayer",
-                    "Ibuprofeno", true,
+                    "Ibuprofeno", false,
                     "/uploads/6a84ff89-02b6-49a4-b722-5a55a3a7b175_actron_400_1.jpg");
 
             Medicamento amoxicilina = new Medicamento(
                     "Amoxicilina 500mg", "Antibiótico de amplio espectro",
                     "Cápsulas", 200,
                     "mg", "Pfizer",
-                    "Amoxicilina", true,
+                    "Amoxicilina", false,
                     "/uploads/c3521887-b0a1-4af3-918a-4b1a22a28108_F_000001106329.jpg");
 
             medicamentoRepository.save(ibuprofeno);

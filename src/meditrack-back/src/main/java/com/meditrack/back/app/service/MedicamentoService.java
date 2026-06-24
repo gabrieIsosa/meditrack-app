@@ -61,7 +61,29 @@ public class MedicamentoService {
         medicamento.setUnidadMedida(body.get("unidadMedida"));
         medicamento.setCantidad(Integer.parseInt(body.get("cantidad")));
         medicamento.setLaboratorio(body.get("laboratorio"));
-        medicamento.setCadenaFrio(Boolean.getBoolean(body.get("cadenaFrio")));
+        boolean cadenaFrio = Boolean.parseBoolean(body.get("cadenaFrio"));
+        medicamento.setCadenaFrio(cadenaFrio);
+        
+        medicamento.setVolumenCm3(Integer.parseInt(body.getOrDefault("volumenCm3", "0")));
+        medicamento.setPesoGramos(Integer.parseInt(body.getOrDefault("pesoGramos", "0")));
+
+        if (cadenaFrio) {
+            String minStr = body.get("temperaturaMinima");
+            String maxStr = body.get("temperaturaMaxima");
+            if (minStr == null || minStr.isBlank() || maxStr == null || maxStr.isBlank()) {
+                throw new IllegalArgumentException("Las temperaturas mínima y máxima son obligatorias para cadena de frío");
+            }
+            double minVal = Double.parseDouble(minStr);
+            double maxVal = Double.parseDouble(maxStr);
+            if (minVal > maxVal) {
+                throw new IllegalArgumentException("La temperatura mínima no puede ser mayor que la temperatura máxima");
+            }
+            medicamento.setTemperaturaMinima(minVal);
+            medicamento.setTemperaturaMaxima(maxVal);
+        } else {
+            medicamento.setTemperaturaMinima(null);
+            medicamento.setTemperaturaMaxima(null);
+        }
 
         if (body.get("imagenUrl") != null && !body.get("imagenUrl").isBlank()) 
             medicamento.setImagenUrl(body.get("imagenUrl"));

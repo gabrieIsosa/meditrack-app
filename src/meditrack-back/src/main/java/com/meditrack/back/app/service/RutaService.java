@@ -57,6 +57,7 @@ public class RutaService {
     public Ruta crear(Map<String, Object> datos, String usuario) {
         String fecha = (String) datos.get("fecha");
         String repartidorId = (String) datos.get("repartidorId");
+        String polyline = (String) datos.get("polyline");
         
         Long transporteId = datos.get("transporteId") != null
             ? Long.valueOf(datos.get("transporteId").toString())
@@ -117,6 +118,7 @@ public class RutaService {
 
         Ruta ruta = new Ruta(fecha, repartidorId, transporteId, usuario);
         rutaRepository.save(ruta);
+        ruta.setPolyline(polyline);
 
         for (Map<String, Object> envioData : enviosData) {
             String envioId = (String) envioData.get("envioId");

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080';
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 // --- Offline Helpers & Caching ---
 const OFFLINE_CACHE_PREFIX = 'meditrack_cache_';
@@ -587,6 +587,80 @@ export async function toggleEstadoUsuario(id) {
   }
 }
 
+export async function bloquearUsuario(id) {
+  const res = await fetch(`${BASE_URL}/api/usuarios/${id}/bloquear`, {
+    method: 'PATCH',
+    headers: { ...getAuthHeaders() },
+  });
+  await handleResponse(res);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al bloquear usuario');
+  }
+  return res.json();
+}
+
+export async function desbloquearUsuario(id) {
+  const res = await fetch(`${BASE_URL}/api/usuarios/${id}/desbloquear`, {
+    method: 'PATCH',
+    headers: { ...getAuthHeaders() },
+  });
+  await handleResponse(res);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al desbloquear usuario');
+  }
+  return res.json();
+}
+
+export async function reportarFatiga() {
+  const res = await fetch(`${BASE_URL}/api/alertas-fatiga`, {
+    method: 'POST',
+    headers: { ...getAuthHeaders() },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al reportar evento de fatiga');
+  }
+  return res.json();
+}
+
+export async function getMiAlertaPendiente() {
+  const res = await fetch(`${BASE_URL}/api/alertas-fatiga/mi-alerta-pendiente`, {
+    headers: { ...getAuthHeaders() },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function getAlertaFatiga(id) {
+  const res = await fetch(`${BASE_URL}/api/alertas-fatiga/${id}`, {
+    headers: { ...getAuthHeaders() },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function getAlertasFatiga() {
+  const res = await fetch(`${BASE_URL}/api/alertas-fatiga`, {
+    headers: { ...getAuthHeaders() },
+  });
+  if (!res.ok) throw new Error('Error al obtener alertas de fatiga');
+  return res.json();
+}
+
+export async function procesarDecisionFatiga(alertaId, { decision, observaciones }) {
+  const res = await fetch(`${BASE_URL}/api/alertas-fatiga/${alertaId}/decision`, {
+    method: 'PUT',
+    headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ decision, observaciones }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al procesar decisión');
+  }
+  return res.json();
+}
 
 export async function getRutas() {
   if (!isOnline()) {
@@ -630,6 +704,7 @@ export async function createRuta(data) {
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data),
   });
+  
   await handleResponse(res);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

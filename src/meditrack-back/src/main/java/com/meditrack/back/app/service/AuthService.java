@@ -59,7 +59,9 @@ public class AuthService {
             "id",     usuario.getId(),
             "email",  usuario.getEmail(),
             "nombre", usuario.getNombre(),
-            "role",   usuario.getRole().name()
+            "role",   usuario.getRole().name(),
+            "estaBloqueado", usuario.isBloqueoActivo(),
+            "fechaBloqueo", usuario.getFechaBloqueo() != null ? usuario.getFechaBloqueo().toString() : ""
         );
     }
 
@@ -83,7 +85,9 @@ public class AuthService {
             "id",     usuario.getId(),
             "email",  usuario.getEmail(),
             "nombre", usuario.getNombre(),
-            "role",   usuario.getRole().name()
+            "role",   usuario.getRole().name(),
+            "estaBloqueado", usuario.isBloqueoActivo(),
+            "fechaBloqueo", usuario.getFechaBloqueo() != null ? usuario.getFechaBloqueo().toString() : ""
         );
     }
 

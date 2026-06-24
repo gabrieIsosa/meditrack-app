@@ -28,8 +28,11 @@ function Transportes() {
         tipoVehiculo: '',
         capacidadKg: '',
         capacidadLitros: '',
+        capacidadM3: '',
         estadoOperativo: 'ACTIVO',
     });
+    const [showSnackbar, setShowSnackbar] = useState(false);
+    const [isEdit, setIsEdit] = useState(false);
 
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -74,6 +77,7 @@ function Transportes() {
             tipoVehiculo: '',
             capacidadKg: '',
             capacidadLitros: '',
+            capacidadM3: '',
             estadoOperativo: 'ACTIVO',
         });
         setError('');
@@ -89,6 +93,7 @@ function Transportes() {
             tipoVehiculo: t.tipoVehiculo || '',
             capacidadKg: String(t.capacidadKg ?? ''),
             capacidadLitros: String(t.capacidadLitros ?? ''),
+            capacidadM3: String(t.capacidadM3 ?? ''),
             estadoOperativo: t.estadoOperativo || 'ACTIVO',
         });
         setError('');
@@ -110,6 +115,8 @@ function Transportes() {
         if (!form.capacidadKg || Number.isNaN(cap) || cap <= 0) return 'La capacidad debe ser mayor a 0';
         const vol = Number(form.capacidadLitros);
         if (!form.capacidadLitros || Number.isNaN(vol) || vol <= 0) return 'La capacidad de volumen debe ser mayor a 0';
+        const capM3 = Number(form.capacidadM3);
+        if (!form.capacidadM3 || Number.isNaN(capM3) || capM3 <= 0) return 'La capacidad del contenedor (m³) debe ser mayor a 0';
         if (!form.estadoOperativo) return 'El estado operativo es obligatorio';
         return '';
     };
@@ -126,6 +133,7 @@ function Transportes() {
             tipoVehiculo: form.tipoVehiculo.trim(),
             capacidadKg: Number(form.capacidadKg),
             capacidadLitros: Number(form.capacidadLitros),
+            capacidadM3: Number(form.capacidadM3),
             estadoOperativo: form.estadoOperativo,
         };
 
@@ -133,11 +141,15 @@ function Transportes() {
             setError('');
             if (modoEdicion && idEditando != null) {
                 await updateTransporte(idEditando, payload);
+                setIsEdit(true);
             } else {
                 await createTransporte(payload);
+                setIsEdit(false);
             }
             cerrarModal();
             await cargar();
+            setShowSnackbar(true);
+            setTimeout(() => setShowSnackbar(false), 3000);
         } catch (e) {
             setErrorModal(e.message || 'Error al guardar transporte');
         }
@@ -161,6 +173,7 @@ function Transportes() {
                 tipoVehiculo: t.tipoVehiculo,
                 capacidadKg: t.capacidadKg,
                 capacidadLitros: t.capacidadLitros,
+                capacidadM3: t.capacidadM3,
                 estadoOperativo: nuevoEstado,
             });
         } catch (e) {
@@ -178,8 +191,14 @@ function Transportes() {
             color,
         };
     };
-    return (
+
+    return (
         <div className="container">
+            {showSnackbar && (
+                <div className={`snackbar-msg ${isEdit ? 'edit' : ''}`}>
+                    {isEdit ? '¡Transporte editado correctamente!' : '¡Transporte creado correctamente!'}
+                </div>
+            )}
             <style>{`
                 .col-ocultar { display: table-cell; }
                 .col-estado { display: table-cell; }
@@ -336,8 +355,9 @@ function Transportes() {
                                         <th>Tipo</th>
                                         <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (kg)</th>
                                         <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (litros)</th>
+                                        <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (m³)</th>
                                         <th className="col-estado">Estado</th>
-                                        <th style={{ textAlign: 'center' }}>Acciones</th>
+                                        {puedeEditar && <th style={{ textAlign: 'center' }}>Acciones</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -347,8 +367,9 @@ function Transportes() {
                                             <td><div className="skeleton-row" style={{ width: '100px' }} /></td>
                                             <td className="col-ocultar"><div className="skeleton-row" style={{ width: '50px', margin: '0 auto' }} /></td>
                                             <td className="col-ocultar"><div className="skeleton-row" style={{ width: '50px', margin: '0 auto' }} /></td>
+                                            <td className="col-ocultar"><div className="skeleton-row" style={{ width: '50px', margin: '0 auto' }} /></td>
                                             <td className="col-estado"><div className="skeleton-row" style={{ width: '90px' }} /></td>
-                                            <td><div className="skeleton-row" style={{ width: '40px', margin: '0 auto' }} /></td>
+                                            {puedeEditar && <td><div className="skeleton-row" style={{ width: '40px', margin: '0 auto' }} /></td>}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -386,14 +407,15 @@ function Transportes() {
                                     <th>Tipo</th>
                                     <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (kg)</th>
                                     <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (litros)</th>
+                                    <th className="col-ocultar" style={{ textAlign: 'center' }}>Capacidad (m³)</th>
                                     <th className="col-estado">Estado</th>
-                                    <th style={{ textAlign: 'center' }}>Acciones</th>
+                                    {puedeEditar && <th style={{ textAlign: 'center' }}>Acciones</th>}
                                 </tr>
                             </thead>
                             <tbody>
                                 {transportesFiltrados.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                                        <td colSpan={puedeEditar ? 7 : 6} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
                                             No hay transportes registrados
                                         </td>
                                     </tr>
@@ -404,6 +426,7 @@ function Transportes() {
                                             <td>{t.tipoVehiculo}</td>
                                             <td className="col-ocultar" style={{ textAlign: 'center' }}>{t.capacidadKg}</td>
                                             <td className="col-ocultar" style={{ textAlign: 'center' }}>{t.capacidadLitros}</td>
+                                            <td className="col-ocultar" style={{ textAlign: 'center' }}>{t.capacidadM3}</td>
                                             <td className="col-estado">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
                                                     className="mt-estado-cell"
@@ -422,9 +445,9 @@ function Transportes() {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                                                    {puedeEditar && (
+                                            {puedeEditar && (
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
                                                         <button
                                                             className="action-icon-btn"
                                                             title="Editar"
@@ -435,9 +458,9 @@ function Transportes() {
                                                                 <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                                                             </svg>
                                                         </button>
-                                                    )}
-                                                </div>
-                                            </td>
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))
                                 )}
@@ -480,6 +503,16 @@ function Transportes() {
                                                 <path d="M12 22a7 7 0 0 0 7-7c0-4.3-7-11-7-11S5 10.7 5 15a7 7 0 0 0 7 7z" />
                                             </svg>
                                             <span><strong>Capacidad Volumen:</strong> {t.capacidadLitros} L</span>
+                                        </div>
+                                        <div className="transport-card-detail-item">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#6b7280' }}>
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                <path d="M9 3v18" />
+                                                <path d="M15 3v18" />
+                                                <path d="M3 9h18" />
+                                                <path d="M3 15h18" />
+                                            </svg>
+                                            <span><strong>Capacidad Contenedor:</strong> {t.capacidadM3} m³</span>
                                         </div>
                                     </div>
                                     <div className="transport-card-footer">
@@ -569,13 +602,24 @@ function Transportes() {
                         </div>
 
                         <div className="form-group">
+                            <label>Capacidad Contenedor (m³) *</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={form.capacidadM3}
+                                onChange={(e) => setForm({ ...form, capacidadM3: e.target.value })}
+                                placeholder="12.5"
+                            />
+                        </div>
+
+                        <div className="form-group">
                             <label>Estado operativo *</label>
                             <select
                                 value={form.estadoOperativo}
                                 onChange={(e) => setForm({ ...form, estadoOperativo: e.target.value })}
                             >
                                 {ESTADOS.map((st) => (
-                                    <option key={st} value={st}>{st}</option>
+                                     <option key={st} value={st}>{st}</option>
                                 ))}
                             </select>
                         </div>
@@ -593,7 +637,6 @@ function Transportes() {
             )}
         </div>
     );
-
 }
 
 export default Transportes;

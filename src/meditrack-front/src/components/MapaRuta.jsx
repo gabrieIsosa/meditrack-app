@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DirectionsRenderer, GoogleMap, InfoWindow, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { DirectionsRenderer, GoogleMap, InfoWindow, Marker, Polyline, useJsApiLoader } from '@react-google-maps/api';
 
-const LIBRARIES = ['places'];
+const LIBRARIES = ['places', 'geometry'];
 
 const OFFSET_M = 18;
 const GRADOS_POR_METRO = 1 / 111320;
@@ -65,7 +65,7 @@ function markerIcon(tipo) {
   };
 }
 
-function MapaRuta({ paradas }) {
+function MapaRuta({ paradas, polyline = null, onPolylineCalculated }) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries: LIBRARIES,
@@ -89,6 +89,11 @@ function MapaRuta({ paradas }) {
   }, [paradasConCoords]);
 
   useEffect(() => {
+    if (polyline) {
+      setDirectionsResult(null);
+      return;
+    }
+
     if (!isLoaded || paradasConCoords.length < 2) return;
 
     let cancelled = false;
@@ -105,7 +110,14 @@ function MapaRuta({ paradas }) {
       travelMode: window.google.maps.TravelMode.DRIVING,
       optimizeWaypoints: false,
     }, (result, status) => {
-      if (!cancelled) setDirectionsResult(status === 'OK' ? result : null);
+      if (cancelled) return;
+
+      if (status === "OK") {
+        setDirectionsResult(result);
+        onPolylineCalculated?.(result.routes[0].overview_polyline);
+      } else {
+        setDirectionsResult(null);
+      }
     });
 
     return () => { cancelled = true; };
@@ -140,11 +152,18 @@ function MapaRuta({ paradas }) {
         options={MAP_OPTIONS}
         onClick={() => setParadaSeleccionada(null)}
       >
-        {directionsResult && paradasConCoords.length >= 2 && (
-          <DirectionsRenderer
-            directions={directionsResult}
-            options={DIRECTIONS_OPTIONS}
+        {polyline ? (
+          <Polyline
+            path={window.google.maps.geometry.encoding.decodePath(polyline)}
+            options={DIRECTIONS_OPTIONS.polylineOptions}
           />
+        ) : (
+          directionsResult && (
+            <DirectionsRenderer
+              directions={directionsResult}
+              options={DIRECTIONS_OPTIONS}
+            />
+          )
         )}
 
         {paradasConCoords.map((p, idx) => (

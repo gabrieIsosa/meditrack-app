@@ -49,6 +49,9 @@ public class Transporte {
     @Column(name = "capacidad_litros", nullable = false)
     private Integer capacidadLitros;
 
+    @Column(name = "capacidad_m3")
+    private Double capacidadM3;
+
     public Transporte () {}
     
     // Getters y Setters
@@ -90,6 +93,13 @@ public class Transporte {
     }
     public void setCapacidadLitros(Integer capacidadLitros) {
         this.capacidadLitros = capacidadLitros;
+    }
+
+    public Double getCapacidadM3() {
+        return capacidadM3;
+    }
+    public void setCapacidadM3(Double capacidadM3) {
+        this.capacidadM3 = capacidadM3;
     }
 
 }

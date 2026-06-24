@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { inactivarMedicamento, getMedicamentos } from '../../services/api';
+import { inactivarMedicamento, getMedicamentos, BASE_URL } from '../../services/api';
 
 const Skeleton = ({ width = '100%', height = '20px', borderRadius = '4px' }) => (
     <div style={{ width, height, borderRadius, backgroundColor: '#E5E7EB', animation: 'pulse 1.5s infinite' }} />
@@ -14,6 +14,21 @@ function Medicamentos() {
     const [paginaActual, setPaginaActual] = useState(1);
     const medicamentosPorPagina = 10;
     const navigate = useNavigate();
+    const location = useLocation();
+    const hasProcessedSuccess = useRef(false);
+    const [showSnackbar, setShowSnackbar] = useState(false);
+    const [isEdit, setIsEdit] = useState(false);
+
+    useEffect(() => {
+        if ((location.state?.success || location.state?.editSuccess) && !hasProcessedSuccess.current) {
+            hasProcessedSuccess.current = true;
+            setIsEdit(!!location.state?.editSuccess);
+            setShowSnackbar(true);
+            const timer = setTimeout(() => setShowSnackbar(false), 3000);
+            window.history.replaceState({}, document.title);
+            return () => clearTimeout(timer);
+        }
+    }, [location.state]);
 
     useEffect(() => {
         getMedicamentos()
@@ -59,6 +74,11 @@ function Medicamentos() {
 
     return (
         <div className="container">
+            {showSnackbar && (
+                <div className={`snackbar-msg ${isEdit ? 'edit' : ''}`}>
+                    {isEdit ? '¡Medicamento editado correctamente!' : '¡Medicamento creado correctamente!'}
+                </div>
+            )}
             <style>{`
                 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
                 
@@ -271,7 +291,7 @@ function Medicamentos() {
                                                             m.imagenUrl
                                                                 ? (m.imagenUrl.startsWith('http') 
                                                                     ? m.imagenUrl 
-                                                                    : `http://localhost:8080${m.imagenUrl}`)
+                                                                    : `${BASE_URL}${m.imagenUrl}`)
                                                                 : '/placeholder-medicamento.png'
                                                         }
                                                         alt={m.nombre}
@@ -287,16 +307,41 @@ function Medicamentos() {
                                                     <div>
                                                         <div style={{
                                                             fontWeight: '700',
-                                                            color: '#111827'
+                                                            color: '#111827',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px'
                                                         }}>
                                                             {m.nombre}
+                                                            {m.cadenaFrio && (
+                                                                <span style={{
+                                                                    fontSize: '10px',
+                                                                    backgroundColor: '#eff6ff',
+                                                                    color: '#1d4ed8',
+                                                                    padding: '2px 6px',
+                                                                    borderRadius: '9999px',
+                                                                    fontWeight: '800',
+                                                                    border: '1px solid #bfdbfe',
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '2px'
+                                                                }}>
+                                                                    ❄️ Frío
+                                                                </span>
+                                                            )}
                                                         </div>
 
                                                         <div style={{
                                                             fontSize: '13px',
-                                                            color: '#6B7280'
+                                                            color: '#6B7280',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: '2px'
                                                         }}>
-                                                            {m.monodroga}
+                                                            <span>{m.monodroga}</span>
+                                                            <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
+                                                                {m.volumenCm3 ?? 0} cm³ · {m.pesoGramos ?? 0} g
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -386,7 +431,7 @@ function Medicamentos() {
                                                 m.imagenUrl
                                                     ? (m.imagenUrl.startsWith('http') 
                                                         ? m.imagenUrl 
-                                                        : `http://localhost:8080${m.imagenUrl}`)
+                                                        : `${BASE_URL}${m.imagenUrl}`)
                                                     : '/placeholder-medicamento.png'
                                             }
                                             alt={m.nombre}
@@ -399,25 +444,44 @@ function Medicamentos() {
                                                 background: '#F9FAFB'
                                             }}
                                         />
-                                        <div>
-                                            <div style={{ fontWeight: '700', color: '#111827' }}>
-                                                {m.nombre}
-                                            </div>
-                                            <div style={{ fontSize: '13px', color: '#6B7280' }}>
-                                                {m.monodroga}
-                                            </div>
-                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                             <div style={{ fontWeight: '700', color: '#111827', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                 {m.nombre}
+                                                 {m.cadenaFrio && (
+                                                     <span style={{
+                                                         fontSize: '10px',
+                                                         backgroundColor: '#eff6ff',
+                                                         color: '#1d4ed8',
+                                                         padding: '1px 5px',
+                                                         borderRadius: '9999px',
+                                                         fontWeight: '800',
+                                                         border: '1px solid #bfdbfe'
+                                                     }}>
+                                                         ❄️ Frío
+                                                     </span>
+                                                 )}
+                                             </div>
+                                             <div style={{ fontSize: '13px', color: '#6B7280' }}>
+                                                 {m.monodroga}
+                                             </div>
+                                         </div>
                                     </div>
                                     <div className="med-card-details">
-                                        <div className="med-card-detail-item">
-                                            <strong>Laboratorio:</strong> {m.laboratorio}
-                                        </div>
-                                        <div className="med-card-detail-item">
-                                            <strong>Presentación:</strong> {m.presentacion}
-                                        </div>
-                                        <div className="med-card-detail-item">
-                                            <strong>Cantidad:</strong> {m.cantidad} {m.unidadMedida}
-                                        </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Laboratorio:</strong> {m.laboratorio}
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Presentación:</strong> {m.presentacion}
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Cantidad:</strong> {m.cantidad} {m.unidadMedida}
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Volumen:</strong> {m.volumenCm3 ?? 0} cm³
+                                         </div>
+                                         <div className="med-card-detail-item">
+                                             <strong>Peso:</strong> {m.pesoGramos ?? 0} g
+                                         </div>
                                     </div>
                                     <div className="med-card-footer">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

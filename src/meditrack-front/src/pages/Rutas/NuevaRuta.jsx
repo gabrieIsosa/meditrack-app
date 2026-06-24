@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEnvios, getRutas, getUsuarios, createRuta, getTransportes } from '../../services/api';
 import MapaRuta from '../../components/MapaRuta';
+import './NuevaRuta.css';
 
 
 const haversineKm = (lat1, lon1, lat2, lon2) => {
@@ -62,7 +63,7 @@ const planificarParadas = (envios) => {
     ruta.push({ tipo: 'RETIRO', envio: e, lat: null, lon: null, direccion: e.origen });
     ruta.push({ tipo: 'ENTREGA', envio: e, lat: null, lon: null, direccion: e.destino });
   });
-
+//
   return ruta;
 };
 
@@ -98,7 +99,131 @@ function NuevaRuta() {
   const [busquedaEnvio, setBusquedaEnvio] = useState('');
   const [loadingEnvios, setLoadingEnvios] = useState(false);
 
+  const [polyline, setPolyline] = useState("");
   const [paradas, setParadas] = useState([]);
+
+  const [hoveredBox, setHoveredBox] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    setTooltipPos({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  const resCarga = useMemo(() => {
+    const tSel = transportes.find(t => String(t.id) === String(transporteId)) || {};
+    const capacidadKg = tSel.capacidadKg ?? 0;
+    const capacidadM3 = tSel.capacidadM3 ?? 0;
+
+    let totalPesoGramos = 0;
+    let totalVolumenFrio = 0;
+    let totalVolumenNormal = 0;
+    const CAPACIDAD_CAJA = 100000; // 100,000 cm3 = 0.1 m3
+
+    const listaCajas = [];
+
+    // Pack cold chain items per shipment into coolers (blue boxes)
+    seleccionados.forEach(envio => {
+      if (envio.detalles) {
+        envio.detalles.forEach(d => {
+          const cantidad = d.cantidad || 0;
+          const med = d.medicamento || {};
+          totalPesoGramos += (med.pesoGramos || 0) * cantidad;
+          if (!med.cadenaFrio) {
+            totalVolumenNormal += (med.volumenCm3 || 0) * cantidad;
+          }
+        });
+      }
+
+      const coldChainDetails = envio.detalles ? envio.detalles.filter(d => d.medicamento?.cadenaFrio) : [];
+      const groups = []; // each group: { details: [], tempMin: Number, tempMax: Number, volumenTotal: Number }
+
+      coldChainDetails.forEach(d => {
+        const med = d.medicamento || {};
+        const medMin = med.temperaturaMinima !== null && med.temperaturaMinima !== undefined ? parseFloat(med.temperaturaMinima) : -Infinity;
+        const medMax = med.temperaturaMaxima !== null && med.temperaturaMaxima !== undefined ? parseFloat(med.temperaturaMaxima) : Infinity;
+        const cantidad = d.cantidad || 0;
+        const vol = (med.volumenCm3 || 0) * cantidad;
+
+        // Try to place it in an existing group
+        let placed = false;
+        for (let group of groups) {
+          const newMin = Math.max(group.tempMin, medMin);
+          const newMax = Math.min(group.tempMax, medMax);
+          if (newMin <= newMax) {
+            group.details.push(d);
+            group.tempMin = newMin;
+            group.tempMax = newMax;
+            group.volumenTotal += vol;
+            placed = true;
+            break;
+          }
+        }
+
+        if (!placed) {
+          groups.push({
+            details: [d],
+            tempMin: medMin,
+            tempMax: medMax,
+            volumenTotal: vol
+          });
+        }
+      });
+
+      groups.forEach((group, idx) => {
+        totalVolumenFrio += group.volumenTotal;
+        let volRestante = group.volumenTotal;
+        let cCount = 1;
+        while (volRestante > 0) {
+          const capCaja = Math.min(volRestante, CAPACIDAD_CAJA);
+          listaCajas.push({
+            tipo: 'frio',
+            fillPct: capCaja / CAPACIDAD_CAJA,
+            envioId: envio.id,
+            remitente: envio.remitente,
+            destinatario: envio.destinatario || 'Desconocido',
+            tempMin: group.tempMin === -Infinity ? null : group.tempMin,
+            tempMax: group.tempMax === Infinity ? null : group.tempMax,
+            medicamentos: group.details.map(d => `${d.medicamento.nombre} (${d.cantidad} u.)`),
+            groupNum: idx + 1,
+            cajaNum: cCount,
+            coolerIndex: listaCajas.length + 1
+          });
+          volRestante -= capCaja;
+          cCount++;
+        }
+      });
+    });
+
+    const cajasAzules = listaCajas.length;
+    const cajasNaranjas = 0;
+    const totalCajas = cajasAzules;
+    const maxCajas = Math.floor((capacidadM3 * 1000000) / CAPACIDAD_CAJA);
+
+    const totalVolumenOcupado = (cajasAzules * CAPACIDAD_CAJA) + totalVolumenNormal;
+    const totalPesoKg = Number((totalPesoGramos / 1000).toFixed(2));
+    const pesoExcedido = totalPesoKg > capacidadKg;
+    const volumenExcedido = totalVolumenOcupado > (capacidadM3 * 1000000);
+
+    return {
+      tSel,
+      capacidadKg,
+      capacidadM3,
+      totalPesoKg,
+      totalVolumenFrio,
+      totalVolumenNormal,
+      totalVolumenOcupado,
+      cajasAzules,
+      cajasNaranjas,
+      totalCajas,
+      maxCajas,
+      pesoExcedido,
+      volumenExcedido,
+      listaCajas
+    };
+  }, [seleccionados, transportes, transporteId]);
 
   useEffect(() => {
     Promise.all([getUsuarios(), getRutas(), getTransportes('', 'ACTIVO')])
@@ -162,6 +287,14 @@ function NuevaRuta() {
 
   const avanzarPaso2 = () => {
     if (seleccionados.length === 0) { setError('Seleccioná al menos un envío'); return; }
+    if (resCarga.pesoExcedido) {
+      setError(`Se ha excedido la capacidad de peso del transporte (${resCarga.totalPesoKg} kg / ${resCarga.capacidadKg} kg)`);
+      return;
+    }
+    if (resCarga.volumenExcedido) {
+      setError(`Se ha excedido la capacidad de volumen del transporte (${(resCarga.totalVolumenOcupado / 1000000).toFixed(3)} m³ / ${resCarga.capacidadM3} m³)`);
+      return;
+    }
     setError('');
     setParadas(planificarParadas(seleccionados));
     setPaso(3);
@@ -198,6 +331,7 @@ function NuevaRuta() {
         fecha,
         repartidorId,
         transporteId,
+        polyline,
         envios: seleccionados.map(e => ({
           envioId: e.id,
           retiroOrden: retiroOrdenPorEnvio[e.id] ?? 999,
@@ -233,15 +367,8 @@ function NuevaRuta() {
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827' }}>Nueva ruta</h1>
       </div>
 
-      <div className="card" style={{ marginBottom: '24px', padding: '32px 60px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          position: 'relative',
-          alignItems: 'flex-start',
-          maxWidth: '600px',
-          margin: '0 auto',
-        }}>
+      <div className="card nr-stepper-card">
+        <div className="nr-stepper-container">
           {[
             { n: 1, label: 'Fecha y repartidor' },
             { n: 2, label: 'Seleccionar envíos' },
@@ -255,54 +382,21 @@ function NuevaRuta() {
             const lineaColor = completado ? '#10B981' : '#E5E7EB';
 
             return (
-              <div key={n} style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                flex: 1,
-                position: 'relative',
-                zIndex: 3,
-              }}>
+              <div key={n} className="nr-step-item">
                 {n < 3 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '17px',
-                    left: '50%',
-                    width: '100%',
-                    height: '3px',
-                    backgroundColor: lineaColor,
-                    zIndex: 1,
-                    transition: 'background-color 0.3s',
-                  }} />
+                  <div className="nr-step-line" style={{ backgroundColor: lineaColor }} />
                 )}
                 <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
                   backgroundColor: circuloColor,
                   border: `2px solid ${bordColor}`,
                   color: completado || actual ? 'white' : '#9CA3AF',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  fontWeight: 'bold',
-                  fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-                  marginBottom: '12px',
-                  transition: 'all 0.3s',
-                  zIndex: 2,
-                  position: 'relative',
-                }}>
+                }} className="nr-step-circle">
                   {completado ? '✓' : n}
                 </div>
                 <span style={{
-                  fontSize: '10px',
-                  textAlign: 'center',
                   fontWeight: actual ? '800' : '500',
                   color: textoColor,
-                  textTransform: 'uppercase',
-                  maxWidth: '90px',
-                  fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-                }}>
+                }} className="nr-step-label">
                   {label}
                 </span>
               </div>
@@ -378,77 +472,351 @@ function NuevaRuta() {
       )}
 
       {paso === 2 && (
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>
-              Seleccionar envíos ({seleccionados.length} seleccionados)
-            </h2>
-            <input
-              className="search-input"
-              style={{ margin: 0, width: '280px' }}
-              placeholder="Buscar por ID, destinatario, dirección..."
-              value={busquedaEnvio}
-              onChange={e => setBusquedaEnvio(e.target.value)}
-            />
-          </div>
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          
+          {/* Columna izquierda: Listado de envíos */}
+          <div className="card" style={{ flex: '2 1 600px', margin: 0 }}>
+            <div className="nr-step2-header">
+              <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#111827', margin: 0 }}>
+                Seleccionar envíos ({seleccionados.length} seleccionados)
+              </h2>
+              <input
+                className="search-input nr-search-input"
+                placeholder="Buscar por ID, destinatario, dirección..."
+                value={busquedaEnvio}
+                onChange={e => setBusquedaEnvio(e.target.value)}
+              />
+            </div>
 
-          {loadingEnvios ? (
-            <p style={{ padding: '20px', color: '#6b7280' }}>Cargando envíos disponibles...</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ width: '40px' }}></th>
-                  <th>Tracking ID</th>
-                  <th>Destinatario</th>
-                  <th>Dirección entrega</th>
-                  <th>Prioridad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {enviosFiltrados.length === 0 ? (
+            {loadingEnvios ? (
+              <p style={{ padding: '20px', color: '#6b7280' }}>Cargando envíos disponibles...</p>
+            ) : (
+              <table className="nr-envios-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-                      No hay envíos disponibles para enrutar
-                    </td>
+                    <th style={{ width: '40px' }}></th>
+                    <th>Tracking ID</th>
+                    <th>Destinatario</th>
+                    <th>Dirección entrega</th>
+                    <th>Prioridad</th>
                   </tr>
-                ) : (
-                  enviosFiltrados.map(e => {
-                    const marcado = seleccionados.some(s => s.id === e.id);
-                    return (
-                      <tr
-                        key={e.id}
-                        onClick={() => toggleSeleccion(e)}
-                        style={{ cursor: 'pointer', backgroundColor: marcado ? '#EFF6FF' : 'transparent' }}
-                      >
-                        <td style={{ textAlign: 'center' }}>
-                          <input type="checkbox" checked={marcado} onChange={() => toggleSeleccion(e)} onClick={ev => ev.stopPropagation()} />
-                        </td>
-                        <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
-                        <td>{e.destinatario}</td>
-                        <td style={{ fontSize: '13px', color: '#6b7280' }}>{e.destino}</td>
-                        <td>
-                          {e.prioridad && (
-                            <span className="status-tag" style={{ backgroundColor: '#FEF3C720', color: '#D97706' }}>
-                              {e.prioridad}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {enviosFiltrados.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                        No hay envíos disponibles para enrutar
+                      </td>
+                    </tr>
+                  ) : (
+                    enviosFiltrados.map(e => {
+                      const marcado = seleccionados.some(s => s.id === e.id);
+                      return (
+                        <tr
+                          key={e.id}
+                          onClick={() => toggleSeleccion(e)}
+                          style={{ cursor: 'pointer', backgroundColor: marcado ? '#EFF6FF' : 'transparent' }}
+                        >
+                          <td style={{ textAlign: 'center' }}>
+                            <input type="checkbox" checked={marcado} onChange={() => toggleSeleccion(e)} onClick={ev => ev.stopPropagation()} />
+                          </td>
+                          <td data-label="Tracking ID" style={{ fontWeight: 'bold', color: '#2563EB' }}>{e.id}</td>
+                          <td data-label="Destinatario">{e.destinatario}</td>
+                          <td data-label="Dirección" style={{ fontSize: '13px', color: '#6b7280' }}>{e.destino}</td>
+                          <td data-label="Prioridad">
+                            {e.prioridad && (
+                              <span className="status-tag" style={{ backgroundColor: '#FEF3C720', color: '#D97706' }}>
+                                {e.prioridad}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            )}
 
-          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
-            <button className="btn btn-secondary" onClick={() => setPaso(1)}>ANTERIOR</button>
-            <button className="btn-new-shipment" onClick={avanzarPaso2}>
-              SUGERIR ORDEN Y CONTINUAR
-            </button>
+            <div className="nr-actions-row">
+              <button className="btn btn-secondary" onClick={() => setPaso(1)}>ANTERIOR</button>
+              <button 
+                className="btn-new-shipment" 
+                onClick={avanzarPaso2}
+                disabled={resCarga.pesoExcedido || resCarga.volumenExcedido}
+                style={{
+                  opacity: (resCarga.pesoExcedido || resCarga.volumenExcedido) ? 0.5 : 1,
+                  cursor: (resCarga.pesoExcedido || resCarga.volumenExcedido) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                SUGERIR ORDEN Y CONTINUAR
+              </button>
+            </div>
           </div>
+
+          {/* Columna derecha: Indicadores de capacidad y Camión interactivo */}
+          <div className="card" style={{ flex: '1 1 320px', minWidth: '320px', margin: 0, padding: '24px', backgroundColor: '#F9FAFB' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#374151', marginBottom: '16px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>
+              Capacidad y Carga del Transporte
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              {/* Indicador de Peso */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', color: '#4B5563', marginBottom: '4px' }}>
+                  <span>Peso Total</span>
+                  <span style={{ color: resCarga.pesoExcedido ? '#EF4444' : '#10B981' }}>
+                    {resCarga.totalPesoKg} kg / {resCarga.capacidadKg} kg
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: '8px', backgroundColor: '#E5E7EB', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${Math.min((resCarga.totalPesoKg / (resCarga.capacidadKg || 1)) * 100, 100)}%`, 
+                    height: '100%', 
+                    backgroundColor: resCarga.pesoExcedido ? '#EF4444' : '#10B981',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                {resCarga.pesoExcedido && (
+                  <p style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', fontWeight: '600' }}>
+                    ⚠️ Capacidad de peso excedida
+                  </p>
+                )}
+              </div>
+
+              {/* Indicador de Volumen/Cajas */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', color: '#4B5563', marginBottom: '4px' }}>
+                  <span>Volumen Total (m³)</span>
+                  <span style={{ color: resCarga.volumenExcedido ? '#EF4444' : '#10B981' }}>
+                    {resCarga.cajasAzules} / {resCarga.maxCajas} coolers ({ (resCarga.totalVolumenOcupado / 1000000).toFixed(3) } m³ / { resCarga.capacidadM3 } m³)
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: '8px', backgroundColor: '#E5E7EB', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${Math.min((resCarga.totalVolumenOcupado / (resCarga.capacidadM3 * 1000000 || 1)) * 100, 100)}%`, 
+                    height: '100%', 
+                    backgroundColor: resCarga.volumenExcedido ? '#EF4444' : '#10B981',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                {resCarga.volumenExcedido && (
+                  <p style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', fontWeight: '600' }}>
+                    ⚠️ Capacidad de volumen excedida
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Render del camión en 2D SVG */}
+            <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', padding: '16px', background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Vista de Carga (Distribución)
+              </div>
+              
+              {/* Contenedor del camión SVG */}
+              {(() => {
+                const maxC = resCarga.maxCajas || 1;
+                // Grid layout
+                let rows = 3;
+                let cols = 4;
+                if (maxC <= 4) { rows = 1; cols = maxC; }
+                else if (maxC <= 8) { rows = 2; cols = 4; }
+                else if (maxC <= 12) { rows = 3; cols = 4; }
+                else if (maxC <= 16) { rows = 4; cols = 4; }
+                else { rows = 4; cols = Math.min(Math.ceil(maxC / 4), 6); }
+
+                const visualMax = rows * cols;
+
+                const padding = 6;
+                const usableW = 188;
+                const usableH = 78;
+                const boxW = Math.min(Math.floor(usableW / cols) - 4, 40);
+                const boxH = Math.min(Math.floor(usableH / rows) - 4, 24);
+
+                const gridW = cols * (boxW + 4) - 4;
+                const gridH = rows * (boxH + 4) - 4;
+                const offsetX = 20 + padding + (usableW - gridW) / 2;
+                const offsetY = 40 + padding + (usableH - gridH) / 2;
+
+                const slots = [];
+                const cajasARenderizar = Math.min(resCarga.totalCajas, visualMax);
+                for (let i = 0; i < cajasARenderizar; i++) {
+                  const r = Math.floor(i / cols);
+                  const c = i % cols;
+                  const bx = offsetX + c * (boxW + 4);
+                  // Stack from bottom up
+                  const by = offsetY + (rows - 1 - r) * (boxH + 4);
+                  
+                  const boxInfo = resCarga.listaCajas[i];
+                  const fillPct = boxInfo.fillPct; // 0 to 1
+                  
+                  const colorFill = boxInfo.tipo === 'frio' ? '#3B82F6' : '#F59E0B';
+                  const colorStroke = boxInfo.tipo === 'frio' ? '#1D4ED8' : '#D97706';
+
+                  const isFrio = boxInfo.tipo === 'frio';
+                  slots.push(
+                    <g 
+                      key={`box-${i}`}
+                      onMouseEnter={isFrio ? (e) => { setHoveredBox(boxInfo); handleMouseMove(e); } : undefined}
+                      onMouseMove={isFrio ? handleMouseMove : undefined}
+                      onMouseLeave={isFrio ? () => setHoveredBox(null) : undefined}
+                      style={isFrio ? { cursor: 'pointer' } : undefined}
+                    >
+                      {/* Container box with a thin outline */}
+                      <rect 
+                        x={bx} 
+                        y={by} 
+                        width={boxW} 
+                        height={boxH} 
+                        rx="2" 
+                        fill="#FFFFFF" 
+                        stroke="#D1D5DB" 
+                        strokeWidth="1.5" 
+                      />
+                      {/* Inner content filled from bottom up based on fillPct */}
+                      <rect 
+                        x={bx + 1} 
+                        y={by + boxH - (boxH * fillPct) + 1} 
+                        width={boxW - 2} 
+                        height={Math.max((boxH * fillPct) - 2, 0)} 
+                        rx="1" 
+                        fill={colorFill} 
+                        stroke={colorStroke} 
+                        strokeWidth="1" 
+                        style={{ transition: 'all 0.3s ease' }}
+                      />
+                    </g>
+                  );
+                }
+
+                // Calcular cajas excedidas (fuera de capacidad)
+                const totalC = resCarga.totalCajas;
+                const sobrantes = totalC - maxC;
+                const overflowBoxes = [];
+                if (sobrantes > 0) {
+                  // Renderizar cajas excedidas encima de la caja del camión
+                  for (let i = 0; i < sobrantes; i++) {
+                    const bx = 20 + padding + i * (boxW + 4);
+                    const by = 12;
+                    
+                    const boxInfo = resCarga.listaCajas[maxC + i];
+                    const fillPct = boxInfo.fillPct;
+                    const colorFill = boxInfo.tipo === 'frio' ? '#3B82F6' : '#F59E0B';
+                    
+                    const isFrio = boxInfo.tipo === 'frio';
+                    overflowBoxes.push(
+                      <g 
+                        key={`overflow-${i}`}
+                        onMouseEnter={isFrio ? (e) => { setHoveredBox(boxInfo); handleMouseMove(e); } : undefined}
+                        onMouseMove={isFrio ? handleMouseMove : undefined}
+                        onMouseLeave={isFrio ? () => setHoveredBox(null) : undefined}
+                        style={isFrio ? { cursor: 'pointer' } : undefined}
+                      >
+                        {/* Container box */}
+                        <rect 
+                          x={bx} 
+                          y={by} 
+                          width={boxW} 
+                          height={boxH} 
+                          rx="2" 
+                          fill="#FFFFFF" 
+                          stroke="#EF4444" 
+                          strokeWidth="2"
+                        />
+                        {/* Inner fill */}
+                        <rect 
+                          x={bx + 1} 
+                          y={by + boxH - (boxH * fillPct) + 1} 
+                          width={boxW - 2} 
+                          height={Math.max((boxH * fillPct) - 2, 0)} 
+                          rx="1" 
+                          fill={colorFill} 
+                          stroke="#EF4444" 
+                          strokeWidth="1" 
+                        />
+                        <line x1={bx} y1={by} x2={bx+boxW} y2={by+boxH} stroke="#EF4444" strokeWidth="1.5" />
+                        <line x1={bx+boxW} y1={by} x2={bx} y2={by+boxH} stroke="#EF4444" strokeWidth="1.5" />
+                      </g>
+                    );
+                  }
+                }
+
+                return (
+                  <svg viewBox="0 0 320 180" width="100%" height="auto" style={{ display: 'block' }}>
+                    <defs>
+                      <clipPath id="cargo-hold-clip">
+                        <rect x="20" y="40" width="200" height="100" rx="6" />
+                      </clipPath>
+                    </defs>
+                    <line x1="20" y1="140" x2="290" y2="140" stroke="#111827" strokeWidth="4" />
+                    
+                    <path d="M230,70 L260,70 L280,92 L290,105 L290,140 L230,140 Z" fill="#E5E7EB" stroke="#111827" strokeWidth="3" strokeLinejoin="round" />
+                    <path d="M240,80 L258,80 L271,95 L271,115 L240,115 Z" fill="#FFFFFF" stroke="#111827" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="282" y="115" width="8" height="15" rx="1" fill="#9CA3AF" />
+                    
+                    <g>
+                      <circle cx="60" cy="148" r="14" fill="#111827" />
+                      <circle cx="60" cy="148" r="5" fill="#FFFFFF" />
+                      <circle cx="95" cy="148" r="14" fill="#111827" />
+                      <circle cx="95" cy="148" r="5" fill="#FFFFFF" />
+                      <circle cx="255" cy="148" r="14" fill="#111827" />
+                      <circle cx="255" cy="148" r="5" fill="#FFFFFF" />
+                    </g>
+                    
+                    {/* Cargo Hold background outline */}
+                    <rect 
+                      x="20" 
+                      y="40" 
+                      width="200" 
+                      height="100" 
+                      rx="6" 
+                      fill="#FFFFFF" 
+                      stroke={resCarga.volumenExcedido ? '#EF4444' : '#111827'} 
+                      strokeWidth={resCarga.volumenExcedido ? '4' : '3'}
+                      style={{ transition: 'stroke 0.3s ease, stroke-width 0.3s ease' }}
+                    />
+                    
+                    {/* Normal medicines volume background fill */}
+                    {resCarga.totalVolumenNormal > 0 && (
+                      <rect 
+                        x="20" 
+                        y={40 + 100 - (100 * Math.min(resCarga.totalVolumenNormal / (resCarga.capacidadM3 * 1000000 || 1), 1))} 
+                        width="200" 
+                        height={100 * Math.min(resCarga.totalVolumenNormal / (resCarga.capacidadM3 * 1000000 || 1), 1)} 
+                        fill="#F59E0B" 
+                        fillOpacity="0.25"
+                        clipPath="url(#cargo-hold-clip)"
+                        style={{ transition: 'all 0.3s ease' }}
+                      />
+                    )}
+                    
+                    {slots}
+                    {overflowBoxes}
+                  </svg>
+                );
+              })()}
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px', fontSize: '11px', fontWeight: '600', color: '#4B5563' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '12px', height: '12px', backgroundColor: '#3B82F6', borderRadius: '3px', border: '1px solid #1D4ED8' }} />
+                  <span>Cooler (Cadena de Frío)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '12px', height: '12px', backgroundColor: '#F59E0B', fillOpacity: 0.25, opacity: 0.5, borderRadius: '3px', border: '1px solid #D97706' }} />
+                  <span>Carga Común (Normal)</span>
+                </div>
+              </div>
+
+              {resCarga.volumenExcedido && (
+                <div style={{ marginTop: '12px', color: '#EF4444', fontSize: '12px', fontWeight: '700', textAlign: 'center' }}>
+                  ⚠️ ¡Capacidad de volumen del transporte superada!
+                </div>
+              )}
+            </div>
+
         </div>
+      </div>
       )}
 
       {paso === 3 && (
@@ -462,11 +830,14 @@ function NuevaRuta() {
             </p>
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <MapaRuta paradas={paradas} />
+          <div className="nr-map-container">
+            <MapaRuta 
+              paradas={paradas}
+              onPolylineCalculated={setPolyline}
+            />
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="nr-paradas-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 <th style={{ width: '60px', textAlign: 'center' }}>Parada</th>
@@ -496,9 +867,9 @@ function NuevaRuta() {
                       {p.tipo}
                     </span>
                   </td>
-                  <td style={{ fontWeight: 'bold', color: '#2563EB' }}>{p.envio.id}</td>
-                  <td>{p.tipo === 'RETIRO' ? p.envio.remitente : p.envio.destinatario}</td>
-                  <td style={{ fontSize: '13px', color: '#6b7280' }}>{p.direccion}</td>
+                  <td data-label="Tracking ID" style={{ fontWeight: 'bold', color: '#2563EB' }}>{p.envio.id}</td>
+                  <td data-label="Contacto">{p.tipo === 'RETIRO' ? p.envio.remitente : p.envio.destinatario}</td>
+                  <td data-label="Dirección" style={{ fontSize: '13px', color: '#6b7280' }}>{p.direccion}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                       <button
@@ -520,22 +891,78 @@ function NuevaRuta() {
             </tbody>
           </table>
 
-          <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px', fontSize: '13px', color: '#6b7280' }}>
-
-            <strong style={{ color: '#374151' }}>Resumen:</strong>{" "}
-            Ruta para el <strong style={{ color: '#111827' }}>{fecha}</strong> |{" "}
-            Repartidor: <strong style={{ color: '#111827' }}>{repartidores.find(r => r.id === repartidorId)?.nombre}</strong> |{" "}
-            Transporte: <strong style={{ color: '#111827' }}>{getNombreTransporte(transporteId)}</strong> |{" "}
-            {seleccionados.length} {seleccionados.length === 1 ? 'envío' : 'envíos' } · 
-            {paradas.length} {paradas.length === 1 ? 'parada' : 'paradas' }
-
+          <div className="nr-summary-box">
+            <strong style={{ color: '#374151', display: 'block', marginBottom: '8px' }}>Resumen de la ruta:</strong>
+            <div className="nr-summary-grid">
+              <span className="nr-summary-item">Fecha: <strong>{fecha}</strong></span>
+              <span className="nr-summary-item">Repartidor: <strong>{repartidores.find(r => r.id === repartidorId)?.nombre || 'No asignado'}</strong></span>
+              <span className="nr-summary-item">Transporte: <strong>{getNombreTransporte(transporteId)}</strong></span>
+              <span className="nr-summary-item">Envíos: <strong>{seleccionados.length}</strong></span>
+              <span className="nr-summary-item">Paradas: <strong>{paradas.length}</strong></span>
+            </div>
           </div>
 
-          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
+          <div className="nr-actions-row">
             <button className="btn btn-secondary" onClick={() => setPaso(2)}>ANTERIOR</button>
             <button className="btn-new-shipment" onClick={confirmarCreacion} disabled={guardando}>
               {guardando ? 'CREANDO...' : 'CREAR RUTA'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {hoveredBox && hoveredBox.tipo === 'frio' && (
+        <div style={{
+          position: 'fixed',
+          top: tooltipPos.y + 15,
+          left: tooltipPos.x + 15,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(59, 130, 246, 0.2)',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          maxWidth: '240px',
+          fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            <div style={{ width: '8px', height: '8px', backgroundColor: '#3B82F6', borderRadius: '50%' }}></div>
+            <span style={{ fontWeight: '750', fontSize: '13px', color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Cooler {hoveredBox.coolerIndex}
+            </span>
+          </div>
+          
+          <div style={{ fontSize: '11px', color: '#4B5563', marginBottom: '8px', borderTop: '1px solid #F3F4F6', paddingTop: '6px' }}>
+            <strong style={{ display: 'block', marginBottom: '4px', color: '#374151' }}>Medicamentos:</strong>
+            <ul style={{ margin: 0, paddingLeft: '14px', listStyleType: 'disc', color: '#4B5563' }}>
+              {hoveredBox.medicamentos.map((m, idx) => (
+                <li key={idx} style={{ marginBottom: '2px' }}>{m}</li>
+              ))}
+            </ul>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: '#EFF6FF',
+            border: '1px solid #BFDBFE',
+            borderRadius: '8px',
+            padding: '8px 10px',
+            marginTop: '8px'
+          }}>
+            <span style={{ fontSize: '11px', fontWeight: '600', color: '#1E40AF' }}>Temp:</span>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#1D4ED8' }}>
+              {hoveredBox.tempMin !== null && hoveredBox.tempMax !== null
+                ? `${hoveredBox.tempMin}°C a ${hoveredBox.tempMax}°C`
+                : hoveredBox.tempMin !== null
+                  ? `≥ ${hoveredBox.tempMin}°C`
+                  : hoveredBox.tempMax !== null
+                    ? `≤ ${hoveredBox.tempMax}°C`
+                    : 'Sin rango'}
+            </span>
           </div>
         </div>
       )}

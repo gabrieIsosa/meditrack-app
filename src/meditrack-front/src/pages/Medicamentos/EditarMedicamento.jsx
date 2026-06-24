@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getMedicamentoById, updateMedicamento } from '../../services/api';
+import { getMedicamentoById, updateMedicamento, BASE_URL } from '../../services/api';
 
 const PRESENTACIONES = ['Comprimidos', 'Cápsulas', 'Ampollas', 'Solución oral', 'Crema', 'Pomada', 'Parche', 'Supositorio', 'Colirio'];
 
@@ -30,20 +30,44 @@ function EditarMedicamento() {
     };
 
     const handleGuardar = async () => {
+        if (!form.nombre?.trim() || !form.monodroga?.trim()) {
+            setError('Nombre y monodroga son obligatorios.');
+            return;
+        }
+
+        if (form.cadenaFrio) {
+            const min = parseFloat(form.temperaturaMinima);
+            const max = parseFloat(form.temperaturaMaxima);
+            if (isNaN(min) || isNaN(max)) {
+                setError('Las temperaturas mínima y máxima son obligatorias para cadena de frío.');
+                return;
+            }
+            if (min > max) {
+                setError('La temperatura mínima no puede ser mayor que la temperatura máxima.');
+                return;
+            }
+        }
+
         try {
             const formData = new FormData();
+            const cleanedForm = { ...form };
+            if (!cleanedForm.cadenaFrio) {
+                cleanedForm.temperaturaMinima = '';
+                cleanedForm.temperaturaMaxima = '';
+            }
 
-            Object.keys(form).forEach(key => {
-                formData.append(key, form[key]);
+            Object.keys(cleanedForm).forEach(key => {
+                if (key !== 'imagen' && cleanedForm[key] != null) 
+                    formData.append(key, cleanedForm[key]);
             });
 
             if (form.imagen) 
                 formData.append("imagen", form.imagen);
             
             await updateMedicamento(id, formData);
-            navigate('/medicamentos');
+            navigate('/medicamentos', { state: { editSuccess: true } });
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Error al actualizar el medicamento.');
         }
     };
 
@@ -104,7 +128,7 @@ function EditarMedicamento() {
                                 (form.imagenUrl
                                     ? (form.imagenUrl.startsWith('http')
                                         ? form.imagenUrl
-                                        : `http://localhost:8080${form.imagenUrl}`)
+                                        : `${BASE_URL}${form.imagenUrl}`)
                                     : 'https://placehold.co/200x200?text=%F0%9F%92%8A')
                             }
                             alt="Medicamento"
@@ -197,6 +221,57 @@ function EditarMedicamento() {
                         <label>Unidad</label>
                         <input name="unidadMedida" value={form.unidadMedida || ''} onChange={handleChange} placeholder="mg, ml, unidades..." />
                     </div>
+
+                    <div className="form-group">
+                        <label>Volumen (cm³)</label>
+                        <input type="number" name="volumenCm3" value={form.volumenCm3 ?? 0} onChange={handleChange} min="0" placeholder="Ej: 150" />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Peso (g)</label>
+                        <input type="number" name="pesoGramos" value={form.pesoGramos ?? 0} onChange={handleChange} min="0" placeholder="Ej: 200" />
+                    </div>
+
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px', height: '42px', marginTop: '24px' }}>
+                        <label className="switch" style={{ margin: 0 }}>
+                            <input
+                                type="checkbox"
+                                name="cadenaFrio"
+                                checked={form.cadenaFrio ?? false}
+                                onChange={e => setForm(prev => ({ ...prev, cadenaFrio: e.target.checked }))}
+                            />
+                            <span className="slider"></span>
+                        </label>
+                        <span style={{ fontWeight: '600', color: '#4B5563', fontSize: '14px' }}>Requiere Cadena de Frío</span>
+                    </div>
+
+                    {form.cadenaFrio && (
+                        <>
+                            <div className="form-group">
+                                <label>Temperatura Mínima (°C) *</label>
+                                <input
+                                    type="number"
+                                    name="temperaturaMinima"
+                                    value={form.temperaturaMinima ?? ''}
+                                    onChange={handleChange}
+                                    step="0.1"
+                                    placeholder="Ej: 2.0"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Temperatura Máxima (°C) *</label>
+                                <input
+                                    type="number"
+                                    name="temperaturaMaxima"
+                                    value={form.temperaturaMaxima ?? ''}
+                                    onChange={handleChange}
+                                    step="0.1"
+                                    placeholder="Ej: 8.0"
+                                />
+                            </div>
+                        </>
+                    )}
+
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>

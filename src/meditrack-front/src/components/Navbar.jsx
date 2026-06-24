@@ -24,6 +24,9 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
   const [toasts, setToasts] = useState([]);
   const dropdownRef = useRef(null);
 
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
   const wsToken = user?.token ?? null;
   const wsUserId = user?.id ?? null;
 
@@ -81,6 +84,54 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (window.deferredPrompt) {
+      setDeferredPrompt(window.deferredPrompt);
+      setShowInstallBtn(true);
+    }
+
+    window.onBeforeInstallPrompt = (e) => {
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setShowInstallBtn(false);
+    }
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setShowInstallBtn(false);
+      window.deferredPrompt = null;
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.onBeforeInstallPrompt = null;
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`PWA install response: ${outcome}`);
+    setDeferredPrompt(null);
+    setShowInstallBtn(false);
+    window.deferredPrompt = null;
+  };
+
   const handleMarkAsRead = async (id) => {
     try {
       await marcarNotificacionLeida(id);
@@ -134,6 +185,13 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
           .notification-dropdown { width: 280px !important; right: -60px !important; }
           .navbar { padding: 10px 12px !important; }
         }
+        @media (max-width: 576px) {
+          .install-text { display: none !important; }
+          .btn-pwa-install { padding: 8px !important; }
+        }
+        .btn-pwa-install:hover {
+          background-color: #00905c !important;
+        }
       `}</style>
       
       <div
@@ -161,6 +219,34 @@ function Navbar({ publicMode = false, buttonText, buttonRoute }) {
       </div>
 
       <div className="navbar-user-section" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {showInstallBtn && (
+          <button
+            onClick={handleInstallClick}
+            className="btn btn-pwa-install"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#00A86B',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 14px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '13px',
+              transition: 'background-color 0.2s',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span className="install-text">Instalar App</span>
+          </button>
+        )}
         {!user ? (
           <button
             className="btn btn-secondary"

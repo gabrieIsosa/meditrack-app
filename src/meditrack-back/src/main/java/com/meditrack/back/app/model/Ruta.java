@@ -46,6 +46,8 @@ public class Ruta {
     @Column(name = "hora_creacion")
     private String horaCreacion;
 
+    @Column(columnDefinition = "TEXT")
+    private String polyline;
 
     @OneToMany(mappedBy = "ruta", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("retiroOrden ASC")
@@ -141,4 +143,11 @@ public class Ruta {
         this.envios = envios;
     }
     
+    public String getPolyline(){
+        return this.polyline;
+    }
+
+    public void setPolyline(String poly){
+        this.polyline = poly;
+    }
 }

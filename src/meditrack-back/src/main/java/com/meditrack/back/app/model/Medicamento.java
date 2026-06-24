@@ -47,6 +47,17 @@ public class Medicamento {
     @Column(name = "imagen_url")
     private String imagenUrl;
 
+    @Column(name = "volumen_cm3")
+    private Integer volumenCm3 = 0;
+
+    @Column(name = "peso_gramos")
+    private Integer pesoGramos = 0;
+
+    @Column(name = "temperatura_minima")
+    private Double temperaturaMinima;
+
+    @Column(name = "temperatura_maxima")
+    private Double temperaturaMaxima;
     public Medicamento(String nombre, String descripcion, String presentacion, int cantidad, String unidadMedida,
             String laboratorio, String monodroga, boolean cadenaFrio, String imagenUrl) {
         this.descripcion = descripcion;
@@ -160,4 +171,35 @@ public class Medicamento {
         this.imagenUrl = imagenUrl;
     }
 
+    public Integer getVolumenCm3() {
+        return volumenCm3;
+    }
+
+    public void setVolumenCm3(Integer volumenCm3) {
+        this.volumenCm3 = volumenCm3;
+    }
+
+    public Integer getPesoGramos() {
+        return pesoGramos;
+    }
+
+    public void setPesoGramos(Integer pesoGramos) {
+        this.pesoGramos = pesoGramos;
+    }
+
+    public Double getTemperaturaMinima() {
+        return temperaturaMinima;
+    }
+
+    public void setTemperaturaMinima(Double temperaturaMinima) {
+        this.temperaturaMinima = temperaturaMinima;
+    }
+
+    public Double getTemperaturaMaxima() {
+        return temperaturaMaxima;
+    }
+
+    public void setTemperaturaMaxima(Double temperaturaMaxima) {
+        this.temperaturaMaxima = temperaturaMaxima;
+    }
 }

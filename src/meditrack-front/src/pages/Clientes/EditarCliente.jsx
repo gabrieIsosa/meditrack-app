@@ -61,7 +61,7 @@ function EditarCliente() {
 
             await updateCliente(id, form);
 
-            navigate('/clientes');
+            navigate('/clientes', { state: { editSuccess: true } });
 
         } catch (err) {
 

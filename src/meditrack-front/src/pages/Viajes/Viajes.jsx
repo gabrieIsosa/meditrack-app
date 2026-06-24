@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getRutas, getClientes, getEnvioById } from '../../services/api';
+import { useNotificacionesWS } from '../../hooks/useNotificacionesWS';
+import { getRutas, getClientes, BASE_URL, getEnvioById, reportarFatiga, getUsuarioById, getMiAlertaPendiente } from '../../services/api';
 import MapaRuta from '../../components/MapaRuta';
 import OfflineBanner from '../../components/OfflineBanner';
 import { iconos, DefaultIcon } from '../../util/Util';
-import { ModalValidacionAptitud, PantallaBloqueo } from './ModalValidacionAptitud';
+import { ModalValidacionAptitud, PantallaBloqueo, PantallaEsperando } from './ModalValidacionAptitud';
 import './Viajes.css';
 
 const obtenerNombreMes = (mesNum) => {
@@ -257,7 +258,7 @@ function ModalResumenViaje({ ruta, onClose, clientes }) {
                                     <div key={idx} className="viajes-modal-carga-item">
                                         <div className="viajes-modal-carga-img-wrapper">
                                             {item.imagenUrl ? (
-                                                <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `http://localhost:8080${item.imagenUrl}`} alt={item.nombre} className="viajes-modal-carga-img" />
+                                                <img src={item.imagenUrl.startsWith('http') ? item.imagenUrl : `${BASE_URL}${item.imagenUrl}`} alt={item.nombre} className="viajes-modal-carga-img" />
                                             ) : (
                                                 <span className="viajes-modal-carga-fallback">MED</span>
                                             )}
@@ -292,7 +293,7 @@ function ModalResumenViaje({ ruta, onClose, clientes }) {
 }
 
 function Viajes() {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     
     const [rutas, setRutas] = useState([]);
@@ -300,8 +301,60 @@ function Viajes() {
     const [loading, setLoading] = useState(true);
     const [viajePreparar, setViajePreparar] = useState(null);
     const [mostrarValidacionAptitud, setMostrarValidacionAptitud] = useState(false);
-    const [viajeBlockeado, setViajeBlockeado] = useState(false);
+    
+    const isBlocked = useCallback(() => {
+        if (!user) return false;
+        if (!user.estaBloqueado) return false;
+        if (!user.fechaBloqueo) return true;
+        const blockTime = new Date(user.fechaBloqueo);
+        const now = new Date();
+        const diffMs = now - blockTime;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        return diffHours < 6;
+    }, [user]);
+
+    const [viajeBlockeado, setViajeBlockeado] = useState(isBlocked());
+    const [alertaFatigaId, setAlertaFatigaId] = useState(null);
     const [modoTestMic, setModoTestMic] = useState(false);
+
+    const alertaFatigaIdRef = useRef(alertaFatigaId);
+    useEffect(() => { alertaFatigaIdRef.current = alertaFatigaId; }, [alertaFatigaId]);
+
+    const userId = user?.id;
+    useNotificacionesWS(userId, user?.token, useCallback((notif) => {
+        if (notif.tipo !== 'DECISION_FATIGA' || !alertaFatigaIdRef.current) return;
+        setAlertaFatigaId(null);
+        if (notif.decision === 'BLOQUEADO') {
+            getUsuarioById(userId)
+                .then(u => updateUser({ estaBloqueado: u.estaBloqueado, fechaBloqueo: u.fechaBloqueo }))
+                .catch(() => {});
+            setViajeBlockeado(true);
+        }
+    }, [userId, updateUser]));
+
+    useEffect(() => {
+        setViajeBlockeado(isBlocked());
+    }, [user, isBlocked]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        getUsuarioById(user.id)
+            .then(latestUser => {
+                updateUser({
+                    estaBloqueado: latestUser.estaBloqueado,
+                    fechaBloqueo: latestUser.fechaBloqueo
+                });
+            })
+            .catch(err => console.error("Error fetching latest user status on mount:", err));
+
+        getMiAlertaPendiente()
+            .then(alerta => {
+                if (alerta && alerta.id && alerta.estado === 'PENDIENTE') {
+                    setAlertaFatigaId(alerta.id);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const fetchRutas = async (silent = false) => {
         if (!silent) setLoading(true);
@@ -482,7 +535,7 @@ function Viajes() {
                 <div className="viajes-header animate-fade-in">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <button 
-                            onClick={() => navigate('/inicio-repartidor')} 
+                            onClick={() => navigate('/menu')} 
                             className="viajes-header-back-btn btn-action-hover"
                             style={{ margin: 0 }}
                         >
@@ -811,13 +864,20 @@ function Viajes() {
                             navigate('/viajes/detalle');
                         }
                     }}
-                    onBloqueado={() => {
+                    onBloqueado={async () => {
                         setMostrarValidacionAptitud(false);
                         if (modoTestMic) {
                             alert('Prueba finalizada: Validación de aptitud falló.');
                             setModoTestMic(false);
                         } else {
-                            setViajeBlockeado(true);
+                            try {
+                                const alerta = await reportarFatiga();
+                                setAlertaFatigaId(alerta.id);
+                            } catch (err) {
+                                console.error("Error al reportar fatiga al supervisor:", err);
+                                // igual mostramos la pantalla de espera
+                                setAlertaFatigaId('error');
+                            }
                         }
                     }}
                     onCancelar={() => {
@@ -827,9 +887,13 @@ function Viajes() {
                 />
             )}
 
+            {alertaFatigaId && !viajeBlockeado && (
+                <PantallaEsperando />
+            )}
+
             {viajeBlockeado && (
                 <PantallaBloqueo
-                    onContactarSupervisor={() => alert('Contactando con supervisor...\n\nUn representante se comunicará contigo a la brevedad para realizar la verificación manual.')}
+                    onContactarSupervisor={() => alert('Tu supervisor ya fue notificado del bloqueo. Revisá tus notificaciones para más información.')}
                 />
             )}
         </div>
